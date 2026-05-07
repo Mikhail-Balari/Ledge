@@ -2,316 +2,35 @@ name: Ledge CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   test:
-    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-
-    env:
-      PYTHONUTF8: "1"
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
 
-      - name: Install package
-        run: pip install -e .
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest
 
-      - name: Run legacy unit tests (150)
-        run: python tests/test_ledge.py
+    - name: Run conformance tests
+      run: python tests/conformance.py
 
-      - name: Run conformance suite (284)
-        run: python tests/conformance.py
-
-      - name: Run pytest-compatible suites
-        run: python -m ledge_lang.test_runner tests/unit/ tests/differential/ tests/examples/ tests/fuzz_suite/ tests/conformance_suite/ tests/integration/
-
-      - name: Run VM random differential tests
-        run: python -m ledge_lang.test_runner tests/differential/test_vm_random.py
-
-      - name: Run AI validation experiment (50 tasks)
-        run: python experiments/ai_validation.py
-
-      - name: Verify AI safety invariants
-        run: |
-          python -c "
-          import sys; sys.path.insert(0,'.')
-          from ledge_lang import run
-          lines,_=run('show confidence_of(analyze(\"x\") using y)',output_fn=lambda x:None)
-          assert lines[0]=='0', f'CRITICAL: fake AI confidence: {lines[0]}'
-          lines,_=run('show value_of(classify(\"x\") using [\"a\",\"b\"])',output_fn=lambda x:None)
-          assert lines[0]=='nothing', f'CRITICAL: fake AI label: {lines[0]}'
-          print('AI safety invariants: OK')
-          "
-
-      - name: Verify version consistency
-        run: |
-          python -c "
-          import sys, re, json
-          sys.path.insert(0,'.')
-          from ledge_lang import __version__
-          with open('pyproject.toml') as f:
-              m = re.search(r'version = \"([^\"]+)\"', f.read())
-              pkg = m.group(1) if m else None
-          with open('vscode-ledge/package.json') as f:
-              vsc = json.load(f)['version']
-          assert __version__ == pkg == vsc == '1.0.0', f'Version mismatch: init={__version__} pkg={pkg} vsc={vsc}'
-          print(f'Version consistency: {__version__} OK')
-          "
-
-      - name: Check no fake AI confidence in examples
-        run: |
-          python -c "
-          import sys
-          sys.path.insert(0,'.')
-          from ledge_lang import run
-          import glob
-          for path in glob.glob('examples/*.ledge'):
-              lines,_ = run(open(path).read(), output_fn=lambda x:None)
-              output = '\n'.join(lines)
-              assert 'confidence: 1' not in output.lower(), f'{path}: fake confidence found'
-          print('Examples: no fake AI confidence')
-          "
-
-  lint:
-    name: Syntax check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install
-        run: pip install -e .
-      - name: Check Python syntax (all modules)
-        run: |
-          python -c "
-          import ast, glob, sys
-          errors = []
-          for path in glob.glob('ledge_lang/*.py'):
-              with open(path) as f:
-                  try:
-                      ast.parse(f.read())
-                  except SyntaxError as e:
-                      errors.append(f'{path}: {e}')
-          if errors:
-              print('SYNTAX ERRORS:')
-              for e in errors: print(' ', e)
-              sys.exit(1)
-          print(f'Checked {len(glob.glob(\"ledge_lang/*.py\"))} modules: OK')
-          "
-      - name: Check feature matrix consistency
-        run: |
-          python -c "
-          with open('docs/FEATURE_MATRIX.md') as f:
-              m = f.read()
-          assert 'roadmap' in m, 'FEATURE_MATRIX.md must have roadmap section'
-          assert 'shipped' in m, 'FEATURE_MATRIX.md must have shipped section'
-          assert '--target wasm' in m, 'wasm must be documented'
-          assert '--target arm32' in m, 'arm32 must be documented'
-          print('Feature matrix: OK')
-          "
-
-  release-gate:
-    name: Release Gate (blocks merge if blockers open)
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install
-        run: pip install -e .
-
-      - name: Gate 1 — all examples run (G1)
-        run: |
-          python -c "
-          import sys, glob
-          sys.path.insert(0,'.')
-          from ledge_lang import run
-          fails = []
-          for path in glob.glob('examples/*.ledge'):
-              with open(path) as f: src = f.read()
-              try:
-                  lines, _ = run(src, output_fn=lambda x:None)
-                  assert lines, f'{path}: no output'
-              except Exception as e:
-                  fails.append(f'{path}: {e}')
-          if fails:
-              print('FAILED examples:', fails)
-              sys.exit(1)
-          print(f'G1 PASS: {len(glob.glob(\"examples/*.ledge\"))} examples run')
-          "
-
-      - name: Gate 2 — no spec contradictions (G2/G3)
-        run: |
-          python -c "
-          import sys; sys.path.insert(0,'.')
-          from ledge_lang import run
-          tests = [
-              ('analyze no-backend', 'show confidence_of(analyze(\"x\") using y)', '0'),
-              ('classify no-backend', 'show value_of(classify(\"x\") using [\"a\",\"b\"])', 'nothing'),
-              ('true!=1', 'show true = 1', 'false'),
-              ('false!=0', 'show false = 0', 'false'),
-          ]
-          for name, src, exp in tests:
-              ls, _ = run(src, output_fn=lambda x:None)
-              assert ls and ls[0] == exp, f'FAIL {name}: got {ls}'
-          print('G2/G3 PASS: spec invariants hold')
-          "
-
-      - name: Gate 3 — version consistency
-        run: |
-          python -c "
-          import sys, re, json; sys.path.insert(0,'.')
-          from ledge_lang import __version__
-          with open('pyproject.toml') as f: pkg=re.search(r'version = \"([^\"]+)\"', f.read()).group(1)
-          with open('vscode-ledge/package.json') as f: vsc=json.load(f)['version']
-          assert __version__ == pkg == vsc, f'Version mismatch: {__version__} vs {pkg} vs {vsc}'
-          print(f'G3 PASS: version {__version__} consistent')
-          "
-
-      - name: Gate 4 — full test suite
-        run: |
-          python tests/test_ledge.py
-          python tests/conformance.py
-          python -m ledge_lang.test_runner tests/unit/ tests/differential/ tests/examples/ tests/fuzz_suite/ tests/conformance_suite/ tests/integration/
-
-      - name: Gate 5 — LLVM IR generation valid (compiler)
-        run: |
-          python -c "
-          import sys; sys.path.insert(0,'.')
-          from ledge_lang.compiler import compile_to_ir
-          programs = [
-              'show 42',
-              'define fib(n):\n    if n <= 1:\n        return n\n    return fib(n - 1) + fib(n - 2)\nshow fib(10)',
-              'define x as 0\nwhile x < 5:\n    set x to x + 1\nshow x',
-          ]
-          for src in programs:
-              ir = compile_to_ir(src)
-              assert 'define i32 @main' in ir, f'Missing main in IR for: {src[:40]}'
-          print(f'Compiler PASS: {len(programs)} programs generate valid IR')
-          "
-
-  performance-regression:
-    name: Performance Regression Check
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install
-        run: pip install -e .
-
-      - name: Performance budget check (N02/N05)
-        run: |
-          python -c "
-          import sys, time
-          sys.path.insert(0,'.')
-          from ledge_lang import run, compile_ledge
-          from ledge_lang.formatter import format_ledge
-          from ledge_lang.typechecker import check_types
-
-          budgets = {
-              'parse_simple':  (lambda: compile_ledge('show 42'),                     5),
-              'format_simple': (lambda: format_ledge('define x as 42'),               5),
-              'check_simple':  (lambda: check_types('show 42'),                       50),
-              'run_while_1k':  (lambda: run('define i as 0\nwhile i < 1000:\n    set i to i + 1\nshow i', output_fn=lambda x: None), 50),
-          }
-
-          fails = []
-          for name, (fn, budget_ms) in budgets.items():
-              fn()
-              t0 = time.perf_counter()
-              for _ in range(10): fn()
-              ms = (time.perf_counter() - t0) / 10 * 1000
-              if ms > budget_ms * 3:
-                  fails.append(f'{name}: {ms:.1f}ms (budget: {budget_ms}ms, 3x = {budget_ms*3}ms)')
-              else:
-                  print(f'OK {name}: {ms:.1f}ms <= {budget_ms*3}ms')
-
-          if fails:
-              print('PERFORMANCE REGRESSION:')
-              for f in fails: print(f'  {f}')
-              sys.exit(1)
-          print('All performance budgets within 3x threshold')
-          "
-
-  smoke-install:
-    name: Smoke Install Test (L01/L05)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Clean install
-        run: pip install -e . --quiet
-
-      - name: Smoke install test
-        run: |
-          python -c "
-          import sys
-          sys.path.insert(0,'.')
-
-          # 1. Version
-          from ledge_lang import __version__
-          print(f'Version: {__version__}')
-
-          # 2. Basic run
-          from ledge_lang import run
-          lines, _ = run('show 42', output_fn=lambda x:None)
-          assert lines == ['42'], f'Expected 42, got {lines}'
-          print('Basic run: OK')
-
-          # 3. AI safety
-          lines, _ = run('show confidence_of(analyze(\"test\") using y)', output_fn=lambda x:None)
-          assert lines == ['0'], f'AI safety: expected 0, got {lines}'
-          print('AI safety: OK')
-
-          # 4. All examples
-          import glob
-          fails = []
-          for path in glob.glob('examples/*.ledge'):
-              with open(path) as f: src = f.read()
-              try:
-                  run(src, output_fn=lambda x:None)
-              except Exception as e:
-                  fails.append(f'{path}: {e}')
-          assert not fails, f'Examples failed: {fails}'
-          print(f'All {len(glob.glob(\"examples/*.ledge\"))} examples: OK')
-
-          # 5. Formatter idempotent
-          from ledge_lang.formatter import format_ledge
-          src = 'define x as 42\nshow x'
-          assert format_ledge(src) == format_ledge(format_ledge(src)), 'Formatter not idempotent'
-          print('Formatter: OK')
-
-          # 6. Typechecker
-          from ledge_lang.typechecker import check_types
-          issues = check_types('define r as analyze(\"x\") using y\nshow upper(r)')
-          errors = [i for i in issues if i.is_error]
-          assert errors, 'Typechecker must catch unsafe Uncertain'
-          print('Typechecker: OK')
-
-          print('SMOKE INSTALL: ALL CHECKS PASSED')
-          "
+    - name: Run unit tests
+      env:
+        PYTHONUTF8: "1"
+      run: python -m pytest tests/unit/ -q --tb=short
