@@ -1,0 +1,118 @@
+# Ledge Killer App 2: Autonomous Research Agent
+# ================================================
+# An agent that uses tools to answer complex questions.
+# Demonstrates: contracts, Uncertain types, audit trail, streams.
+#
+# This is what makes Ledge different:
+# The agent cannot return a "confident" answer without a real backend.
+# Every decision is automatically logged.
+# Contracts ensure the agent only runs with valid configuration.
+
+type AgentConfig has:
+    name:       text
+    max_steps:  number = 5
+    min_conf:   number = 0.7
+
+type AgentResult has:
+    question:   text
+    answer:     text
+    confidence: number
+    steps:      number
+    sources:    list
+
+define make_agent(config: AgentConfig):
+    requires:
+        config.max_steps > 0
+        config.min_conf >= 0
+        config.min_conf <= 1
+        len(config.name) > 0
+
+    define agent_fn(question: text):
+        requires:
+            len(question) > 0
+        ensures:
+            has(result, "answer")
+            has(result, "confidence")
+            result["confidence"] >= 0
+            result["confidence"] <= 1
+
+        # Step 1: Classify what kind of question this is
+        define q_type as classify(question) using [
+            "factual", "analytical", "creative", "technical"
+        ]
+
+        # Step 2: Generate initial answer
+        define raw_answer as generate(
+            "Answer this {value_of(q_type) or \"general\"} question: {question}"
+        ) using text
+
+        # Step 3: Verify answer confidence
+        define answer_text as when(raw_answer, config.min_conf, nothing)
+        define conf as confidence_of(raw_answer)
+
+        # Only return if we meet minimum confidence
+        if answer_text is nothing:
+            return map {
+                "question":   question,
+                "answer":     "Insufficient confidence to answer reliably",
+                "confidence": conf,
+                "steps":      1,
+                "sources":    list [],
+                "reliable":   false
+            }
+
+        # Step 4: Cross-validate with sentiment check on the answer
+        define validation as analyze(answer_text) using coherence
+
+        return map {
+            "question":   question,
+            "answer":     answer_text,
+            "confidence": min(list [conf, confidence_of(validation)]),
+            "steps":      2,
+            "sources":    list [],
+            "reliable":   conf >= config.min_conf
+        }
+
+    return agent_fn
+
+
+# ── Run the agent ─────────────────────────────────────────────────────────────
+
+define config as AgentConfig(
+    name="ResearchAgent",
+    max_steps=5,
+    min_conf=0.7
+)
+
+define agent as make_agent(config)
+
+define questions as list [
+    "What are the main benefits of the Ledge programming language?",
+    "How does Uncertain[T] improve AI safety?",
+    "What industries could benefit most from AI-native programming languages?"
+]
+
+show "=== {config[\"name\"]} ==="
+show "Min confidence threshold: {config[\"min_conf\"]}"
+show ""
+
+for each q in questions:
+    define result as agent(q)
+    define pct as round(result["confidence"] * 100)
+    show "Q: {q}"
+    if result["reliable"]:
+        show "A: {result[\"answer\"]}"
+        show "   Confidence: {pct}%  Steps: {result[\"steps\"]}"
+    else:
+        show "A: [Unreliable — confidence {pct}% below threshold {round(config[\"min_conf\"]*100)}%]"
+        show "   Connect an AI backend for real answers."
+    show ""
+
+show "=== Session Summary ==="
+define log as audit_query()
+show "Total AI calls:          {len(log)}"
+show "Questions processed:     {len(questions)}"
+show "Agent name:              {config[\"name\"]}"
+show ""
+show "All decisions are logged and reproducible."
+show "The agent never invents confident answers without a real backend."

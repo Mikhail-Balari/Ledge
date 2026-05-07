@@ -1,0 +1,22 @@
+# Medical decision chain with uncertainty propagation
+# Each step feeds the next
+# Final confidence reflects the ENTIRE chain
+
+define symptoms as "fever 39C, headache, neck stiffness"
+
+define step1 as analyze(symptoms) using differential_diagnosis
+define step2 as classify(symptoms) using ["meningitis","flu","migraine"]
+define step3 as generate(symptoms) using emergency_protocol
+
+define chain as uncertain_chain(list [step1, step2, step3])
+
+show "Confidence of each step:"
+show "  Step 1 (diagnosis):      " + confidence_of(step1)
+show "  Step 2 (classification): " + confidence_of(step2)
+show "  Step 3 (protocol):       " + confidence_of(step3)
+show ""
+show "Full chain confidence: " + chain_confidence(chain)
+show "Chain safe (threshold 0.8): " + chain_is_safe(chain, 0.8)
+show "Weakest step: " + weakest_step(chain)
+show ""
+show "Without backend: chain_confidence=0, no automatic decision possible"

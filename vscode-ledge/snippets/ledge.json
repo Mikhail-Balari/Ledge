@@ -1,0 +1,152 @@
+{
+  "Define variable": {
+    "prefix": "def",
+    "body": ["define ${1:name} as ${2:value}"],
+    "description": "Define a variable"
+  },
+  "Define function": {
+    "prefix": "defn",
+    "body": [
+      "define ${1:name}(${2:params}):",
+      "    ${3:pass}"
+    ],
+    "description": "Define a function"
+  },
+  "Define typed variable": {
+    "prefix": "deft",
+    "body": ["define ${1:name}: ${2:text} as ${3:value}"],
+    "description": "Define a typed variable"
+  },
+  "Show": {
+    "prefix": "show",
+    "body": ["show ${1:value}"],
+    "description": "Show a value"
+  },
+  "If statement": {
+    "prefix": "if",
+    "body": [
+      "if ${1:condition}:",
+      "    ${2:pass}"
+    ],
+    "description": "If statement"
+  },
+  "If-else statement": {
+    "prefix": "ife",
+    "body": [
+      "if ${1:condition}:",
+      "    ${2:pass}",
+      "else:",
+      "    ${3:pass}"
+    ],
+    "description": "If-else statement"
+  },
+  "For each loop": {
+    "prefix": "for",
+    "body": [
+      "for each ${1:item} in ${2:items}:",
+      "    ${3:pass}"
+    ],
+    "description": "For each loop"
+  },
+  "While loop": {
+    "prefix": "while",
+    "body": [
+      "while ${1:condition}:",
+      "    ${2:pass}"
+    ],
+    "description": "While loop"
+  },
+  "Check block": {
+    "prefix": "check",
+    "body": [
+      "check:",
+      "    ${1:pass}",
+      "recover ${2:error}:",
+      "    show \"Error: \" + ${2:error}",
+      "always:",
+      "    ${3:pass}"
+    ],
+    "description": "Check/recover/always block"
+  },
+  "Match statement": {
+    "prefix": "match",
+    "body": [
+      "match ${1:value}:",
+      "    case ${2:pattern}:",
+      "        ${3:pass}",
+      "    otherwise:",
+      "        ${4:pass}"
+    ],
+    "description": "Match statement"
+  },
+  "Safe fallback": {
+    "prefix": "or",
+    "body": ["${1:expr} or ${2:default}"],
+    "description": "Safe fallback with or"
+  },
+  "Define list": {
+    "prefix": "list",
+    "body": ["define ${1:items} as list [${2}]"],
+    "description": "Define a list"
+  },
+  "Define map": {
+    "prefix": "map",
+    "body": [
+      "define ${1:data} as map {",
+      "    \"${2:key}\": ${3:value}",
+      "}"
+    ],
+    "description": "Define a map"
+  },
+  "Lambda": {
+    "prefix": "given",
+    "body": ["given ${1:x}: ${2:x}"],
+    "description": "Lambda function"
+  },
+  "User type": {
+    "prefix": "type",
+    "body": [
+      "type ${1:Name} has:",
+      "    ${2:field}: ${3:text}"
+    ],
+    "description": "Define a user type"
+  },
+  "Repeat N times": {
+    "prefix": "repeat",
+    "body": [
+      "repeat ${1:5} times:",
+      "    ${2:pass}"
+    ],
+    "description": "Repeat N times"
+  },
+  "Analyze with AI": {
+    "prefix": "analyze",
+    "body": ["define ${1:result} as analyze(${2:text}) using ${3:sentiment}"],
+    "description": "AI analyze instruction"
+  },
+  "Generate with AI": {
+    "prefix": "generate",
+    "body": ["define ${1:result} as generate(${2:prompt}) using ${3:text}"],
+    "description": "AI generate instruction"
+  },
+  "Classify with AI": {
+    "prefix": "classify",
+    "body": ["define ${1:result} as classify(${2:text}) using [\"${3:label1}\", \"${4:label2}\"]"],
+    "description": "AI classify instruction"
+  },
+  "Import module": {
+    "prefix": "import",
+    "body": ["import \"${1:module}\" as ${2:alias}"],
+    "description": "Import a module"
+  },
+  "Map function": {
+    "prefix": "mapfn",
+    "body": ["define ${1:result} as map(${2:items}, given ${3:x}: ${4:x})"],
+    "description": "Map over a list"
+  },
+  "Filter function": {
+    "prefix": "filterfn",
+    "body": ["define ${1:result} as filter(${2:items}, given ${3:x}: ${4:condition})"],
+    "description": "Filter a list"
+  }
+}

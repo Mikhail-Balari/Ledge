@@ -1,0 +1,55 @@
+# LLM calibration evaluator — Ledge AI-first
+# Measures whether a model says what it actually knows.
+# Uses native type system to guarantee results are Uncertain[T]
+# and confidence is never accidentally discarded.
+
+define MIN_CONFIDENCE_TO_COUNT as 0.5
+
+define evaluate_question(question: text, expected_answer: text):
+    define response as analyze(question) using qa_evaluation
+
+    define conf as confidence_of(response)
+    define correct as false
+
+    if conf >= MIN_CONFIDENCE_TO_COUNT:
+        define ai_result as value_of(response) or map {}
+        define resp_text as ai_result["answer"] or "no_answer"
+        set correct to resp_text = expected_answer
+
+    return map {
+        "question":   question,
+        "expected":   expected_answer,
+        "confidence": conf,
+        "counted":    conf >= MIN_CONFIDENCE_TO_COUNT,
+        "correct":    correct
+    }
+
+define questions as list [
+    map {"p": "Capital of France",       "r": "Paris"},
+    map {"p": "Square root of 144",      "r": "12"},
+    map {"p": "Author of Don Quixote",   "r": "Cervantes"},
+    map {"p": "Year of US independence", "r": "1776"},
+    map {"p": "Largest planet",          "r": "Jupiter"}
+]
+
+show "=== LLM CALIBRATION EVALUATOR ==="
+show ""
+
+define results as list []
+for each q in questions:
+    define r as evaluate_question(q["p"], q["r"])
+    set results to append(results, r)
+    show "Q: {r[\"question\"]}"
+    show "  Confidence: {r[\"confidence\"]} | Counted: {r[\"counted\"]}"
+    show ""
+
+define counted as filter(results, given r: r["counted"] = true)
+define correct_answers as filter(counted, given r: r["correct"] = true)
+
+show "Questions evaluated:        {len(questions)}"
+show "With sufficient confidence: {len(counted)}"
+show "Correct:                    {len(correct_answers)}"
+show ""
+show "Note: without a real backend, confidence=0 for all."
+show "Connect a backend to get real calibration."
+show "Audit entries: {len(audit_query())} | Chain: {audit_verify()}"

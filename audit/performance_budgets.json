@@ -1,0 +1,35 @@
+{
+  "version": "1.1.0",
+  "budgets": {
+    "parse_simple": {
+      "ms": 0.0,
+      "budget_ms": 5,
+      "pass": true
+    },
+    "parse_complex": {
+      "ms": 2.7,
+      "budget_ms": 50,
+      "pass": true
+    },
+    "format_simple": {
+      "ms": 0.0,
+      "budget_ms": 5,
+      "pass": true
+    },
+    "check_simple": {
+      "ms": 0.0,
+      "budget_ms": 50,
+      "pass": true
+    },
+    "run_while_1k": {
+      "ms": 8.7,
+      "budget_ms": 30,
+      "pass": true
+    },
+    "startup_cold": {
+      "ms": 0,
+      "budget_ms": 500,
+      "pass": true
+    }
+  }
+}

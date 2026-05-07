@@ -1,0 +1,39 @@
+# Ledge AI Pipeline Demo
+# ========================
+# Content moderation pipeline with proper uncertainty handling.
+# Demonstrates the core Ledge safety guarantee:
+# AI results CANNOT be used without explicit confidence handling.
+
+define posts as list [
+    "This product is amazing, highly recommend!",
+    "Buy followers NOW cheap prices guaranteed!!!",
+    "Having a great day with friends",
+    "Click here to win $1000 free money NOW",
+    "The conference talk was really insightful"
+]
+
+define safe_posts as list []
+define flagged as list []
+define low_confidence as list []
+
+for each post in posts:
+    define result as classify(post) using ["safe", "spam", "harmful"]
+
+    if confidence_of(result) >= 0.8:
+        if value_of(result) = "safe":
+            set safe_posts to append(safe_posts, post)
+        else:
+            set flagged to append(flagged, post)
+    else:
+        set low_confidence to append(low_confidence, post)
+
+show "=== Content Moderation Results ==="
+show "Safe:         " + len(safe_posts)
+show "Flagged:      " + len(flagged)
+show "Human review: " + len(low_confidence)
+show ""
+show "Total AI calls logged: " + len(audit_query())
+show ""
+show "=== No backend: all go to human review ==="
+show "This is the CORRECT safe behavior, not a failure."
+show "Connect an AI backend to get real classifications."

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledge Studio v1.1.0</title>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+.topbar {
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  padding: 0 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.logo {
+  color: #38bdf8;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  user-select: none;
+}
+.topbar-gap { flex: 1; }
+.cwd-label {
+  font-size: 11px;
+  color: #475569;
+  font-family: monospace;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+.controls { display: flex; align-items: center; gap: 8px; }
+
+select {
+  background: #0f172a;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 200px;
+}
+select:focus { outline: none; border-color: #38bdf8; color: #e2e8f0; }
+
+.btn {
+  border: none;
+  padding: 6px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-run   { background: #3b82f6; color: #fff; }
+.btn-run:hover:not(:disabled) { background: #2563eb; }
+.btn-run:disabled { opacity: 0.55; cursor: default; }
+.btn-check { background: #334155; color: #94a3b8; }
+.btn-check:hover { background: #475569; color: #e2e8f0; }
+.btn-clear { background: transparent; color: #475569; border: 1px solid #334155; }
+.btn-clear:hover { background: #1e293b; color: #94a3b8; }
+
+/* ── Workspace ───────────────────────────────────────────────────────────── */
+.workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Editor panel ────────────────────────────────────────────────────────── */
+.editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #334155;
+  min-width: 0;
+}
+.panel-header {
+  background: #1e293b;
+  padding: 7px 14px;
+  font-size: 10px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+  user-select: none;
+}
+.editor {
+  flex: 1;
+  background: #0d1526;
+  color: #e2e8f0;
+  border: none;
+  padding: 16px 18px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  resize: none;
+  outline: none;
+  width: 100%;
+  tab-size: 4;
+  caret-color: #38bdf8;
+}
+.editor::placeholder { color: #1e3a5f; }
+
+/* ── Output panel ────────────────────────────────────────────────────────── */
+.output-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.output-line   { display: block; white-space: pre-wrap; word-break: break-word; }
+.out-green     { color: #4ade80; }
+.out-red       { color: #f87171; }
+.out-cyan      { color: #67e8f9; font-weight: 600; }
+.out-yellow    { color: #fbbf24; }
+.out-dim       { color: #475569; }
+.out-normal    { color: #cbd5e1; }
+.out-empty     { color: #1e293b; }
+
+.output-placeholder { color: #1e3a5f; font-style: italic; font-size: 13px; }
+
+.error-block {
+  background: rgba(248,113,113,0.07);
+  border-left: 3px solid #f87171;
+  padding: 7px 12px;
+  margin: 3px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 12.5px;
+  color: #f87171;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.issue-error {
+  background: rgba(248,113,113,0.06);
+  border-left: 3px solid #f87171;
+  padding: 6px 12px;
+  margin: 2px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+  color: #fca5a5;
+}
+.issue-warn {
+  background: rgba(251,191,36,0.06);
+  border-left: 3px solid #fbbf24;
+  padding: 6px 12px;
+  margin: 2px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+  color: #fde68a;
+}
+
+/* ── Guarantees bar ──────────────────────────────────────────────────────── */
+.guarantees {
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  padding: 9px 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.g-label {
+  font-size: 10px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-right: 6px;
+  user-select: none;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: help;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+.badge-pass    { background: rgba(74,222,128,0.10); color: #4ade80; border: 1px solid rgba(74,222,128,0.30); }
+.badge-fail    { background: rgba(248,113,113,0.10); color: #f87171; border: 1px solid rgba(248,113,113,0.30); }
+.badge-pending { background: rgba(100,116,139,0.15); color: #475569; border: 1px solid #334155; }
+.badge-dot     { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.status-text { font-size: 11px; color: #475569; margin-left: auto; }
+
+/* running animation */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border: 1.5px solid #3b82f6;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+</style>
+</head>
+<body>
+
+<!-- ── Top bar ── -->
+<div class="topbar">
+  <span class="logo">&#11041; Ledge Studio v1.1.0</span>
+  <span class="cwd-label" id="cwdLabel"></span>
+  <div class="topbar-gap"></div>
+  <div class="controls">
+    <select id="fileSelect" onchange="loadFile(this.value)" title="Open a .ledge file">
+      <option value="">— open file —</option>
+    </select>
+    <button class="btn btn-check" onclick="checkCode()" title="Run typechecker (Ctrl+Shift+K)">Check</button>
+    <button class="btn btn-run" id="runBtn" onclick="runCode()" title="Run code (Ctrl+Enter)">&#9654; Run</button>
+    <button class="btn btn-clear" onclick="clearOutput()" title="Clear output">Clear</button>
+  </div>
+</div>
+
+<!-- ── Workspace ── -->
+<div class="workspace">
+
+  <!-- Left: editor -->
+  <div class="editor-panel">
+    <div class="panel-header">Editor</div>
+    <textarea id="editor" class="editor" spellcheck="false"
+      placeholder="Write Ledge code here...
+
+define result as analyze(&quot;Hello Ledge&quot;) using sentiment
+show confidence_of(result)
+show is_confident(result)
+show when(result, 0.8, &quot;connect an AI backend for real analysis&quot;)"></textarea>
+  </div>
+
+  <!-- Right: output -->
+  <div class="output-panel">
+    <div class="panel-header" id="outputHeader">Output</div>
+    <div class="output" id="output">
+      <span class="output-placeholder">Press &#9654; Run to execute — or Ctrl+Enter</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Guarantees bar ── -->
+<div class="guarantees">
+  <span class="g-label">Guarantees</span>
+  <span class="badge badge-pending" id="g1" title="G1: confidence=0 always without AI backend">
+    <span class="badge-dot"></span>G1
+  </span>
+  <span class="badge badge-pending" id="g2" title="G2: typechecker blocks unsafe AI use at analysis time">
+    <span class="badge-dot"></span>G2
+  </span>
+  <span class="badge badge-pending" id="g3" title="G3: cryptographic audit trail — tampering is detected">
+    <span class="badge-dot"></span>G3
+  </span>
+  <span class="badge badge-pending" id="g4" title="G4: safe failure by design — no fabricated AI results">
+    <span class="badge-dot"></span>G4
+  </span>
+  <span class="status-text" id="statusText"></span>
+</div>
+
+<script>
+// ── Socket ────────────────────────────────────────────────────────────────────
+const socket = io();
+let isRunning = false;
+
+socket.on('output', function(data) {
+  appendOutputLine(data.line);
+});
+
+socket.on('done', function(data) {
+  setRunning(false);
+  if (data.error) {
+    appendErrorBlock(data.error);
+  }
+  setStatus('');
+});
+
+socket.on('connect_error', function() {
+  setStatus('connection lost');
+});
+
+// ── Run ───────────────────────────────────────────────────────────────────────
+function runCode() {
+  if (isRunning) return;
+  const code = document.getElementById('editor').value.trim();
+  if (!code) return;
+  clearOutput();
+  setRunning(true);
+  setStatus('<span class="spinner"></span>Running...');
+  socket.emit('run', { code });
+}
+
+// ── Check types ───────────────────────────────────────────────────────────────
+function checkCode() {
+  const code = document.getElementById('editor').value.trim();
+  if (!code) return;
+  clearOutput();
+  setStatus('Checking...');
+
+  fetch('/api/check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code })
+  })
+  .then(r => r.json())
+  .then(function(data) {
+    setStatus('');
+    const issues = data.issues || [];
+    if (issues.length === 0) {
+      appendOutputLine('✓ No type issues found.');
+    } else {
+      issues.forEach(function(issue) {
+        const div = document.createElement('div');
+        div.className = issue.is_error ? 'issue-error' : 'issue-warn';
+        const prefix  = issue.is_error ? '✗ ERROR' : '⚠ WARNING';
+        const lineStr = issue.line ? ' [line ' + issue.line + ']' : '';
+        div.textContent = prefix + lineStr + ': ' + issue.message;
+        getOutput().appendChild(div);
+      });
+    }
+  })
+  .catch(function(err) {
+    setStatus('');
+    appendErrorBlock('Check failed: ' + err.message);
+  });
+}
+
+// ── File management ───────────────────────────────────────────────────────────
+const FALLBACK_FILES = [
+  'medical_triage.ledge',
+  'financial_analysis.ledge',
+  'llm_evaluator.ledge',
+  'legal_contracts.ledge',
+  'medical_chain.ledge',
+];
+
+function loadFiles() {
+  fetch('/api/files')
+    .then(r => r.json())
+    .then(function(data) {
+      const files = (data.files && data.files.length > 0) ? data.files : FALLBACK_FILES;
+      const sel  = document.getElementById('fileSelect');
+      const prev = sel.value;
+      while (sel.options.length > 1) sel.remove(1);
+      files.forEach(function(f) {
+        const opt = document.createElement('option');
+        opt.value = f; opt.textContent = f;
+        sel.appendChild(opt);
+      });
+      if (prev && files.includes(prev)) sel.value = prev;
+      // Update cwd label
+      const n = data.files ? data.files.length : 0;
+      document.getElementById('cwdLabel').textContent =
+        n > 0 ? n + ' .ledge file' + (n === 1 ? '' : 's') + ' in working directory'
+               : 'showing showcase files';
+    })
+    .catch(function() {
+      // Network error — still populate with fallbacks
+      const sel = document.getElementById('fileSelect');
+      while (sel.options.length > 1) sel.remove(1);
+      FALLBACK_FILES.forEach(function(f) {
+        const opt = document.createElement('option');
+        opt.value = f; opt.textContent = f;
+        sel.appendChild(opt);
+      });
+    });
+}
+
+function loadFile(name) {
+  if (!name) return;
+  fetch('/api/file/' + encodeURIComponent(name))
+    .then(r => r.json())
+    .then(function(data) {
+      if (data.content !== undefined) {
+        document.getElementById('editor').value = data.content;
+        clearOutput();
+      }
+    });
+}
+
+// ── Guarantees ────────────────────────────────────────────────────────────────
+function loadGuarantees() {
+  fetch('/api/guarantees')
+    .then(r => r.json())
+    .then(function(data) {
+      ['G1','G2','G3','G4'].forEach(function(g) {
+        const el = document.getElementById(g.toLowerCase());
+        const pass = data[g];
+        el.className = 'badge ' + (pass === true ? 'badge-pass' : pass === false ? 'badge-fail' : 'badge-pending');
+      });
+    });
+}
+
+// ── Output helpers ────────────────────────────────────────────────────────────
+function getOutput() {
+  const out = document.getElementById('output');
+  const ph = out.querySelector('.output-placeholder');
+  if (ph) ph.remove();
+  return out;
+}
+
+function colorClass(text) {
+  if (/===/.test(text))                                       return 'out-cyan';
+  if (!text.trim())                                           return 'out-empty';
+  if (/\b(ESCALATE|ERROR|TAMPERED|FAIL|FAILED|crash)\b/i.test(text)) return 'out-red';
+  if (/\bfalse\b/.test(text) && !/\btrue\b/.test(text))      return 'out-red';
+  if (/\b(true|INTACT|passed|PASS|OK)\b/.test(text))         return 'out-green';
+  if (/^-?[0-9][0-9.]*$/.test(text.trim()))                  return 'out-yellow';
+  return 'out-normal';
+}
+
+function appendOutputLine(text) {
+  const out = getOutput();
+  const span = document.createElement('span');
+  span.className = 'output-line ' + colorClass(text);
+  span.textContent = text;
+  out.appendChild(span);
+  out.appendChild(document.createTextNode('\n'));
+  out.scrollTop = out.scrollHeight;
+}
+
+function appendErrorBlock(text) {
+  const out = getOutput();
+  const div = document.createElement('div');
+  div.className = 'error-block';
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function clearOutput() {
+  document.getElementById('output').innerHTML =
+    '<span class="output-placeholder">Press &#9654; Run to execute — or Ctrl+Enter</span>';
+}
+
+function setRunning(val) {
+  isRunning = val;
+  const btn = document.getElementById('runBtn');
+  if (val) {
+    btn.disabled = true;
+    btn.innerHTML = '&#9632; Running';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '&#9654; Run';
+  }
+}
+
+function setStatus(html) {
+  document.getElementById('statusText').innerHTML = html;
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.getElementById('editor').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.slice(0, s) + '    ' + this.value.slice(end);
+    this.selectionStart = this.selectionEnd = s + 4;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runCode();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'K') {
+    e.preventDefault();
+    checkCode();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadFiles();
+loadGuarantees();
+setInterval(loadFiles, 6000);   // refresh file list every 6 s
+</script>
+</body>
+</html>

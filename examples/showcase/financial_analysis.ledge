@@ -1,0 +1,74 @@
+# Credit risk analysis — Ledge AI-first
+# Every risk decision has full explainability.
+# Immutable: once recorded in the audit trail, it cannot be altered.
+
+type Applicant has:
+    id:      text
+    income:  number
+    debt:    number
+    history: text
+
+define evaluate_credit(app: Applicant):
+    requires:
+        app.income > 0
+        app.debt >= 0
+    ensures:
+        has(result, "decision")
+        has(result, "explanation")
+        has(result, "confidence")
+
+    define debt_ratio as divide(app.debt, app.income) or 0
+    define analysis as analyze(app.history) using credit_risk
+
+    # Explainability: each factor that influenced the decision
+    define factors as list []
+
+    if debt_ratio > 0.4:
+        set factors to append(factors, "high_debt_ratio")
+    if debt_ratio < 0.2:
+        set factors to append(factors, "healthy_debt_ratio")
+
+    define conf as confidence_of(analysis)
+    define history_risk as "unknown"
+
+    if conf >= 0.75:
+        define ai_result as value_of(analysis) or map {}
+        set history_risk to ai_result["risk"] or "moderate"
+        set factors to append(factors, "history_analyzed")
+    else:
+        set factors to append(factors, "history_inconclusive")
+
+    define decision as "approve"
+    if debt_ratio > 0.5 or history_risk = "high":
+        set decision to "reject"
+    else if debt_ratio > 0.35 or history_risk = "moderate":
+        set decision to "review"
+
+    return map {
+        "applicant_id": app.id,
+        "decision":     decision,
+        "confidence":   conf,
+        "factors":      factors,
+        "debt_ratio":   debt_ratio,
+        "explanation":  "Decision based on {len(factors)} factors"
+    }
+
+define applicants as list [
+    Applicant(id="A001", income=80000, debt=12000, history="on-time payments for 5 years"),
+    Applicant(id="A002", income=45000, debt=32000, history="default in 2022, recovered"),
+    Applicant(id="A003", income=120000, debt=8000,  history="no prior credit history")
+]
+
+show "=== CREDIT RISK ANALYSIS ==="
+show ""
+
+for each app in applicants:
+    define r as evaluate_credit(app)
+    show "Applicant {r[\"applicant_id\"]}: {upper(r[\"decision\"])}"
+    show "  AI Confidence: {r[\"confidence\"]}"
+    show "  Factors: {r[\"factors\"]}"
+    show "  {r[\"explanation\"]}"
+    show ""
+
+show "Total audited decisions: {len(audit_query())}"
+show "Audit chain intact: {audit_verify()}"

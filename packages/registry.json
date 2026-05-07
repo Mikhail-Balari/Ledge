@@ -1,0 +1,81 @@
+{
+  "registry": "https://packages.ledge-lang.org",
+  "version": "1.0.0",
+  "packages": {
+    "ledge_math": {
+      "version": "1.0.0",
+      "description": "Math utilities for Ledge",
+      "path": "packages/ledge_math"
+    },
+    "ledge_text": {
+      "version": "1.0.0",
+      "description": "Text processing for AI pipelines",
+      "path": "packages/ledge_text"
+    },
+    "ledge_data": {
+      "version": "1.0.0",
+      "description": "Data pipeline utilities",
+      "path": "packages/ledge_data"
+    },
+    "ledge_ai_utils": {
+      "version": "1.0.0",
+      "description": "AI pipeline utilities with uncertainty handling",
+      "path": "packages/ledge_ai_utils"
+    },
+    "ledge_http": {
+      "version": "1.0.0",
+      "description": "HTTP client for Ledge programs",
+      "path": "packages/ledge_http"
+    },
+    "ledge_validation": {
+      "version": "1.0.0",
+      "description": "Ledge validation package",
+      "path": "packages/ledge_validation"
+    },
+    "ledge_datetime": {
+      "version": "1.0.0",
+      "description": "Ledge datetime package",
+      "path": "packages/ledge_datetime"
+    },
+    "ledge_cache": {
+      "version": "1.0.0",
+      "description": "Ledge cache package",
+      "path": "packages/ledge_cache"
+    },
+    "ledge_metrics": {
+      "version": "1.0.0",
+      "description": "Ledge metrics package",
+      "path": "packages/ledge_metrics"
+    },
+    "ledge_crypto": {
+      "version": "1.0.0",
+      "description": "Ledge crypto package",
+      "path": "packages/ledge_crypto"
+    },
+    "ledge_env": {
+      "version": "1.0.0",
+      "description": "Ledge env package",
+      "path": "packages/ledge_env"
+    },
+    "ledge_audit": {
+      "version": "1.0.0",
+      "description": "Ledge audit package",
+      "path": "packages/ledge_audit"
+    },
+    "ledge_io": {
+      "version": "1.0.0",
+      "description": "Ledge io package",
+      "path": "packages/ledge_io"
+    },
+    "ledge_strings": {
+      "version": "1.0.0",
+      "description": "Ledge strings package",
+      "path": "packages/ledge_strings"
+    },
+    "ledge_collections": {
+      "version": "1.0.0",
+      "description": "Ledge collections package",
+      "path": "packages/ledge_collections"
+    }
+  }
+}

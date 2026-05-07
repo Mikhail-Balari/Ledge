@@ -1,0 +1,71 @@
+# Legal contracts — Ledge AI-first
+# Extracts clauses from contracts and automatically flags low-confidence ones.
+# The system guarantees that NO low-confidence clause passes without review.
+
+define MIN_CONFIDENCE_CLAUSE as 0.80
+
+type Contract has:
+    id:   text
+    text: text
+
+define extract_clauses(contract: Contract):
+    requires:
+        len(contract.text) > 0
+        contract.id != ""
+    ensures:
+        has(result, "id")
+        has(result, "requires_human_review")
+
+    define analysis as analyze(contract.text) using legal_extraction
+
+    define conf as confidence_of(analysis)
+    define extracted_clauses as list []
+    define require_review as list []
+
+    if conf >= MIN_CONFIDENCE_CLAUSE:
+        define ai_result as value_of(analysis) or map {}
+        define clauses as ai_result["clauses"] or list []
+        set extracted_clauses to clauses
+        show "  {len(extracted_clauses)} clauses extracted with high confidence ({conf})"
+    else:
+        # Low confidence: entire contract goes to human review
+        set require_review to append(require_review, map {
+            "type":       "full_contract",
+            "reason":     "insufficient_confidence",
+            "confidence": conf
+        })
+        show "  HUMAN REVIEW REQUIRED (confidence={conf} < {MIN_CONFIDENCE_CLAUSE})"
+
+    return map {
+        "id":                    contract.id,
+        "clauses":               extracted_clauses,
+        "requires_human_review": require_review,
+        "analysis_confidence":   conf,
+        "auto_processed":        conf >= MIN_CONFIDENCE_CLAUSE
+    }
+
+define contracts as list [
+    Contract(id="C001", text="Confidentiality agreement. Duration 2 years. Breach penalty: 50000 USD."),
+    Contract(id="C002", text="Professional services contract with early termination and territorial exclusivity clauses."),
+    Contract(id="C003", text="Standard NDA with mutual non-disclosure terms and arbitration in case of dispute.")
+]
+
+show "=== LEGAL CLAUSE EXTRACTOR ==="
+show ""
+
+define results as list []
+for each c in contracts:
+    show "Contract {c.id}:"
+    define r as extract_clauses(c)
+    set results to append(results, r)
+
+show ""
+
+define auto_processed as filter(results, given r: r["auto_processed"] = true)
+define require_human as filter(results, given r: len(r["requires_human_review"]) > 0)
+
+show "Auto-processed: {len(auto_processed)}/{len(contracts)}"
+show "Require human review: {len(require_human)}/{len(contracts)}"
+show ""
+show "Without a real backend: all go to review (confidence=0)."
+show "Audit entries: {len(audit_query())} | Chain intact: {audit_verify()}"

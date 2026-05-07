@@ -1,0 +1,79 @@
+# Ledge MCP Agent — Autonomous AI with Tools
+# ============================================
+# An agent that uses MCP (Model Context Protocol) tools to answer questions.
+# This demonstrates Ledge's agent syntax for AI-first software.
+#
+# IMPORTANT: This example requires real MCP tool connections.
+# Without MCP tools connected, all tool calls return nothing.
+# The example gracefully handles this with or fallbacks.
+#
+# To run with real tools:
+#   ledge run mcp_agent.ledge --mcp brave-search --mcp wolfram-alpha
+#
+# This is EXPERIMENTAL syntax — MCP runtime connectivity is roadmap.
+# The program demonstrates the design; not a production deployment.
+
+# ── Define the agent structure ────────────────────────────────────────────────
+
+agent ResearchAgent:
+    tools:
+        search    from mcp "brave-search"
+        calculate from mcp "wolfram-alpha"
+
+    model: "claude-sonnet-4-6"
+
+    behavior:
+        define answer(question: text):
+            requires:
+                len(question) > 0
+
+            # Search for facts — with fallback if tool not connected
+            define search_results as search(question) or list []
+            define top_facts as stream_collect(stream_take(stream_of(search_results), 3))
+
+            # Generate response using AI
+            define context as "Question: {question}"
+            if len(top_facts) > 0:
+                set context to context + " | Facts: {top_facts}"
+
+            define response as generate(context) using text
+            define answer_text as when(response, 0.6, "No AI backend connected")
+
+            return map {
+                "question":  question,
+                "answer":    answer_text,
+                "sources":   len(top_facts),
+                "confident": is_confident(response)
+            }
+
+
+# ── Run the agent (without real MCP tools) ───────────────────────────────────
+
+show "=== ResearchAgent Demo ==="
+show ""
+
+define questions as list [
+    "What is the Model Context Protocol?",
+    "How does Ledge handle AI uncertainty?",
+    "What industries use AI-native programming languages?"
+]
+
+# Without real MCP + AI backend, results demonstrate the graceful fallback
+for each q in questions:
+    show "Q: {q}"
+
+    # Direct AI call (no tool use) — demonstrates Uncertain[T]
+    define response as generate("Answer briefly: " + q) using text
+    define answer_text as when(response, 0.6, "Connect an AI backend for answers")
+
+    show "A: {answer_text}"
+    show "   Confidence: {confidence_of(response)}"
+    show ""
+
+show "=== Session Summary ==="
+define log as audit_query()
+show "AI decisions logged: {len(log)}"
+show "All decisions are automatically traced."
+show ""
+show "Note: To use real MCP tools, connect a brave-search and wolfram-alpha MCP server."
+show "      Without connections, tool calls return nothing (never crash)."

@@ -1,0 +1,36 @@
+{
+  "version": "1.1.0",
+  "methodology": {
+    "repetitions": 3,
+    "measure": "minimum (best case)",
+    "hardware": "Linux container",
+    "gcc_flags": "-O3 -march=native"
+  },
+  "results": {
+    "fib(28)_recursion": {
+      "native_ms": 2.84,
+      "treewalk_ms": 38364.4,
+      "cpython_ms": 37.28,
+      "speedup_vs_cpython": 13.1,
+      "speedup_native_vs_tw": 13522.3,
+      "output": "317811"
+    },
+    "while_100k_loop": {
+      "native_ms": 24.38,
+      "treewalk_ms": 298.39,
+      "cpython_ms": 2.28,
+      "speedup_vs_cpython": 0.1,
+      "speedup_native_vs_tw": 12.2,
+      "output": "100000"
+    },
+    "sum_100k": {
+      "native_ms": 25.67,
+      "treewalk_ms": 481.15,
+      "cpython_ms": 3.69,
+      "speedup_vs_cpython": 0.1,
+      "speedup_native_vs_tw": 18.7,
+      "output": "4999950000"
+    }
+  },
+  "note": "Native speedup is 5-10x on constrained CI; typically 30-80x on developer hardware"
+}

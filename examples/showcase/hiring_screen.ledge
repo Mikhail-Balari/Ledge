@@ -1,0 +1,42 @@
+# Hiring screening system -- Guarantee 2: typechecker blocks unsafe AI use.
+# The Ledge typechecker prevents using AI output without verifying confidence.
+# Using 'show r' directly on an Uncertain value is a compile-time error.
+
+define THRESHOLD as 0.85
+
+type Candidate has:
+    id:      text
+    name:    text
+    cv:      text
+    role:    text
+
+define screen_candidate(candidate: Candidate):
+    define r as classify(candidate.cv) using ["hire", "reject", "maybe"]
+
+    # Typechecker BLOCKS: show r               (Unsafe use of Uncertain value)
+    # Typechecker ALLOWS: if confidence_of(r) >= THRESHOLD: show value_of(r)
+    if confidence_of(r) >= THRESHOLD:
+        show "CANDIDATE {candidate.id} ({candidate.name}): {value_of(r)} (confidence={confidence_of(r)})"
+        return value_of(r)
+    else:
+        show "CANDIDATE {candidate.id} ({candidate.name}): Needs human review (confidence={confidence_of(r)})"
+        return "review"
+
+define candidates as list [
+    Candidate(id="C001", name="Alice Chen", cv="10 years Python led 3 ML projects PhD computer science published researcher", role="Senior ML Engineer"),
+    Candidate(id="C002", name="Bob Martin", cv="2 years general coding no ML experience junior developer background only", role="Senior ML Engineer"),
+    Candidate(id="C003", name="Carol Smith", cv="5 years data science sklearn pytorch 2 deployed production models at scale", role="Senior ML Engineer")
+]
+
+show "=== HIRING SCREENING SYSTEM ==="
+show "Role: Senior ML Engineer"
+show "Typechecker: active -- unsafe AI use is a compile-time error"
+show ""
+
+for each c in candidates:
+    screen_candidate(c)
+
+show ""
+show "Guarantee 2 confirmed: every AI result is checked before use."
+show "The typechecker rejects 'show r' -- confidence was never verified."
+show "Decisions logged: {len(audit_query())} | Chain intact: {audit_verify()}"

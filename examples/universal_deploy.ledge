@@ -1,0 +1,88 @@
+# Ledge Universal Deployment Example
+# =====================================
+# The same program runs on: native, WASM, ARM32, serverless.
+# ledge run universal_deploy.ledge                 (native)
+# ledge run universal_deploy.ledge --target wasm   (browser) [roadmap]
+# ledge run universal_deploy.ledge --target arm32  (embedded) [roadmap]
+#
+# AI POLICY: Without a backend, Ledge returns confidence=0.0.
+# It NEVER invents confident classifications. This is a core safety guarantee.
+
+define classify_input(text: text):
+    requires:
+        len(text) > 0
+    ensures:
+        has(result, "label")
+        has(result, "confidence")
+
+    define result_ai as classify(text) using ["positive", "negative", "neutral"]
+
+    # Honest handling: only act on confident results
+    define label as when(result_ai, 0.7, "unclassified")
+    define conf  as confidence_of(result_ai)
+
+    return map {
+        "text":       text,
+        "label":      label,
+        "confidence": conf,
+        "reliable":   conf >= 0.7
+    }
+
+
+define process_batch(items: list):
+    define results    as list []
+    define classified as 0
+    define skipped    as 0
+
+    for each item in items:
+        check:
+            define r as classify_input(item)
+            set results to append(results, r)
+            if r["reliable"]:
+                set classified to classified + 1
+            else:
+                set skipped to skipped + 1
+        recover error:
+            set skipped to skipped + 1
+
+    return map {
+        "results":    results,
+        "classified": classified,
+        "skipped":    skipped
+    }
+
+
+define inputs as list [
+    "The new product exceeded all our expectations",
+    "Service was completely unacceptable",
+    "It was okay, nothing special",
+    "Absolutely love it, will buy again",
+    "Terrible experience, never returning"
+]
+
+show "=== Ledge Universal Classifier ==="
+show "Processing {len(inputs)} inputs..."
+show ""
+
+define batch as process_batch(inputs)
+
+show "Classified (confident): {batch[\"classified\"]}"
+show "Skipped (no AI backend / low confidence): {batch[\"skipped\"]}"
+show ""
+
+if batch["classified"] = 0:
+    show "No AI backend connected."
+    show "Connect a backend to get real classifications."
+    show "Without a backend, Ledge never invents confident answers."
+    show "This is a core safety guarantee of the language."
+else:
+    show "Results:"
+    for each r in batch["results"]:
+        if r["reliable"]:
+            define pct as round(r["confidence"] * 100)
+            show "  {r[\"label\"]} ({pct}%) — {r[\"text\"]}"
+
+show ""
+define log as audit_query()
+show "AI decisions in audit trail: {len(log)}"
+show "Every decision is traceable and reproducible."

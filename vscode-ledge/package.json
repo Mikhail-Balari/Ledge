@@ -1,0 +1,145 @@
+{
+  "name": "ledge-lang",
+  "displayName": "Ledge",
+  "description": "Language support for Ledge \u2014 the first programming language designed for AI generation",
+  "version": "1.1.0",
+  "publisher": "ledge-lang",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Formatters"
+  ],
+  "keywords": [
+    "ledge",
+    "ai",
+    "programming language",
+    "interpreter"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ledge-lang/ledge"
+  },
+  "activationEvents": [
+    "onLanguage:ledge"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "ledge",
+        "aliases": [
+          "Ledge",
+          "ledge"
+        ],
+        "extensions": [
+          ".ledge"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icon.png",
+          "dark": "./icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ledge",
+        "scopeName": "source.ledge",
+        "path": "./syntaxes/ledge.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "ledge",
+        "path": "./snippets/ledge.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "ledge.runFile",
+        "title": "Ledge: Run File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ledge.runSelection",
+        "title": "Ledge: Run Selection"
+      },
+      {
+        "command": "ledge.openRepl",
+        "title": "Ledge: Open REPL"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "ledge.runFile",
+          "when": "resourceExtname == .ledge",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "ledge.runFile",
+          "when": "resourceExtname == .ledge"
+        },
+        {
+          "command": "ledge.runSelection",
+          "when": "resourceExtname == .ledge && editorHasSelection"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "ledge.runFile",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
+        "when": "editorTextFocus && resourceExtname == .ledge"
+      }
+    ],
+    "configuration": {
+      "title": "Ledge",
+      "properties": {
+        "ledge.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to the Python interpreter with ledge-lang installed"
+        },
+        "ledge.showOutputOnRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically show the output panel when running a Ledge file"
+        },
+        "ledge.clearOutputOnRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clear the output panel before each run"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "ledge.keyword",
+        "description": "Color for Ledge keywords",
+        "defaults": {
+          "dark": "#C084FC",
+          "light": "#7C3AED",
+          "highContrast": "#C084FC"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

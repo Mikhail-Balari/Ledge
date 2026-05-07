@@ -1,0 +1,468 @@
+# ═══════════════════════════════════════════════════════════════════
+# Ledge Example Programs — Complete Feature Tour
+# ═══════════════════════════════════════════════════════════════════
+
+# ─── 01: Hello World ────────────────────────────────────────────────
+
+show "Hello, world"
+
+
+# ─── 02: Variables and types ────────────────────────────────────────
+
+define name as "Ledge"
+define version as 1
+define stable as false
+define pi_approx as 3.14159
+
+show "Language: " + name
+show "Version: " + version
+show "Stable: " + stable
+
+
+# ─── 03: String interpolation ───────────────────────────────────────
+
+define city as "Buenos Aires"
+define temp as 24
+
+show "Today in {city} it is {temp} degrees"
+show "Next year Ledge will be version {version + 1}"
+
+
+# ─── 04: Lists ──────────────────────────────────────────────────────
+
+define primes as list [2, 3, 5, 7, 11, 13]
+show "First prime: " + primes[0]
+show "Count: " + len(primes)
+
+define extended as append(primes, 17)
+show extended
+
+
+# ─── 05: Maps ───────────────────────────────────────────────────────
+
+define person as map {
+    "name": "Ada Lovelace",
+    "born": 1815,
+    "known_for": "first programmer"
+}
+
+show person["name"] + " born in " + person["born"]
+show "Known for: " + person.known_for
+
+
+# ─── 06: Arithmetic and math ────────────────────────────────────────
+
+define a as 100
+define b as 7
+
+show divide(a, b) or 0
+show modulo(a, b)
+show power(2, 10)
+show sqrt(144)
+show round(3.14159, 2)
+
+
+# ─── 07: Conditionals ───────────────────────────────────────────────
+
+define score as 87
+
+if score >= 90:
+    show "Grade: A"
+else if score >= 80:
+    show "Grade: B"
+else if score >= 70:
+    show "Grade: C"
+else:
+    show "Grade: F"
+
+
+# ─── 08: For loop ───────────────────────────────────────────────────
+
+define fruits as list ["apple", "banana", "cherry"]
+
+for each fruit in fruits:
+    show "I have a " + fruit
+
+
+# ─── 09: For with index (enumerate-style) ───────────────────────────
+
+define numbers as list [10, 20, 30, 40, 50]
+define total as 0
+
+for each n in numbers:
+    set total to total + n
+
+show "Sum: " + total
+show "Average: " + divide(total, len(numbers)) or 0
+
+
+# ─── 10: While loop ─────────────────────────────────────────────────
+
+define x as 1
+
+while x < 100:
+    set x to x * 2
+
+show "First power of 2 over 100: " + x
+
+
+# ─── 11: Repeat ─────────────────────────────────────────────────────
+
+define count as 0
+repeat 5 times:
+    set count to count + 1
+
+show "Counted to: " + count
+
+
+# ─── 12: Functions ──────────────────────────────────────────────────
+
+define greet(who):
+    show "Hello, " + who + "!"
+
+greet("Ledge")
+greet("world")
+
+
+define add(a, b):
+    return a + b
+
+define result as add(10, 32)
+show "10 + 32 = " + result
+
+
+# ─── 13: Functions with type hints ──────────────────────────────────
+
+define multiply(a: number, b: number):
+    return a * b
+
+show multiply(6, 7)
+
+
+# ─── 14: Recursive functions ────────────────────────────────────────
+
+define factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+show "10! = " + factorial(10)
+
+
+define fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+show "fib(10) = " + fibonacci(10)
+
+
+# ─── 15: Safe error handling — or fallback ──────────────────────────
+
+define dangerous as divide(100, 0) or 0
+show "Safe division: " + dangerous
+
+define safe_index as list [1, 2, 3]
+show safe_index[99] or "not found"
+
+define maybe_name as map {}
+show maybe_name["name"] or "anonymous"
+
+
+# ─── 16: Check blocks ───────────────────────────────────────────────
+
+check:
+    define data as divide(10, 0) or nothing
+    if data is nothing:
+        error("Division produced nothing")
+    show data
+recover err:
+    show "Caught: " + err
+always:
+    show "This always runs"
+
+
+# ─── 17: Pattern matching ───────────────────────────────────────────
+
+define status as "active"
+
+match status:
+    case "active":
+        show "System is running"
+    case "paused":
+        show "System is paused"
+    case "stopped":
+        show "System has stopped"
+    otherwise:
+        show "Unknown status: " + status
+
+
+# ─── 18: Lambda functions ───────────────────────────────────────────
+
+define double as given x: x * 2
+define square as given x: x * x
+define add_two as given (a, b): a + b
+
+show double(5)
+show square(9)
+show add_two(3, 4)
+
+
+# ─── 19: Higher-order functions ─────────────────────────────────────
+
+define nums as list [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+define doubled as map(nums, given x: x * 2)
+show doubled
+
+define evens as filter(nums, given x: modulo(x, 2) = 0)
+show evens
+
+show sum(evens)
+
+
+# ─── 20: User-defined types ─────────────────────────────────────────
+
+type Point has:
+    x: number
+    y: number
+
+type Rectangle has:
+    origin: any
+    width: number
+    height: number
+
+define p1 as Point(0, 0)
+define p2 as Point(10, 5)
+
+show "Point: ({p1.x}, {p1.y})"
+
+define rect as Rectangle(p1, 100, 50)
+show "Area: " + rect.width * rect.height
+
+
+# ─── 21: Closures ───────────────────────────────────────────────────
+
+define make_counter():
+    define count as 0
+    define increment():
+        set count to count + 1
+        return count
+    return increment
+
+define counter as make_counter()
+show counter()
+show counter()
+show counter()
+
+
+# ─── 22: String operations ──────────────────────────────────────────
+
+define sentence as "  The quick brown fox  "
+define cleaned as trim(sentence)
+define words as split(cleaned, " ")
+
+show "Word count: " + len(words)
+show "Upper: " + upper(cleaned)
+
+for each word in words:
+    if starts_with(word, "f"):
+        show "Found f-word: " + word
+
+
+# ─── 23: Map operations ─────────────────────────────────────────────
+
+define config as map {
+    "host": "localhost",
+    "port": 8080,
+    "debug": true
+}
+
+show keys(config)
+show has(config, "port")
+
+define updated as merge(config, map {"port": 9000})
+show updated["port"]
+
+
+# ─── 24: Nested data structures ─────────────────────────────────────
+
+define team as list [
+    map {"name": "Alice", "role": "lead"},
+    map {"name": "Bob",   "role": "dev"},
+    map {"name": "Carol", "role": "dev"}
+]
+
+for each member in team:
+    show member["name"] + " is " + member["role"]
+
+define leads as filter(team, given m: m["role"] = "lead")
+show "Leads: " + len(leads)
+
+
+# ─── 25: Parallel execution ─────────────────────────────────────────
+
+# Simulated parallel: in v0.1 runs sequentially, v1.0 uses async
+define results as parallel [
+    add(1, 2),
+    add(3, 4),
+    add(5, 6)
+]
+
+show results
+show sum(results)
+
+
+# ─── 26: Generator functions ────────────────────────────────────────
+
+define even_numbers(limit):
+    define n as 0
+    while n <= limit:
+        if modulo(n, 2) = 0:
+            yield n
+        set n to n + 1
+
+define evens_to_20 as even_numbers(20)
+show evens_to_20
+
+
+# ─── 27: Complex algorithm — quicksort ──────────────────────────────
+
+define quicksort(lst):
+    if len(lst) <= 1:
+        return lst
+    define pivot as lst[0]
+    define rest as slice(lst, 1)
+    define smaller as filter(rest, given x: x < pivot)
+    define greater as filter(rest, given x: x >= pivot)
+    return merge(quicksort(smaller), merge(list [pivot], quicksort(greater)))
+
+define unsorted as list [64, 34, 25, 12, 22, 11, 90]
+define sorted_list as quicksort(unsorted)
+show sorted_list
+
+
+# ─── 28: FizzBuzz ───────────────────────────────────────────────────
+
+for each n in range(1, 21):
+    if modulo(n, 15) = 0:
+        show "FizzBuzz"
+    else if modulo(n, 3) = 0:
+        show "Fizz"
+    else if modulo(n, 5) = 0:
+        show "Buzz"
+    else:
+        show n
+
+
+# ─── 29: Data pipeline ──────────────────────────────────────────────
+
+define sales as list [
+    map {"product": "Widget A", "amount": 1200, "region": "north"},
+    map {"product": "Widget B", "amount": 850,  "region": "south"},
+    map {"product": "Widget A", "amount": 2100, "region": "south"},
+    map {"product": "Widget C", "amount": 430,  "region": "north"},
+    map {"product": "Widget B", "amount": 1680, "region": "north"}
+]
+
+define north_sales as filter(sales, given s: s["region"] = "north")
+define north_total as sum(map(north_sales, given s: s["amount"]))
+
+show "North region total: " + north_total
+
+define top_sales as filter(sales, given s: s["amount"] > 1000)
+show "High-value transactions: " + len(top_sales)
+
+
+# ─── 30: String builder pattern ─────────────────────────────────────
+
+define build_report(data):
+    define lines as list []
+    for each item in data:
+        define line as item["product"] + ": $" + item["amount"]
+        set lines to append(lines, line)
+    return join(lines, "\n")
+
+show build_report(sales)
+
+
+# ─── 31: AI-Native — Uncertain[T] ───────────────────────────────────
+# The core Ledge innovation: AI results carry mandatory confidence.
+# Without a backend, confidence = 0.0 and value = nothing.
+# The language enforces safe handling.
+
+define review as "This product exceeded my expectations!"
+define sentiment as analyze(review) using sentiment
+
+show "Confident? " + is_confident(sentiment)
+show "Confidence: " + confidence_of(sentiment)
+show when(sentiment, 0.8, "not confident enough to act")
+
+
+# ─── 32: AI Classification with fallback ────────────────────────────
+
+define email_text as "URGENT: Production server is down"
+define category as classify(email_text) using ["urgent", "normal", "spam"]
+
+show "Category: " + when(category, 0.7, "unclassified")
+show "Confidence: " + confidence_of(category)
+
+
+# ─── 33: Audit Trail — automatic, tamper-evident ────────────────────
+# Every AI call is automatically logged — no extra code needed.
+
+define r1 as analyze("great product") using sentiment
+define r2 as analyze("terrible service") using sentiment
+define r3 as classify("hello world") using ["greeting", "other"]
+
+define audit_log as audit_query()
+show "AI decisions recorded: " + len(audit_log)
+show "All decisions are traceable and reproducible."
+
+
+# ─── 34: Streams — lazy reactive sequences ───────────────────────────
+
+define numbers as stream_of(list [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+define evens   as stream_where(numbers, given x: modulo(x, 2) = 0)
+define doubled as stream_map(evens, given x: x * 2)
+
+show "Doubled evens: " + stream_collect(doubled)
+
+
+# ─── 35: Reactive streams ────────────────────────────────────────────
+
+define sensor_data as stream_of(list [
+    map {"sensor": "T1", "value": 72.3},
+    map {"sensor": "T2", "value": 91.5},
+    map {"sensor": "T3", "value": 65.0}
+])
+
+define alerts as list []
+when sensor_data has new item as reading:
+    if reading["value"] > 85:
+        set alerts to append(alerts, reading["sensor"])
+
+show "Overheat alerts: " + alerts
+
+
+# ─── 36: Contracts — verifiable function invariants ─────────────────
+
+define safe_sqrt(x: number):
+    requires:
+        x >= 0
+    ensures:
+        result >= 0
+    return sqrt(x) or 0
+
+show "sqrt(25): " + safe_sqrt(25)
+show "sqrt(0):  " + safe_sqrt(0)
+
+
+# ─── 37: Python interop ──────────────────────────────────────────────
+# The entire Python ecosystem is one line away.
+
+import "python:math" as m
+
+show "Python math.pi: " + m["pi"]
+show "Python math.sqrt(144): " + m["sqrt"](144)
+show "Python math.log(2.718): " + round(m["log"](2.718), 4)

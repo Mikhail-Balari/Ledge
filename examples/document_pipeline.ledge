@@ -1,0 +1,154 @@
+# Ledge Killer App 1: AI Document Analysis Pipeline
+# ====================================================
+# Processes documents through a multi-stage AI pipeline.
+# Every decision is automatically audited.
+# Confidence gates prevent low-quality results from propagating.
+#
+# This demonstrates the core Ledge advantage:
+# - Uncertain[T] makes confidence handling mandatory, not optional
+# - Audit trail is automatic — no extra code
+# - Contracts prevent invalid inputs silently
+# - Fallback operator handles every failure case
+
+type Document has:
+    id:      text
+    title:   text
+    content: text
+    source:  text
+
+type AnalysisResult has:
+    doc_id:     text
+    category:   text
+    sentiment:  text
+    confidence: number
+    reliable:   truth
+    summary:    text
+
+define analyze_document(doc: Document):
+    requires:
+        len(doc.content) > 0
+        len(doc.id) > 0
+    ensures:
+        result["doc_id"] = doc.id
+        result["confidence"] >= 0
+        result["confidence"] <= 1
+
+    # Stage 1: Classify the document type
+    define category_result as classify(doc.content) using [
+        "technical", "financial", "legal", "medical", "general"
+    ]
+
+    # Stage 2: Sentiment analysis
+    define sentiment_result as analyze(doc.content) using sentiment
+
+    # Stage 3: Generate summary — only if we have confident classification
+    define category  as when(category_result, 0.75, "unclassified")
+    define sentiment as when(sentiment_result, 0.70, "unknown")
+    define cat_conf  as confidence_of(category_result)
+    define sent_conf as confidence_of(sentiment_result)
+
+    # Confidence is the minimum of all analysis steps
+    define overall_confidence as min(list [cat_conf, sent_conf])
+    define is_reliable as overall_confidence >= 0.70
+
+    return map {
+        "doc_id":      doc.id,
+        "title":       doc.title,
+        "category":    category,
+        "sentiment":   sentiment,
+        "confidence":  overall_confidence,
+        "reliable":    is_reliable,
+        "source":      doc.source
+    }
+
+
+define run_pipeline(documents: list):
+    requires:
+        len(documents) > 0
+    ensures:
+        len(result["processed"]) = len(documents)
+
+    define processed as list []
+    define high_conf  as list []
+    define low_conf   as list []
+    define errors     as list []
+
+    for each doc in documents:
+        check:
+            define result as analyze_document(doc)
+            set processed to append(processed, result)
+            if result["reliable"]:
+                set high_conf to append(high_conf, result)
+            else:
+                set low_conf to append(low_conf, result)
+        recover error:
+            set errors to append(errors, map {
+                "doc_id": doc.id,
+                "error":  error
+            })
+
+    return map {
+        "processed":       processed,
+        "high_confidence": high_conf,
+        "low_confidence":  low_conf,
+        "errors":          errors,
+        "total":           len(documents),
+        "reliable_count":  len(high_conf)
+    }
+
+
+# ── Run the pipeline ──────────────────────────────────────────────────────────
+
+define documents as list [
+    Document(
+        id="DOC-001",
+        title="Q3 Financial Report",
+        content="Revenue increased 23% year-over-year. Operating margins improved to 18.5%.",
+        source="finance-dept"
+    ),
+    Document(
+        id="DOC-002",
+        title="Patient Care Protocol v2.1",
+        content="Administer 10mg twice daily. Monitor liver function every 3 months.",
+        source="medical-dept"
+    ),
+    Document(
+        id="DOC-003",
+        title="Software Architecture Proposal",
+        content="Microservices with event-driven communication via message queue.",
+        source="engineering"
+    )
+]
+
+show "=== Document Analysis Pipeline ==="
+show "Processing {len(documents)} documents..."
+show ""
+
+define results as run_pipeline(documents)
+
+show "Total processed:   {results[\"total\"]}"
+show "High confidence:   {results[\"reliable_count\"]}"
+show "Low confidence:    {len(results[\"low_confidence\"])}"
+show "Errors:            {len(results[\"errors\"])}"
+show ""
+
+if results["reliable_count"] > 0:
+    show "High-confidence results:"
+    for each r in results["high_confidence"]:
+        define pct as round(r["confidence"] * 100)
+        show "  [{r[\"doc_id\"]}] {r[\"title\"]}: {r[\"category\"]} / {r[\"sentiment\"]} ({pct}% confident)"
+
+if len(results["low_confidence"]) > 0:
+    show ""
+    show "Low-confidence results (review manually):"
+    for each r in results["low_confidence"]:
+        show "  [{r[\"doc_id\"]}] {r[\"title\"]}: insufficient confidence for automated processing"
+
+show ""
+show "=== Audit Trail ==="
+define audit_log as audit_query()
+show "Total AI decisions recorded: {len(audit_log)}"
+show "Every decision is timestamped, hashed, and traceable."
+show ""
+show "Note: Without an AI backend, all confidence scores are 0.0"
+show "      Connect a backend for real analysis."

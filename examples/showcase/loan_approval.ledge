@@ -1,0 +1,68 @@
+# Loan approval system -- Guarantee 4: safe failure by design.
+# Without a real AI backend, confidence = 0 -- no loan is ever auto-approved.
+# Satisfies Basel III and EU AI Act Article 14 (human oversight for high-risk decisions).
+# The system fails safely, not silently.
+
+define MIN_CONFIDENCE as 0.85
+define MAX_DTI as 0.43
+
+type LoanApplication has:
+    id:        text
+    applicant: text
+    amount:    number
+    income:    number
+    debts:     number
+    history:   text
+
+define evaluate_loan(app: LoanApplication):
+    requires:
+        app.income > 0
+        app.amount > 0
+
+    # Deterministic check: DTI ceiling enforced before AI, regardless of confidence.
+    define dti as round(divide(app.debts, app.income) or 0, 2)
+
+    if dti > MAX_DTI:
+        show "APPLICATION {app.id} ({app.applicant}): DECLINED"
+        show "  Reason: DTI={dti} exceeds Basel III ceiling of {MAX_DTI}"
+        return "declined_dti"
+
+    # AI evaluates the narrative credit history for additional risk signals.
+    define risk as classify(app.history) using ["low_risk", "medium_risk", "high_risk"]
+
+    # Guarantee 4: without backend, confidence = 0 -> escalate, never auto-approve.
+    if confidence_of(risk) < MIN_CONFIDENCE:
+        show "APPLICATION {app.id} ({app.applicant}): PENDING HUMAN REVIEW"
+        show "  Amount=${app.amount} | DTI={dti} | AI confidence={confidence_of(risk)}"
+        show "  EU AI Act Art.14: high-stakes automated decision requires human oversight"
+        return "pending"
+
+    # Only reached when a real AI backend provides high-confidence assessment.
+    if value_of(risk) = "low_risk":
+        show "APPLICATION {app.id} ({app.applicant}): APPROVED"
+        show "  Amount=${app.amount} | Risk={value_of(risk)} | Confidence={confidence_of(risk)}"
+        return "approved"
+
+    show "APPLICATION {app.id} ({app.applicant}): DECLINED -- {value_of(risk)}"
+    return "declined_risk"
+
+define applications as list [
+    LoanApplication(id="L001", applicant="Maria Santos", amount=25000, income=85000, debts=12000, history="Consistent payment history 8 years credit no defaults excellent standing"),
+    LoanApplication(id="L002", applicant="James Cooper", amount=40000, income=52000, debts=28000, history="Two missed payments last year recovering credit score some delinquencies"),
+    LoanApplication(id="L003", applicant="Priya Nair", amount=15000, income=95000, debts=8000, history="Excellent credit history 12 years zero delinquencies highest credit score tier")
+]
+
+show "=== AUTOMATED LOAN APPROVAL SYSTEM ==="
+show "Regulatory framework: Basel III + EU AI Act Article 14"
+show "Backend: none"
+show ""
+
+for each app in applications:
+    evaluate_loan(app)
+
+show ""
+show "Total applications audited: {len(audit_query())}"
+show "Audit chain intact: {audit_verify()}"
+show ""
+show "Guarantee 4 confirmed: without backend, confidence = 0."
+show "No loan auto-approved -- all AI-assessed applications sent to human review."

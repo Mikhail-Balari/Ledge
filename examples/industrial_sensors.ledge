@@ -1,0 +1,58 @@
+# Ledge Real-World Examples
+# The programs below run exactly as written. No imports. No boilerplate. No crashes.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EXAMPLE 1: Industrial Sensor Monitoring (Siemens / Rockwell use case)
+# Deploy the same code on a PLC, an edge server, and a cloud dashboard.
+# ledge run sensors.ledge
+# Note: --target native available when clang installed (v1.2 roadmap)
+# ─────────────────────────────────────────────────────────────────────────────
+
+define CRITICAL_TEMP as 85
+define WARNING_TEMP  as 70
+define SAMPLE_RATE   as 5
+
+# Simulated sensors (real-time stream from external sources is ROADMAP — see docs/ROADMAP.md)
+define sensor_readings as stream_of(list [
+    map {"id": "T1", "value": 72.3, "unit": "C"},
+    map {"id": "T2", "value": 91.5, "unit": "C"},
+    map {"id": "T3", "value": 68.1, "unit": "C"},
+    map {"id": "T4", "value": 87.2, "unit": "C"},
+    map {"id": "T1", "value": 65.0, "unit": "C"}
+])
+
+define alerts as list []
+define warnings as list []
+
+when sensor_readings has new item as reading:
+    define temp as reading["value"]
+    define sensor as reading["id"]
+
+    if temp > CRITICAL_TEMP:
+        set alerts to append(alerts, map {
+            "sensor":  sensor,
+            "temp":    temp,
+            "level":   "CRITICAL",
+            "message": "Sensor {sensor}: {temp}°C exceeds critical threshold"
+        })
+    else if temp > WARNING_TEMP:
+        set warnings to append(warnings, map {
+            "sensor":  sensor,
+            "temp":    temp,
+            "level":   "WARNING",
+            "message": "Sensor {sensor}: {temp}°C in warning range"
+        })
+
+show "=== Sensor Report ==="
+show "Alerts:   {len(alerts)}"
+show "Warnings: {len(warnings)}"
+
+for each alert in alerts:
+    show alert["message"]
+
+# AI analysis of anomalies (works on cloud, degrades gracefully on embedded)
+if len(alerts) > 0:
+    define anomaly_text as join(map(alerts, given a: a["message"]), "; ")
+    define analysis as analyze(anomaly_text) using anomaly_detection
+    show "AI confidence in anomaly: {confidence_of(analysis)}"
+    show when(analysis, 0.7, "Insufficient data for AI analysis")

@@ -1,0 +1,47 @@
+# Medical diagnosis audit -- Guarantee 3: cryptographic audit trail.
+# Every AI diagnosis is recorded in a hash chain -- any modification is detectable.
+# Each entry links to the previous via SHA-256. Tampering breaks the chain.
+
+define MIN_CONFIDENCE as 0.80
+
+type DiagnosisRequest has:
+    patient_id: text
+    symptoms:   text
+    doctor_id:  text
+
+define diagnose(req: DiagnosisRequest):
+    requires:
+        len(req.symptoms) > 0
+
+    # Every call to analyze() is automatically recorded in the tamper-evident audit trail.
+    define result as analyze(req.symptoms) using differential_diagnosis
+
+    if confidence_of(result) < MIN_CONFIDENCE:
+        show "PATIENT {req.patient_id}: INDETERMINATE -- confidence={confidence_of(result)}"
+        show "  Ordered by Dr.{req.doctor_id} -- refer to specialist"
+        return map {"status": "indeterminate"}
+
+    define diagnosis as value_of(result) or map {"condition": "unknown"}
+    show "PATIENT {req.patient_id}: {diagnosis[\"condition\"] or \"see notes\"}"
+    show "  Confidence: {confidence_of(result)} | Ordered by Dr.{req.doctor_id}"
+    return map {"status": "diagnosed", "confidence": confidence_of(result)}
+
+define requests as list [
+    DiagnosisRequest(patient_id="MR-001", symptoms="persistent cough fever night sweats 3 weeks duration", doctor_id="JONES"),
+    DiagnosisRequest(patient_id="MR-002", symptoms="sudden severe headache photophobia neck stiffness vomiting", doctor_id="PATEL"),
+    DiagnosisRequest(patient_id="MR-003", symptoms="chest tightness wheezing shortness of breath worsens at night", doctor_id="CHEN")
+]
+
+show "=== MEDICAL DIAGNOSIS AUDIT SYSTEM ==="
+show ""
+
+for each req in requests:
+    diagnose(req)
+
+show ""
+show "Diagnoses recorded in audit trail: {len(audit_query())}"
+show "Cryptographic chain intact: {audit_verify()}"
+show ""
+show "Each entry is SHA-256 linked to the previous one."
+show "Any modification to any field breaks the chain."
+show "Guarantee 3 confirmed: tamper-evident log -- every diagnosis is permanently traceable."

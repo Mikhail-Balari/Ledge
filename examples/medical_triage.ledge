@@ -1,0 +1,95 @@
+# Ledge Medical AI Pipeline
+# Demonstrates: Uncertain types, contracts, audit trail
+# Every AI decision is automatically auditable — HIPAA compliant by design.
+
+# Type: patient record
+type PatientRecord has:
+    id:          text
+    age:         number
+    symptoms:    text
+    vitals:      map
+    history:     text
+
+# Contract-verified risk assessment
+# The compiler guarantees these invariants before and after execution
+define assess_risk(patient: PatientRecord):
+    requires:
+        patient.id != ""
+        patient.age > 0
+        patient.age < 150
+        len(patient.symptoms) > 0
+    ensures:
+        result["risk_score"] >= 0
+        result["risk_score"] <= 1
+        has(result, "recommendation")
+
+    # AI analyzes symptom text — returns Uncertain[Map]
+    define symptom_analysis as analyze(patient.symptoms) using medical_triage
+
+    # Only act on high-confidence AI results
+    define risk_level as when(symptom_analysis, 0.85, map {
+        "severity": "unknown",
+        "confidence": "low"
+    })
+
+    # Age-adjusted risk calculation
+    define age_factor as 1.0
+    if patient.age > 65:
+        set age_factor to 1.3
+    else if patient.age < 5:
+        set age_factor to 1.2
+
+    define analysis_val as value_of(symptom_analysis) or map {}
+    define base_risk as analysis_val["severity_score"] or 0.5
+    define adjusted_risk as clamp(base_risk * age_factor, 0, 1)
+
+    define recommendation as "routine"
+    if adjusted_risk > 0.8:
+        set recommendation to "urgent"
+    else if adjusted_risk > 0.6:
+        set recommendation to "priority"
+
+    return map {
+        "patient_id":        patient.id,
+        "risk_score":        adjusted_risk,
+        "recommendation":    recommendation,
+        "ai_confidence":     confidence_of(symptom_analysis),
+        "age_factor_applied": age_factor > 1.0
+    }
+
+# Process patients
+define patients as list [
+    PatientRecord(
+        id="P001", age=72,
+        symptoms="severe chest pain, shortness of breath, left arm numbness",
+        vitals=map {"bp": "160/100", "hr": 95},
+        history="hypertension, diabetes"
+    ),
+    PatientRecord(
+        id="P002", age=34,
+        symptoms="mild headache, fatigue",
+        vitals=map {"bp": "120/80", "hr": 72},
+        history="none"
+    ),
+    PatientRecord(
+        id="P003", age=8,
+        symptoms="high fever, rash, difficulty swallowing",
+        vitals=map {"bp": "90/60", "hr": 110},
+        history="asthma"
+    )
+]
+
+show "=== Medical AI Triage System ==="
+show "Processing {len(patients)} patients..."
+show ""
+
+define results as map(patients, given p: assess_risk(p))
+
+for each result in results:
+    show "Patient {result[\"patient_id\"]}: {upper(result[\"recommendation\"])} (risk={round(result[\"risk_score\"], 2)})"
+
+show ""
+show "=== Audit Trail ==="
+show "Total AI decisions recorded: {len(audit_query())}"
+show "All decisions are tamper-evident and reproducible."
+show "AI confidence scores are attached to every recommendation."

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Ledge",
+  "scopeName": "source.ledge",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords-control" },
+    { "include": "#keywords-definition" },
+    { "include": "#keywords-ai" },
+    { "include": "#keywords-types" },
+    { "include": "#keywords-operators" },
+    { "include": "#constants" },
+    { "include": "#builtins" },
+    { "include": "#function-call" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.number-sign.ledge",
+      "match": "#.*$"
+    },
+    "strings": {
+      "name": "string.quoted.double.ledge",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.ledge",
+          "match": "\\\\[ntr\"\\\\{}]"
+        },
+        {
+          "name": "meta.interpolation.ledge",
+          "begin": "\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.interpolation.begin.ledge" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.interpolation.end.ledge" }
+          },
+          "patterns": [
+            { "include": "#numbers" },
+            { "include": "#keywords-operators" },
+            { "include": "#function-call" },
+            { "include": "#identifiers" }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.ledge",
+          "match": "\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.ledge",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "keywords-control": {
+      "name": "keyword.control.ledge",
+      "match": "\\b(if|else|for|each|in|while|repeat|until|times|match|case|otherwise|check|recover|always|return|break|continue|pass|yield|run|wait|parallel|collect)\\b"
+    },
+    "keywords-definition": {
+      "name": "keyword.declaration.ledge",
+      "match": "\\b(define|as|set|to|given|type|has|import|from|export|native)\\b"
+    },
+    "keywords-ai": {
+      "name": "keyword.other.ai.ledge",
+      "match": "\\b(analyze|generate|ask|embed|classify|using)\\b"
+    },
+    "keywords-types": {
+      "name": "support.type.ledge",
+      "match": "\\b(text|number|truth|list|map|nothing|any)\\b"
+    },
+    "keywords-operators": {
+      "name": "keyword.operator.word.ledge",
+      "match": "\\b(and|or|not|is)\\b"
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.ledge",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "constant.language.null.ledge",
+          "match": "\\bnothing\\b"
+        }
+      ]
+    },
+    "builtins": {
+      "name": "support.function.builtin.ledge",
+      "match": "\\b(show|len|range|append|remove|slice|merge|join|sum|max|min|sort|reverse|filter|map|has|keys|values|split|trim|upper|lower|replace|contains|starts_with|ends_with|divide|modulo|power|sqrt|abs|round|floor|ceil|log|sin|cos|random|now|json_parse|json_stringify|type|number|text|truth|error|assert)(?=\\()"
+    },
+    "function-call": {
+      "name": "entity.name.function.ledge",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\()"
+    },
+    "identifiers": {
+      "name": "variable.other.ledge",
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+    }
+  }
+}
