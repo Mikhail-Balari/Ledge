@@ -39,7 +39,7 @@ send_treatment_recommendation(result["diagnosis"])
 In Ledge, this is caught before the program runs:
 
 ```ledge
-define result as classify(symptoms) using diagnoses
+define result as classify(symptoms) using ["urgent", "routine", "monitor"]
 show result
 # STATIC ANALYSIS ERROR: Unsafe use of Uncertain value
 # Confidence was never verified.
@@ -49,7 +49,7 @@ show result
 The only way to use the result is to handle uncertainty explicitly:
 
 ```ledge
-define result as classify(symptoms) using diagnoses
+define result as classify(symptoms) using ["urgent", "routine", "monitor"]
 if confidence_of(result) >= 0.85:
     show value_of(result)
 else:
