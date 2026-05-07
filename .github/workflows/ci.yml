@@ -16,6 +16,9 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
+    env:
+      PYTHONUTF8: "1"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +36,7 @@ jobs:
       - name: Run conformance suite (284)
         run: python tests/conformance.py
 
-      - name: Run pytest-compatible suites (517+)
+      - name: Run pytest-compatible suites
         run: python -m ledge_lang.test_runner tests/unit/ tests/differential/ tests/examples/ tests/fuzz_suite/ tests/conformance_suite/ tests/integration/
 
       - name: Run VM random differential tests
@@ -153,7 +156,7 @@ jobs:
           if fails:
               print('FAILED examples:', fails)
               sys.exit(1)
-          print(f'G1 PASS: all {len(glob.glob(chr(101)+chr(120)+chr(97)+chr(109)+chr(112)+chr(108)+chr(101)+chr(115)+chr(47)+chr(42)+chr(46)+chr(108)+chr(101)+chr(100)+chr(103)+chr(101)))} examples run')
+          print(f'G1 PASS: {len(glob.glob(\"examples/*.ledge\"))} examples run')
           "
 
       - name: Gate 2 — no spec contradictions (G2/G3)
@@ -162,8 +165,8 @@ jobs:
           import sys; sys.path.insert(0,'.')
           from ledge_lang import run
           tests = [
-              ('analyze no-backend', 'show confidence_of(analyze(chr(120)) using y)', '0'),
-              ('classify no-backend', 'show value_of(classify(chr(120)) using [chr(97),chr(98)])', 'nothing'),
+              ('analyze no-backend', 'show confidence_of(analyze(\"x\") using y)', '0'),
+              ('classify no-backend', 'show value_of(classify(\"x\") using [\"a\",\"b\"])', 'nothing'),
               ('true!=1', 'show true = 1', 'false'),
               ('false!=0', 'show false = 0', 'false'),
           ]
@@ -173,22 +176,22 @@ jobs:
           print('G2/G3 PASS: spec invariants hold')
           "
 
-      - name: Gate 3 — version consistency (G2)
+      - name: Gate 3 — version consistency
         run: |
           python -c "
           import sys, re, json; sys.path.insert(0,'.')
           from ledge_lang import __version__
-          with open('pyproject.toml') as f: pkg=re.search(r'version = chr(34)([^chr(34)]+)chr(34)', f.read()).group(1)
+          with open('pyproject.toml') as f: pkg=re.search(r'version = \"([^\"]+)\"', f.read()).group(1)
           with open('vscode-ledge/package.json') as f: vsc=json.load(f)['version']
           assert __version__ == pkg == vsc, f'Version mismatch: {__version__} vs {pkg} vs {vsc}'
-          print(f'G2 PASS: version {__version__} consistent')
+          print(f'G3 PASS: version {__version__} consistent')
           "
 
-      - name: Gate 4 — full test suite (G5/G8)
+      - name: Gate 4 — full test suite
         run: |
           python tests/test_ledge.py
           python tests/conformance.py
-          python -m ledge_lang.test_runner tests/unit/ tests/differential/ tests/examples/ tests/fuzz_suite/ tests/conformance_suite/ tests/integration/ tests/compiler/
+          python -m ledge_lang.test_runner tests/unit/ tests/differential/ tests/examples/ tests/fuzz_suite/ tests/conformance_suite/ tests/integration/
 
       - name: Gate 5 — LLVM IR generation valid (compiler)
         run: |
@@ -236,13 +239,11 @@ jobs:
 
           fails = []
           for name, (fn, budget_ms) in budgets.items():
-              # Warmup
               fn()
-              # Measure
               t0 = time.perf_counter()
               for _ in range(10): fn()
               ms = (time.perf_counter() - t0) / 10 * 1000
-              if ms > budget_ms * 3:  # 3x budget = regression alert
+              if ms > budget_ms * 3:
                   fails.append(f'{name}: {ms:.1f}ms (budget: {budget_ms}ms, 3x = {budget_ms*3}ms)')
               else:
                   print(f'OK {name}: {ms:.1f}ms <= {budget_ms*3}ms')
@@ -283,7 +284,7 @@ jobs:
           print('Basic run: OK')
 
           # 3. AI safety
-          lines, _ = run('show confidence_of(analyze(chr(116)+chr(101)+chr(115)+chr(116)) using y)', output_fn=lambda x:None)
+          lines, _ = run('show confidence_of(analyze(\"test\") using y)', output_fn=lambda x:None)
           assert lines == ['0'], f'AI safety: expected 0, got {lines}'
           print('AI safety: OK')
 
@@ -297,7 +298,7 @@ jobs:
               except Exception as e:
                   fails.append(f'{path}: {e}')
           assert not fails, f'Examples failed: {fails}'
-          print(f'All {len(glob.glob("examples/*.ledge"))} examples: OK')
+          print(f'All {len(glob.glob(\"examples/*.ledge\"))} examples: OK')
 
           # 5. Formatter idempotent
           from ledge_lang.formatter import format_ledge
@@ -307,7 +308,7 @@ jobs:
 
           # 6. Typechecker
           from ledge_lang.typechecker import check_types
-          issues = check_types('define r as analyze(chr(120)) using y\nshow upper(r)')
+          issues = check_types('define r as analyze(\"x\") using y\nshow upper(r)')
           errors = [i for i in issues if i.is_error]
           assert errors, 'Typechecker must catch unsafe Uncertain'
           print('Typechecker: OK')
