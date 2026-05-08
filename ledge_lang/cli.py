@@ -13,6 +13,7 @@ Usage:
   ledge studio                 Launch Ledge Studio (web IDE) at http://localhost:5000
   ledge audit --show                        Show last 20 decisions from the persistent store
   ledge audit --verify                      Verify cryptographic chain integrity
+  ledge audit --verify-anchors              Cross-check external anchor file against the store
   ledge audit --export <file>               Export all decisions as JSON-LD
   ledge audit --stats                       Show real accuracy by model and domain
   ledge audit --calibration <model> <domain>            Calibration report for a model/domain
@@ -291,6 +292,28 @@ def _audit(args):
             print(f"Chain valid: False — first invalid entry: {bad_id}")
         return
 
+    if "--verify-anchors" in args:
+        from ledge_lang.audit_store import AnchorStore
+        anchor_store = AnchorStore()
+        result = anchor_store.verify_against_store(store)
+        print(f"Anchors verified : {result['anchors_verified']}")
+        print(f"Anchors failed   : {result['anchors_failed']}")
+        print(f"Store matches    : {result['store_matches_anchors']}")
+        if result["details"]:
+            print()
+            print(f"  {'ENTRY_COUNT':>12}  {'STATUS':8}  DETAIL")
+            print("  " + "-" * 48)
+            for d in result["details"]:
+                detail = ""
+                if d["status"] == "failed":
+                    detail = (f"integrity={'ok' if d.get('integrity_ok') else 'FAIL'}  "
+                              f"store_match={'ok' if d.get('store_match') else 'MISS'}")
+                print(f"  {d['entry_count']:>12}  {d['status']:8}  {detail}")
+        if result["anchors_failed"] > 0:
+            import sys as _sys
+            _sys.exit(1)
+        return
+
     if "--export" in args:
         idx = args.index("--export")
         out_path = args[idx + 1] if idx + 1 < len(args) else "audit.json"
@@ -492,7 +515,7 @@ def _audit(args):
         print(f"  Model trustworthy    : {trustworthy}")
         return
 
-    print("Usage: ledge audit [--show | --verify | --export <file> | --stats | --calibration <model> <domain> | --calibration-metrics <model> <domain>]")
+    print("Usage: ledge audit [--show | --verify | --verify-anchors | --export <file> | --stats | --calibration <model> <domain> | --calibration-metrics <model> <domain>]")
 
 
 def _studio(args):

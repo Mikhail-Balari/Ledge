@@ -33,6 +33,7 @@ Dependencies:
 """
 
 from __future__ import annotations
+import math
 import os
 from typing import Optional, Dict, Any, List
 
@@ -107,35 +108,86 @@ def openai_backend(
         return resp.choices[0].message.content.strip()
 
     def analyze(text: str, mode: str) -> dict:
-        """Analyze text and return a structured result dict."""
+        """Analyze text and return a structured result dict with logprob-derived confidence."""
+        import json
         system = f"You are an expert at {mode} analysis. Return ONLY valid JSON."
         prompt = f"Analyze this text for {mode}:\n\n{text}\n\nReturn JSON with relevant fields."
         try:
-            import json
-            result_text = _chat(prompt, system)
-            # Strip markdown code blocks if present
-            result_text = result_text.strip()
+            resp = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt},
+                ],
+                logprobs=True,
+                temperature=temperature,
+            )
+            result_text = resp.choices[0].message.content.strip()
+            lp_content = resp.choices[0].logprobs.content if resp.choices[0].logprobs else None
+            if lp_content:
+                avg_logprob = sum(lp.logprob for lp in lp_content) / len(lp_content)
+                confidence = math.exp(avg_logprob)
+            else:
+                confidence = 0.0  # logprobs not available — no confidence claim
             if result_text.startswith("```"):
                 result_text = result_text.split("\n", 1)[1].rsplit("```", 1)[0]
-            return json.loads(result_text)
+            result = json.loads(result_text)
+            result["confidence"] = round(confidence, 4)
+            return result
         except Exception:
             return {"result": _chat(f"Analyze this for {mode}: {text}"), "mode": mode}
 
-    def classify(text: str, labels: list) -> str:
-        """Classify text into one of the given labels."""
+    def classify(text: str, labels: list) -> dict:
+        """Classify text using logprobs for confidence. Returns {value, confidence}."""
         labels_str = ", ".join(f'"{l}"' for l in labels)
         prompt = (
             f"Classify the following text into EXACTLY ONE of these categories: {labels_str}\n\n"
             f"Text: {text}\n\n"
             f"Respond with ONLY the category name, nothing else."
         )
-        result = _chat(prompt)
-        # Find the best matching label
-        result_lower = result.lower().strip()
-        for label in labels:
-            if str(label).lower() in result_lower or result_lower in str(label).lower():
-                return str(label)
-        return str(labels[0])  # fallback to first label
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=1,
+                logprobs=True,
+                top_logprobs=5,
+                temperature=0,
+            )
+            lp_content = resp.choices[0].logprobs.content if resp.choices[0].logprobs else None
+            if lp_content:
+                top_lps = lp_content[0].top_logprobs or []
+                best_label, best_prob = None, 0.0
+                for lp in top_lps:
+                    tok = lp.token.strip().lower()
+                    prob = math.exp(lp.logprob)
+                    for label in labels:
+                        lbl = str(label).lower()
+                        if lbl.startswith(tok) or tok == lbl:
+                            if prob > best_prob:
+                                best_prob, best_label = prob, str(label)
+                if best_label is not None:
+                    return {"value": best_label, "confidence": min(1.0, best_prob)}
+                # No label matched top tokens — use first-token logprob, match by text
+                confidence = math.exp(lp_content[0].logprob)
+                token = (resp.choices[0].message.content or "").strip().lower()
+                for label in labels:
+                    if str(label).lower().startswith(token[:3]) or token in str(label).lower():
+                        return {"value": str(label), "confidence": confidence}
+                return {"value": str(labels[0]), "confidence": confidence}
+            else:
+                raise ValueError("logprobs not returned")
+        except Exception:
+            # Graceful fallback for models that don't support logprobs (e.g. GPT-5+)
+            try:
+                result = _chat(prompt)
+                result_lower = result.lower().strip()
+                for label in labels:
+                    if str(label).lower() in result_lower or result_lower in str(label).lower():
+                        return {"value": str(label), "confidence": 0.0}
+                return {"value": str(labels[0]), "confidence": 0.0}
+            except Exception:
+                return {"value": str(labels[0]), "confidence": 0.0}
 
     def generate(prompt: str, mode: str) -> str:
         """Generate text based on prompt and mode."""
@@ -244,11 +296,18 @@ def anthropic_backend(
         return _message(question)
 
     def embed(text: str) -> list:
-        # Anthropic doesn't have embeddings yet — use a simple hash-based mock
-        # that at least returns a consistent vector
-        import hashlib
-        h = hashlib.sha256(text.encode()).digest()
-        return [((b / 255.0) * 2 - 1) for b in h[:64]]  # 64-dim normalized
+        # Option A: use sentence-transformers if available.
+        # Option B: raise NotImplementedError — Anthropic has no native embeddings API.
+        try:
+            from sentence_transformers import SentenceTransformer
+            _model = SentenceTransformer("all-MiniLM-L6-v2")
+            return _model.encode(text).tolist()
+        except ImportError:
+            raise NotImplementedError(
+                "Anthropic backend does not support native embeddings. "
+                "Use openai_backend() for embed() operations, "
+                "or install sentence-transformers: pip install sentence-transformers"
+            )
 
     return _make_backend(analyze, classify, generate, ask, embed)
 

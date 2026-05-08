@@ -496,20 +496,38 @@ class TypeChecker:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+class TypecheckerInternalError(Exception):
+    """Raised when the typechecker itself fails — a bug in the checker, not user code."""
+    pass
+
+
 def check_types(source: str) -> List[Issue]:
     """
     Run the type checker on Ledge source code.
     Returns a list of Issue objects (errors and warnings).
+
+    Raises TypecheckerInternalError if the checker itself crashes (not a user code error).
+    User syntax errors (LexError, ParseError) are returned as Issues, not raised.
     """
+    from .lexer import Lexer, LexError
+    from .parser import Parser, ParseError
+
     try:
-        from .lexer import Lexer
-        from .parser import Parser
         tokens = Lexer(source).tokenize()
         program = Parser(tokens).parse()
+    except (LexError, ParseError) as e:
+        return [Issue("error", str(e), getattr(e, 'line', 0))]
+
+    try:
         checker = TypeChecker()
         return checker.check(program)
-    except Exception:
-        return []
+    except Exception as e:
+        import traceback
+        raise TypecheckerInternalError(
+            f"Internal typechecker error — this is a bug in the checker, not your code.\n"
+            f"Error: {e}\n"
+            f"{traceback.format_exc()}"
+        ) from e
 
 
 def check_file(path: str) -> List[Issue]:

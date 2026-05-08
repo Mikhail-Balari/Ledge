@@ -55,6 +55,9 @@ class AuditStore:
             db_path = os.path.join(ledge_dir, "audit.db")
         self._db_path = db_path
         self._lock = threading.Lock()
+        self._session_record_count = 0
+        self._anchor_interval = 10
+        self._anchor_store: Optional["AnchorStore"] = None  # lazy default
         self._init_db()
 
     # ── Internal helpers ──────────────────────────────────────────────────────
@@ -102,6 +105,7 @@ class AuditStore:
             decision_id = str(uuid.uuid4())
         ts = time.time()
 
+        chain_hash = None
         with self._lock:
             conn = self._connect()
             try:
@@ -120,6 +124,14 @@ class AuditStore:
                 conn.commit()
             finally:
                 conn.close()
+
+        self._session_record_count += 1
+        if chain_hash and self._session_record_count % self._anchor_interval == 0:
+            try:
+                _as = self._anchor_store if self._anchor_store is not None else AnchorStore()
+                _as.add_anchor(chain_hash, self._session_record_count, time.time())
+            except Exception:
+                pass  # never break execution
 
         return decision_id
 
@@ -401,6 +413,113 @@ class AuditStore:
             )
 
         return {"valid": all(c["passed"] for c in checks), "checks": checks}
+
+
+# ── Anchor Store ──────────────────────────────────────────────────────────────
+
+class AnchorStore:
+    """
+    Append-only file of cryptographic anchors for the AuditStore.
+
+    Each anchor records the chain_hash at a known entry count with a timestamp.
+    Because the file is separate from the SQLite database, a full DB rewrite
+    cannot silently remove evidence — an auditor can cross-check anchors against
+    the current store state.
+
+    Default location: ~/.ledge/anchors.jsonl (one JSON object per line, append-only).
+    """
+
+    def __init__(self, path: str = "~/.ledge/anchors.jsonl"):
+        self._path = os.path.expanduser(path)
+        os.makedirs(os.path.dirname(self._path), exist_ok=True)
+
+    def add_anchor(self, chain_hash: str, entry_count: int, timestamp: float):
+        """
+        Append one anchor entry to the file.
+
+        Format:
+          {
+            "timestamp":   "<ISO 8601>",
+            "entry_count": 42,
+            "chain_hash":  "sha256:<hex>",
+            "anchor_hash": "<sha256 of timestamp+entry_count+chain_hash>"
+          }
+        """
+        ts_iso = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+        anchor_input = f"{ts_iso}{entry_count}{chain_hash}"
+        anchor_hash = hashlib.sha256(anchor_input.encode()).hexdigest()
+        entry = {
+            "timestamp":   ts_iso,
+            "entry_count": entry_count,
+            "chain_hash":  f"sha256:{chain_hash}",
+            "anchor_hash": anchor_hash,
+        }
+        with open(self._path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    def _read_anchors(self) -> List[Dict]:
+        try:
+            with open(self._path, encoding="utf-8") as f:
+                return [json.loads(line) for line in f if line.strip()]
+        except FileNotFoundError:
+            return []
+
+    def verify_against_store(self, audit_store: "AuditStore") -> Dict:
+        """
+        Verify all anchors in the file against the current audit store.
+
+        For each anchor:
+          1. Recomputes anchor_hash and checks integrity.
+          2. Looks for the anchor's chain_hash in the store entries.
+
+        Returns:
+          {
+            "anchors_verified": int,
+            "anchors_failed":   int,
+            "store_matches_anchors": bool,
+            "details": [{"entry_count": int, "status": "ok"|"failed", ...}]
+          }
+        """
+        anchors = self._read_anchors()
+
+        all_entries = audit_store.query(limit=1_000_000)
+        known_hashes: set = {e["chain_hash"] for e in all_entries}
+
+        verified = failed = 0
+        details: List[Dict] = []
+
+        for anchor in anchors:
+            raw_hash = anchor["chain_hash"].replace("sha256:", "")
+            ts       = anchor["timestamp"]
+            count    = anchor["entry_count"]
+
+            # Integrity: recompute anchor_hash
+            expected = hashlib.sha256(
+                f"{ts}{count}{raw_hash}".encode()
+            ).hexdigest()
+            integrity_ok = (expected == anchor["anchor_hash"])
+
+            # Store match: chain_hash must exist in current store
+            store_ok = raw_hash in known_hashes
+
+            if integrity_ok and store_ok:
+                verified += 1
+                details.append({"entry_count": count, "status": "ok"})
+            else:
+                failed += 1
+                details.append({
+                    "entry_count":     count,
+                    "status":          "failed",
+                    "integrity_ok":    integrity_ok,
+                    "store_match":     store_ok,
+                })
+
+        return {
+            "anchors_verified":      verified,
+            "anchors_failed":        failed,
+            "store_matches_anchors": failed == 0,
+            "details":               details,
+        }
 
 
 # ── Global persistent store ───────────────────────────────────────────────────

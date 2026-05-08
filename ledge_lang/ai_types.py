@@ -11,6 +11,7 @@ Introduces types that no other language has:
 These aren't libraries. They're built into the language.
 """
 
+import math
 import time
 import threading
 import json
@@ -139,13 +140,43 @@ class UncertainChain:
         self.step_names.append(name or f"step_{len(self.steps)}")
         return self
 
+    _DECAY = 0.9
+
     def chain_confidence(self):
+        """
+        Computes composite chain confidence using three factors:
+
+        1. Position-weighted product: early step errors propagate, so later steps
+           are penalized more as the chain grows.
+           weight[i] = (1/DECAY)^i, all weights >= 1, so product(c^w) <= product(c).
+
+        2. Weak step penalty: any step with confidence < 0.5 penalizes the chain.
+           penalty = product(min(1.0, c/0.5) for c < 0.5)
+
+        3. G1 safety floor: if any step has confidence == 0.0, return 0.0.
+        """
         if not self.steps:
             return 0.0
-        result = 1.0
-        for s in self.steps:
-            result *= s.confidence
-        return result
+        confidences = [s.confidence for s in self.steps]
+        if any(c == 0.0 for c in confidences):
+            return 0.0
+        n = len(self.steps)
+        weights = [(1.0 / self._DECAY) ** i for i in range(n)]
+        weighted_product = math.prod(c ** w for c, w in zip(confidences, weights))
+        weak_penalty = math.prod(
+            min(1.0, c / 0.5) for c in confidences if c < 0.5
+        ) if any(c < 0.5 for c in confidences) else 1.0
+        return weighted_product * weak_penalty
+
+    def chain_risk_level(self) -> str:
+        """Return a risk classification based on chain_confidence().
+        LOW >= 0.8 | MEDIUM >= 0.5 | HIGH >= 0.2 | CRITICAL < 0.2
+        """
+        c = self.chain_confidence()
+        if c >= 0.8:   return "LOW"
+        if c >= 0.5:   return "MEDIUM"
+        if c >= 0.2:   return "HIGH"
+        return "CRITICAL"
 
     def chain_is_safe(self, threshold=0.8):
         if not self.steps:
@@ -153,9 +184,15 @@ class UncertainChain:
         return all(s.confidence >= threshold for s in self.steps)
 
     def weakest_step(self):
+        """Return the name of the step with the smallest weighted contribution."""
         if not self.steps:
             return ""
-        min_idx = min(range(len(self.steps)), key=lambda i: self.steps[i].confidence)
+        n = len(self.steps)
+        weights = [(1.0 / self._DECAY) ** i for i in range(n)]
+        weighted_contribs = [
+            s.confidence ** w for s, w in zip(self.steps, weights)
+        ]
+        min_idx = min(range(n), key=lambda i: weighted_contribs[i])
         return self.step_names[min_idx]
 
     def chain_audit(self):
@@ -853,6 +890,9 @@ def make_ai_native_builtins(audit: AuditTrail = None):
 
         "weakest_step": _n("weakest_step", lambda a,k,u:
             a[0].weakest_step() if isinstance(a[0], UncertainChain) else ""),
+
+        "chain_risk_level": _n("chain_risk_level", lambda a,k,u:
+            a[0].chain_risk_level() if isinstance(a[0], UncertainChain) else "CRITICAL"),
 
         # Model migration comparison (Feature 4)
         "compare_models_report": _n("compare_models_report", lambda a, k, u: (

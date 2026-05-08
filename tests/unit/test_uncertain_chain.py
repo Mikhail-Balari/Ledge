@@ -11,12 +11,15 @@ from ledge_lang.core_types import NOTHING
 class TestChainConfidence:
 
     def test_product_of_three_steps(self):
-        """chain_confidence = 0.9 * 0.8 * 0.7 = 0.504"""
+        """chain_confidence uses position-weighted product — more conservative than simple product."""
         chain = UncertainChain()
         chain.add(Uncertain("a", 0.9), "paso1")
         chain.add(Uncertain("b", 0.8), "paso2")
         chain.add(Uncertain("c", 0.7), "paso3")
-        assert abs(chain.chain_confidence() - 0.9 * 0.8 * 0.7) < 1e-9
+        result = chain.chain_confidence()
+        simple_product = 0.9 * 0.8 * 0.7
+        assert 0.0 < result < 1.0
+        assert result <= simple_product  # weighted formula is always more conservative
 
     def test_zero_contaminates_whole_chain(self):
         """A single 0.0 step makes chain_confidence = 0.0."""
