@@ -134,6 +134,7 @@ class TypeChecker:
         elif t == "If":
             for cond, blk in node.branches:
                 self._check_expr(cond, env)
+                self._check_as_boolean(cond, env)
                 # Flow narrowing: if confidence check on uncertain var,
                 # narrow its type inside the block
                 narrowed = env.child()
@@ -168,6 +169,7 @@ class TypeChecker:
         elif t in ("While", "Repeat"):
             if hasattr(node, 'condition'):
                 self._check_expr(node.condition, env)
+                self._check_as_boolean(node.condition, env)
             if hasattr(node, 'body'):
                 c = env.child()
                 self._check_block(node.body.stmts, c)
@@ -381,9 +383,34 @@ class TypeChecker:
             if node.op in ("=", "!=", "<", ">", "<=", ">="): return "truth"
             return "any"
 
-        if t == "LogicalOp":   return "truth"
+        if t == "LogicalOp":
+            left_type  = self._infer_type(node.left, env)
+            right_type = self._infer_type(node.right, env)
+            for side_type, side_node in [(left_type, node.left), (right_type, node.right)]:
+                if side_type and side_type.startswith("uncertain"):
+                    var_name = getattr(side_node, 'name', 'value')
+                    self._error(
+                        f"Unsafe use of Uncertain value '{var_name}' as boolean condition — "
+                        f"confidence was never verified. "
+                        f"Use: if confidence_of({var_name}) >= threshold:",
+                        line=getattr(side_node, 'line', 0),
+                        suggestion=f"if confidence_of({var_name}) >= 0.85:"
+                    )
+            return "truth"
+
         if t == "UnaryOp":
-            if node.op == "not": return "truth"
+            if node.op == "not":
+                operand_type = self._infer_type(node.operand, env)
+                if operand_type and operand_type.startswith("uncertain"):
+                    var_name = getattr(node.operand, 'name', 'value')
+                    self._error(
+                        f"Unsafe use of Uncertain value '{var_name}' as boolean condition — "
+                        f"confidence was never verified. "
+                        f"Use: if confidence_of({var_name}) >= threshold:",
+                        line=getattr(node, 'line', 0),
+                        suggestion=f"if confidence_of({var_name}) >= 0.85:"
+                    )
+                return "truth"
             if node.op == "-":   return "number"
 
         if t == "Fallback":
@@ -413,6 +440,17 @@ class TypeChecker:
             return False
         return False
 
+
+    def _check_as_boolean(self, node, env: TypeEnv):
+        """Emit error if node is a bare Uncertain identifier used as boolean condition."""
+        if type(node).__name__ == "Identifier" and node.name in self._uncertain:
+            self._error(
+                f"Unsafe use of Uncertain value '{node.name}' as boolean condition — "
+                f"confidence was never verified. "
+                f"Use: if confidence_of({node.name}) >= threshold:",
+                line=getattr(node, 'line', 0),
+                suggestion=f"if confidence_of({node.name}) >= 0.85:"
+            )
 
     def _extract_confidence_narrowing(self, cond) -> set:
         """

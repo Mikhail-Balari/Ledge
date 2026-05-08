@@ -1,5 +1,5 @@
 """
-Ledge v0.2.0 — The first programming language designed for AI generation.
+Ledge is a programming language and governance runtime for auditable, uncertainty-aware AI decisions.
 
 Quick start:
     from ledge_lang import run
