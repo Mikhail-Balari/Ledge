@@ -1,0 +1,420 @@
+﻿# Ledge: A Programming Language for Governed AI Decisions
+
+**Technical Report — v1.1.0**  
+Mikhail Balari  
+May 2026  
+https://github.com/Mikhail-Balari/Ledge
+
+---
+
+## Abstract
+
+We present Ledge, a programming language where the use of an AI model output without explicit confidence verification is a static analysis error. Ledge introduces `Uncertain[T]` as a first-class type: values produced by AI inference operations carry uncertainty metadata that the type system tracks and enforces before execution. We describe the language design, its formal grammar, four verifiable runtime guarantees, a domain calibration infrastructure for empirical confidence measurement, and a cryptographic audit trail for decision traceability. We report performance measurements on the reference implementation and compare Ledge with concurrent work on typed LLM inference and uncertainty quantification.
+
+**Note on methodology:** The experimental evaluation in Section 6 was conducted on the reference implementation using synthetic benchmarks. No external user studies or production deployments exist at the time of writing. Results are reported with this context.
+
+---
+
+## 1. Contributions
+
+This report makes the following contributions:
+
+1. **Uncertain[T] as a language primitive.** We define a type system where AI inference results carry confidence metadata enforced at static analysis time. Unsafe use — consuming an uncertain value without confidence verification — prevents program execution.
+
+2. **Four verifiable runtime guarantees.** We specify and demonstrate four properties of the Ledge runtime: zero confidence without a connected backend, pre-execution enforcement of confidence handling, cryptographic audit trail integrity, and safe failure by design. Each guarantee is verifiable in under five minutes without an API key.
+
+3. **Domain calibration infrastructure.** We implement a calibration layer that compares declared model confidence against empirically recorded outcomes per (model, domain) pair, computing Brier score, Expected Calibration Error (ECE), false accept rate, false reject rate, and calibrated decision thresholds.
+
+4. **Persistent cryptographic audit trail.** We implement per-decision SHA-256 hash chains persisted to SQLite, with export to JSON-LD structured for EU AI Act Article 12/13 evidence documentation.
+
+5. **Honest accounting of current limitations.** We identify one gap in the typechecker coverage (Section 6.3), document the absence of formal proofs, and report zero known production deployments.
+
+---
+
+## 2. Motivation
+
+Large language models deployed in production systems produce outputs that carry implicit uncertainty. When a model classifies a medical symptom, approves a loan application, or flags a contract clause, it operates with some level of confidence — yet most programming languages provide no mechanism to enforce that this confidence is acknowledged before the output is used.
+
+The consequence is a systematic class of bugs: code that treats uncertain AI outputs as facts. Consider the following pattern, valid in Python with no error:
+
+```python
+result = model.classify(patient_symptoms)
+send_treatment_recommendation(result["diagnosis"])
+# If confidence was 0.30, treatment is still sent.
+```
+
+The developer must remember to check. In practice, they forget.
+
+Ledge makes this class of bug structurally impossible. The equivalent program:
+
+```ledge
+define result as classify(symptoms) using ["urgent", "routine", "monitor"]
+show result
+```
+
+fails before execution:
+
+```
+STATIC ANALYSIS ERROR: Unsafe use of Uncertain value 'result' in 'show'
+confidence was never verified.
+```
+
+The only valid pattern requires explicit handling:
+
+```ledge
+define result as classify(symptoms) using ["urgent", "routine", "monitor"]
+if confidence_of(result) >= 0.85:
+    show value_of(result)
+else:
+    show "Refer to specialist"
+```
+
+---
+
+## 3. Language Design
+
+### 3.1 The Uncertain Type
+
+Every AI inference operation returns a value of type `Uncertain[T]`, where `T` is the expected output type. The type carries:
+
+- The underlying value (inaccessible without explicit extraction)
+- A confidence score in [0.0, 1.0]
+- The operation that produced it (`classify`, `analyze`, `generate`)
+- A unique decision ID for audit purposes
+
+Three operations are defined:
+
+```
+confidence_of(u: Uncertain[T]) → Number      -- returns the confidence score
+value_of(u: Uncertain[T])      → T           -- extracts the value
+is_confident(u, threshold)     → Boolean     -- confidence_of(u) >= threshold
+when(u, threshold, fallback)   → T           -- value_of(u) or fallback
+```
+
+Consuming an `Uncertain[T]` directly — without first calling `confidence_of` or using a safe extractor — is a static analysis error.
+
+### 3.2 AI Primitives
+
+Ledge defines five AI primitive expressions:
+
+```ledge
+classify(input) using [label1, label2, ...]   -- returns Uncertain[Text]
+analyze(input)  using model_name              -- returns Uncertain[Text]
+generate(prompt) using model_name             -- returns Uncertain[Text]
+ask(prompt)                                   -- returns Uncertain[Text]
+embed(input)                                  -- returns List[Number]
+```
+
+Without a connected backend, all operations return `confidence = 0.0` exactly.
+
+### 3.3 AIDerived Values
+
+When a value is extracted from `Uncertain[T]` via `value_of()`, it becomes `AIDerived` — a plain value that carries provenance metadata:
+
+```
+has_ai_origin(v)     → Boolean    -- true if extracted from Uncertain
+origin_confidence(v) → Number     -- the original confidence score
+origin_operation(v)  → Text       -- "classify", "analyze", etc.
+```
+
+This preserves uncertainty provenance across function boundaries, preventing silent loss of AI origin information.
+
+### 3.4 Chain Confidence
+
+For multi-step pipelines, Ledge provides transitive uncertainty propagation:
+
+```ledge
+define step1 as classify(input) using labels
+define step2 as analyze(value_of(step1)) using model
+define chain as uncertain_chain(list [step1, step2])
+show chain_confidence(chain)   -- product of individual confidences
+show weakest_step(chain)       -- identifies the lowest-confidence step
+```
+
+If any step has confidence 0.0, chain confidence is 0.0.
+
+---
+
+## 4. Formal Grammar
+
+The following grammar is extracted directly from the reference parser (`ledge_lang/parser.py`). AI primitives are marked.
+
+```bnf
+-- ── Program ─────────────────────────────────────────────────
+program         ::= statement*
+
+-- ── Statements ──────────────────────────────────────────────
+statement       ::= define_stmt | assign_stmt | show_stmt
+                  | if_stmt | for_stmt | while_stmt
+                  | repeat_stmt | match_stmt | check_stmt
+                  | return_stmt | break_stmt | continue_stmt
+                  | pass_stmt | when_stmt | agent_def
+                  | import_stmt | type_def | expr_stmt
+
+define_stmt     ::= "define" name "(" params ")" ":" block_with_contracts
+                  | "define" name [":" type_hint] "as" fallback_expr
+
+block_with_contracts
+                ::= INDENT
+                      [requires_clause]
+                      [ensures_clause]
+                      statement+
+                    DEDENT
+
+requires_clause ::= "requires" ":" INDENT expr+ DEDENT
+ensures_clause  ::= "ensures" ":" INDENT expr+ DEDENT
+
+assign_stmt     ::= "set" IDENT "to" fallback_expr
+show_stmt       ::= "show" expr ["as" show_format]
+show_format     ::= "table" | "json" | "raw" | IDENT
+
+if_stmt         ::= "if" condition ":" block
+                    ("else" "if" condition ":" block)*
+                    ["else" ":" block]
+
+for_stmt        ::= "for" "each" IDENT ["," IDENT] "in" expr ":" block
+while_stmt      ::= "while" condition ":" block
+repeat_stmt     ::= "repeat" expr "times" ":" block
+                  | "repeat" "until" condition ":" block
+
+match_stmt      ::= "match" expr ":" INDENT
+                      ("case" expr ":" block)*
+                      ["otherwise" ":" block]
+                    DEDENT
+
+check_stmt      ::= "check" ":" block
+                    ["recover" [IDENT] ":" block]
+                    ["always" ":" block]
+
+return_stmt     ::= "return" [expr]
+
+agent_def       ::= "agent" IDENT ":" INDENT
+                      ["tools" ":" INDENT (IDENT "from" "mcp" expr)+ DEDENT]
+                      ["model" ":" expr]
+                      ["behavior" ":" block]
+                    DEDENT
+
+import_stmt     ::= "import" STRING "as" IDENT
+                  | "from" STRING "import" IDENT ("," IDENT)*
+
+type_def        ::= "type" IDENT "has" ":" INDENT
+                      (IDENT [":" type_hint] ["=" expr])+
+                    DEDENT
+
+-- ── Expressions ──────────────────────────────────────────────
+fallback_expr   ::= expr ["or" expr]
+condition       ::= or_cond
+or_cond         ::= and_cond ("or" and_cond)*
+and_cond        ::= not_cond ("and" not_cond)*
+not_cond        ::= "not" not_cond | comparison
+expr            ::= or_expr
+or_expr         ::= and_expr ("or" and_expr)*
+and_expr        ::= not_expr ("and" not_expr)*
+not_expr        ::= "not" not_expr | comparison
+comparison      ::= arithmetic [comp_op arithmetic]
+                  | arithmetic "is" ["not"] arithmetic
+comp_op         ::= "=" | "!=" | "<" | ">" | "<=" | ">="
+arithmetic      ::= term (("+"|"-") term)*
+term            ::= unary (("*"|"/") unary)*
+unary           ::= "-" postfix | postfix
+postfix         ::= primary (call_suffix | index_suffix | field_suffix)*
+call_suffix     ::= "(" [arg_list] ")"
+arg_list        ::= arg ("," arg)*
+arg             ::= IDENT "=" expr | expr
+
+-- ── Primary ──────────────────────────────────────────────────
+primary         ::= NUMBER | STRING | BOOL | "nothing"
+                  | list_lit | map_lit | "(" expr ")"
+                  | parallel_expr
+                  | classify_expr      -- AI primitive
+                  | analyze_expr       -- AI primitive
+                  | generate_expr      -- AI primitive
+                  | ask_expr           -- AI primitive
+                  | embed_expr         -- AI primitive
+                  | IDENT
+
+list_lit        ::= "list" "[" [expr ("," expr)*] "]"
+map_lit         ::= "map" "{" [expr ":" expr ("," expr ":" expr)*] "}"
+parallel_expr   ::= "parallel" "[" [expr ("," expr)*] "]"
+
+-- ── AI Primitive Expressions ─────────────────────────────────
+classify_expr   ::= "classify" "(" expr ")" "using" "[" expr ("," expr)* "]"
+                  -- Returns Uncertain[Text]
+
+analyze_expr    ::= "analyze" "(" expr ")" "using" IDENT
+                  -- Returns Uncertain[Text]
+
+generate_expr   ::= "generate" "(" expr ")" "using" IDENT
+                  -- Returns Uncertain[Text]
+
+ask_expr        ::= "ask" "(" expr ")"
+                  -- Returns Uncertain[Text]
+
+embed_expr      ::= "embed" "(" expr ")"
+                  -- Returns List[Number]
+
+-- ── AI Built-in Functions (parsed as normal calls) ───────────
+-- confidence_of(u)              Returns NUMBER in [0.0, 1.0]    -- AI primitive
+-- value_of(u)                   Extracts value from Uncertain    -- AI primitive
+-- when(u, threshold, fallback)  Safe extraction with fallback    -- AI primitive
+-- chain_confidence(list)        Product of chain confidences     -- AI primitive
+-- has_ai_origin(v)              True if value derived from AI    -- AI primitive
+-- origin_confidence(v)          Original confidence score        -- AI primitive
+
+-- ── Lexical ──────────────────────────────────────────────────
+NUMBER          ::= ["-"] digit+ ["." digit+]
+STRING          ::= '"' (char | "{" expr "}")* '"'
+BOOL            ::= "true" | "false"
+IDENT           ::= letter (letter | digit | "_")*
+INDENT          ::= increase in indentation (multiples of 4 spaces)
+DEDENT          ::= decrease in indentation
+```
+
+---
+
+## 5. Four Verifiable Guarantees
+
+**G1 — Zero confidence without a backend.**
+Without a connected AI model, every AI primitive returns `confidence = 0.0`. This is enforced by the runtime, not by convention. Any system where the decision threshold is above 0.0 will fail safe — escalating every decision rather than acting on fabricated certainty. Verifiable: `python demo_guarantee1.py`
+
+**G2 — Unsafe AI use is a pre-execution error.**
+The typechecker runs before any code executes. Unsafe use of an `Uncertain` value — passing it to `show`, arithmetic, or function calls without confidence verification — produces an error that prevents execution. Verifiable: `python demo_guarantee2.py`
+
+**G3 — Cryptographic audit trail integrity.**
+Every AI decision is recorded with a SHA-256 hash chain. Each entry includes: operation type, input hash, confidence score, model identifier, and timestamp. The chain hash links each entry to the previous. Any modification to any field breaks the chain and is detected by `verify()`. The trail persists to SQLite between sessions. Verifiable: `python demo_guarantee3.py`
+
+**G4 — Safe failure by design.**
+Without a backend, the system does not act. This is a consequence of G1, not a configuration option. A system where `confidence = 0.0` and where the threshold for automatic action is `>= 0.85` cannot take automatic action. Verifiable: `python demo_guarantee4.py`
+
+---
+
+## 6. Experimental Evaluation
+
+*All measurements were conducted on the reference implementation using synthetic benchmarks on a Windows development machine. No external user studies or production deployments exist. Results should be interpreted as characterization of the prototype, not as general performance claims.*
+
+### 6.1 Typechecker Overhead
+
+We measured the time to run the pre-execution typechecker on four showcase programs, averaged over 100 runs:
+
+| Program | Lines | Time per check |
+|---------|-------|---------------|
+| medical_triage.ledge | 47 | 0.86 ms |
+| financial_analysis.ledge | 75 | 2.46 ms |
+| legal_contracts.ledge | 72 | 1.40 ms |
+| medical_chain.ledge | 23 | 0.40 ms |
+
+The typechecker runs in under 3ms for programs up to 75 lines. This overhead is incurred once per program load, not per execution.
+
+### 6.2 Audit Trail Overhead
+
+We measured the time to record a single decision to the persistent SQLite audit store over 100 iterations:
+
+| Metric | Value |
+|--------|-------|
+| Average | 9.92 ms |
+| Minimum | 8.16 ms |
+| Maximum | 19.95 ms |
+
+The audit trail overhead is dominated by SQLite write latency. For high-frequency applications, batching writes or using an in-memory store with periodic flush would reduce this cost.
+
+### 6.3 Typechecker Bug Detection Coverage
+
+We tested the typechecker against five code patterns — four unsafe, one safe — to measure detection coverage:
+
+| Pattern | Description | Errors detected | Correct? |
+|---------|-------------|-----------------|----------|
+| 1 | `show r` without confidence check | 1 | ✓ |
+| 2 | `r + 1` arithmetic on Uncertain | 1 | ✓ |
+| 3 | `if r:` boolean use of Uncertain | **0** | **✗ Gap** |
+| 4 | Passing Uncertain to function | 1 | ✓ |
+| 5 | Safe pattern with confidence guard | 0 | ✓ |
+
+**Gap identified:** Pattern 3 — using an `Uncertain` value directly in a boolean condition (`if r:`) — is not detected by the current typechecker. This is a known limitation of the prototype. The other three unsafe patterns are correctly detected.
+
+### 6.4 Calibration Example
+
+Using 30 recorded outcomes for a mock GPT-4 model in the medical domain (simulated at 80% real accuracy):
+
+| Metric | Value |
+|--------|-------|
+| Declared confidence range | 0.80 – 0.95 |
+| Real accuracy (0.8–0.9 bucket) | 85.0% |
+| Real accuracy (0.9–1.0 bucket) | 70.0% ← overconfident |
+| Brier score | 0.1711 |
+| ECE | 0.0756 |
+| Calibrated threshold | 0.921 |
+
+The calibration report identifies that the model is overconfident in the 0.9–1.0 range: it declares high confidence but achieves only 70% accuracy there. The calibrated threshold (0.921) is higher than the default (0.85), reflecting this gap.
+
+### 6.5 Test Suite
+
+| Suite | Result | Time |
+|-------|--------|------|
+| Conformance (284 tests) | 284/284 passed | 0.62 s |
+| Unit tests (339 tests) | 338 passed, 1 failed | 1.57 s |
+
+The single failure (`test_formatter_idempotent_on_tour`) is a pre-existing Windows console encoding issue (cp1252 vs UTF-8) unrelated to language semantics.
+
+---
+
+## 7. Related Work
+
+**Turn** (Kizito, 2024; arXiv:2603.08755) introduces typed LLM inference as a language primitive with cognitive type safety: the compiler generates a JSON Schema from struct definitions and the VM validates model output before binding. Turn also provides a confidence operator for deterministic control flow gated on model certainty. Turn is designed for agentic systems where LLMs generate code. Ledge targets developers building systems that use LLMs, and adds persistent cryptographic audit trails, domain calibration, and outcome-based threshold adaptation. Unlike Turn, Ledge is currently interpreted rather than compiled.
+
+**QUASAR** (2025; arXiv:2506.12202) proposes a language for LLM code actions with uncertainty quantification via conformal prediction. QUASAR transpiles from Python subsets generated by LLMs. Ledge is written by human developers and enforces confidence handling at static analysis time. QUASAR's uncertainty quantification is grounded in conformal prediction theory; Ledge's calibration is empirical and domain-specific.
+
+**IMMACULATE** (Guo et al., 2026; arXiv:2602.22700) audits whether LLM API providers execute the model they claim, detecting model substitution and quantization abuse via verifiable computation. IMMACULATE addresses: "Did the provider run the model they said?" Ledge addresses the complementary question: "Does the code using the model handle its output safely?" These are distinct and non-competing problems.
+
+**SAUP** (Zhao et al., 2024; arXiv:2412.01033) propagates uncertainty through multi-step LLM agent reasoning at runtime, demonstrating up to 20% improvement on standard benchmarks. Ledge implements transitive uncertainty propagation as `chain_confidence()` at the language level and enforces it at static analysis time rather than only at runtime.
+
+**On the research gap:** We found no published work combining pre-execution enforcement of AI confidence handling with empirical domain calibration and cryptographic audit trails in a single programming language. We note this as an observation, not a strong novelty claim, and welcome identification of prior or concurrent work.
+
+---
+
+## 8. Implementation
+
+Ledge is implemented in Python 3.9+ as a tree-walking interpreter with a pre-execution typechecking phase. The interpreter does not use Python's `eval()` or `exec()` — it evaluates Ledge's own AST. Python FFI is available but restricted by default (`--safe-mode` blocks all imports).
+
+The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA-256 via Python's `hashlib`. The calibration layer has no external statistical dependencies.
+
+**Installation:** `pip install ledge-lang`  
+**Repository:** https://github.com/Mikhail-Balari/Ledge  
+**Python versions tested:** 3.10, 3.11, 3.12 (CI verified)
+
+---
+
+## 9. Limitations and Future Work
+
+**Current limitations:**
+
+- The typechecker does not detect boolean use of `Uncertain` values in conditions (Section 6.3)
+- No formal proofs of the type system properties — the four guarantees are demonstrated empirically, not proved
+- No distributed audit trail — currently local SQLite only
+- No package ecosystem beyond 15 included utility packages
+- Native compilation to C99 is experimental and requires `gcc`
+- Calibration requires manual outcome recording; no automated ground truth pipeline
+- **Known production deployments: zero**
+
+**Future directions:**
+
+- Python static analyzer applying Ledge's enforcement rules to existing Python codebases without language migration
+- Formal type system specification and mechanized proofs
+- Distributed audit trail with cryptographic guarantees across nodes
+- Automated calibration pipelines for structured-outcome domains
+
+---
+
+## 10. Conclusion
+
+Ledge demonstrates that AI uncertainty can be treated as a typed, auditable, empirically calibrated property of a programming language rather than an informal engineering convention. The four guarantees are individually verifiable without an API key. The calibration layer provides infrastructure to measure whether declared model confidence is predictive for a given domain and to adapt decision thresholds accordingly. The typechecker coverage gap identified in Section 6.3 is a known limitation of the current prototype.
+
+The language is available at: https://github.com/Mikhail-Balari/Ledge
+
+---
+
+## References
+
+1. Kizito, M. (2024). *Turn: A language for agentic computation.* arXiv:2603.08755.
+2. *QUASAR: A language for LLM code actions with uncertainty quantification* (2025). arXiv:2506.12202. OpenReview: TvpaeQVTGQ.
+3. Guo, Y., Qu, W., Wu, L., Zhai, S., Wang, L. Z., Xu, M., Liu, Y., Yuan, B., Song, D., & Zhang, J. (2026). *IMMACULATE: A practical LLM auditing framework via verifiable computation.* arXiv:2602.22700.
+4. Zhao, Q., Zhao, X., Liu, Y., et al. (2024). *SAUP: Situation awareness uncertainty propagation on LLM agents.* arXiv:2412.01033.

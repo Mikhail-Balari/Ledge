@@ -438,6 +438,8 @@ What does not yet exist:
 - A mature package ecosystem
 - Known production deployments
 
+See [TECHNICAL_REPORT.md](TECHNICAL_REPORT.md) for the formal language specification, BNF grammar, experimental evaluation, and comparison with related work.
+
 ---
 
 ## How Ledge relates to existing work
