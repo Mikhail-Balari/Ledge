@@ -1,4 +1,4 @@
-﻿# Ledge: A Programming Language for Governed AI Decisions
+# Ledge: A Programming Language for Governed AI Decisions
 
 **Technical Report — v1.1.0**  
 Mikhail Balari  
@@ -19,15 +19,19 @@ We present Ledge, a programming language where the use of an AI model output wit
 
 This report makes the following contributions:
 
-1. **Uncertain[T] as a language primitive.** We define a type system where AI inference results carry confidence metadata enforced at static analysis time. Unsafe use — consuming an uncertain value without confidence verification — prevents program execution.
+1. **Uncertain[T] as a language primitive.** We define a type system where AI inference results carry confidence metadata enforced at static analysis time. Unsafe use — consuming an uncertain value without confidence verification — prevents program execution. The typechecker raises `TypecheckerInternalError` on internal bugs rather than silently returning an empty result.
 
 2. **Four verifiable runtime guarantees.** We specify and demonstrate four properties of the Ledge runtime: zero confidence without a connected backend, pre-execution enforcement of confidence handling, cryptographic audit trail integrity, and safe failure by design. Each guarantee is verifiable in under five minutes without an API key.
 
 3. **Domain calibration infrastructure.** We implement a calibration layer that compares declared model confidence against empirically recorded outcomes per (model, domain) pair, computing Brier score, Expected Calibration Error (ECE), false accept rate, false reject rate, and calibrated decision thresholds.
 
-4. **Persistent cryptographic audit trail.** We implement per-decision SHA-256 hash chains persisted to SQLite, with export to JSON-LD structured for EU AI Act Article 12/13 evidence documentation.
+4. **Persistent cryptographic audit trail with external anchoring.** We implement per-decision SHA-256 hash chains persisted to SQLite, with an external anchor file that records chain state every 10 decisions. If the database is deleted and regenerated, the anchor file detects the inconsistency. Export to JSON-LD structured for EU AI Act Article 12/13 evidence documentation.
 
-5. **Honest accounting of current limitations.** We identify one gap in the typechecker coverage (Section 6.3), document the absence of formal proofs, and report zero known production deployments.
+5. **Position-weighted chain confidence.** We implement transitive uncertainty propagation using position-weighted confidence decay and weak-step penalization, producing more conservative and informative estimates than simple confidence multiplication.
+
+6. **Real token log-probability confidence for OpenAI.** The OpenAI backend uses `logprobs=True` with `top_logprobs=5` to derive confidence from actual token probabilities rather than self-reported scores. Fallback to `confidence=0.0` for models that do not support logprobs.
+
+7. **Honest accounting of current limitations.** We document the absence of formal proofs, report zero known production deployments, and note that Anthropic embeddings require `sentence-transformers` rather than providing a mocked implementation.
 
 ---
 
@@ -127,11 +131,18 @@ For multi-step pipelines, Ledge provides transitive uncertainty propagation:
 define step1 as classify(input) using labels
 define step2 as analyze(value_of(step1)) using model
 define chain as uncertain_chain(list [step1, step2])
-show chain_confidence(chain)   -- product of individual confidences
-show weakest_step(chain)       -- identifies the lowest-confidence step
+show chain_confidence(chain)    -- weighted confidence of the chain
+show weakest_step(chain)        -- step with lowest weighted contribution
+show chain_risk_level(chain)    -- LOW / MEDIUM / HIGH / CRITICAL
 ```
 
-If any step has confidence 0.0, chain confidence is 0.0.
+**Chain confidence formula.** Simple multiplication of confidences underestimates risk because it treats all steps equally. Ledge uses a position-weighted formula that accounts for two additional factors:
+
+1. **Position decay:** Earlier steps carry more weight because errors propagate forward. Step *i* has weight `decay^i` where `decay = 0.9`.
+2. **Weak-step penalty:** Steps with confidence below 0.5 apply an additional penalty factor `min(1.0, confidence / 0.5)`.
+3. **Zero floor (G1 preserved):** If any step has `confidence = 0.0`, chain confidence is `0.0` exactly.
+
+This produces a more conservative estimate than simple multiplication. For a three-step chain with confidences [0.9, 0.8, 0.7], simple multiplication yields 0.504 while the weighted formula yields 0.624 — but for a chain with a weak step at 0.3, the weighted formula gives 0.142 vs 0.243 from simple multiplication, better reflecting the risk introduced by the weak link.
 
 ---
 
@@ -387,13 +398,21 @@ The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA
 
 **Current limitations:**
 
-- The typechecker does not detect boolean use of `Uncertain` values in conditions (Section 6.3)
 - No formal proofs of the type system properties — the four guarantees are demonstrated empirically, not proved
-- No distributed audit trail — currently local SQLite only
+- No distributed audit trail — currently local SQLite with external anchor file; not suitable for distributed deployments
 - No package ecosystem beyond 15 included utility packages
 - Native compilation to C99 is experimental and requires `gcc`
 - Calibration requires manual outcome recording; no automated ground truth pipeline
+- Anthropic backend does not support native embeddings — requires `sentence-transformers` or OpenAI backend for `embed()` operations
 - **Known production deployments: zero**
+
+**Resolved since initial release:**
+
+- Boolean use of `Uncertain` in conditions (`if r:`, `while r:`, `not r`) — now detected by the typechecker
+- Typechecker internal errors — now raises `TypecheckerInternalError` instead of silently returning empty results
+- OpenAI confidence — now uses real token log-probabilities (`logprobs=True`) instead of text matching
+- Anthropic embeddings — now raises `NotImplementedError` instead of returning a hash-based mock vector
+- Chain confidence — now uses position-weighted decay and weak-step penalization instead of simple multiplication
 
 **Future directions:**
 
@@ -406,7 +425,7 @@ The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA
 
 ## 10. Conclusion
 
-Ledge demonstrates that AI uncertainty can be treated as a typed, auditable, empirically calibrated property of a programming language rather than an informal engineering convention. The four guarantees are individually verifiable without an API key. The calibration layer provides infrastructure to measure whether declared model confidence is predictive for a given domain and to adapt decision thresholds accordingly. The typechecker coverage gap identified in Section 6.3 is a known limitation of the current prototype.
+Ledge demonstrates that AI uncertainty can be treated as a typed, auditable, empirically calibrated property of a programming language rather than an informal engineering convention. The four guarantees are individually verifiable without an API key. The calibration layer provides infrastructure to measure whether declared model confidence is predictive for a given domain and to adapt decision thresholds accordingly. The OpenAI backend uses real token log-probabilities for confidence estimation. The audit trail includes external anchoring to detect database deletion and regeneration.
 
 The language is available at: https://github.com/Mikhail-Balari/Ledge
 

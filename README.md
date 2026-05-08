@@ -1,9 +1,5 @@
 # Ledge
 
-![Tests](https://img.shields.io/badge/tests-338%20passing-brightgreen)
-![Conformance](https://img.shields.io/badge/conformance-284%2F284-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
 **Ledge is a governance runtime and programming language for AI decisions.**
 
 It does not trust model confidence blindly.  
@@ -39,7 +35,7 @@ send_treatment_recommendation(result["diagnosis"])
 In Ledge, this is caught before the program runs:
 
 ```ledge
-define result as classify(symptoms) using ["urgent", "routine", "monitor"]
+define result as classify(symptoms) using diagnoses
 show result
 # STATIC ANALYSIS ERROR: Unsafe use of Uncertain value
 # Confidence was never verified.
@@ -49,7 +45,7 @@ show result
 The only way to use the result is to handle uncertainty explicitly:
 
 ```ledge
-define result as classify(symptoms) using ["urgent", "routine", "monitor"]
+define result as classify(symptoms) using diagnoses
 if confidence_of(result) >= 0.85:
     show value_of(result)
 else:
@@ -129,7 +125,7 @@ Safe code errors detected: 0
 Guarantee verified.
 ```
 
-The static typechecker catches unsafe code before the program runs — not after something goes wrong in production.
+The static typechecker catches unsafe code before the program runs — not after something goes wrong in production. If the typechecker itself encounters an internal bug, it raises `TypecheckerInternalError` with a full stack trace — it never silently returns an empty result.
 
 *Note on terminology: Ledge is currently interpreted, not compiled in the traditional sense. "Compile-time" refers to the pre-execution static analysis phase that runs before any code executes.*
 
@@ -147,7 +143,11 @@ After inserting fake entry: False
 Guarantee verified: any modification breaks the chain.
 ```
 
-Every AI decision is recorded with a SHA-256 hash chain. Changing any field — confidence, timestamp, result — breaks the chain and is detected immediately.
+Every AI decision is recorded with a SHA-256 hash chain. Changing any field — confidence, timestamp, result — breaks the chain and is detected immediately. An external anchor file (`~/.ledge/anchors.jsonl`) records chain state every 10 decisions — if the SQLite database is deleted and regenerated, the anchors detect the inconsistency.
+
+```bash
+ledge audit --verify-anchors   # verify anchor file against current database
+```
 
 ### G4 — Safe failure by design
 
@@ -266,146 +266,18 @@ VALIDATION PASSED — compliance-supporting Article 12/13 export is structurally
 
 ## Showcase examples
 
-Each of these runs without an API key. With confidence=0,
-every decision escalates to human review.
+Each of these runs without an API key:
 
 ```bash
-ledge run examples/showcase/medical_triage.ledge
-```
-```
-=== MEDICAL TRIAGE SYSTEM ===
-PATIENT P001: ESCALATE TO HUMAN (confidence=0)
-PATIENT P002: ESCALATE TO HUMAN (confidence=0)
-PATIENT P003: ESCALATE TO HUMAN (confidence=0)
-
-Decisions logged in audit trail: 3
-Cryptographic chain intact: true
+ledge run examples/showcase/financial_analysis.ledge   # credit risk assessment
+ledge run examples/showcase/legal_contracts.ledge      # contract clause review
+ledge run examples/showcase/email_scanner.ledge        # phishing detection
+ledge run examples/showcase/hiring_screen.ledge        # candidate screening
+ledge run examples/showcase/loan_approval.ledge        # Basel III + EU AI Act Article 14
+ledge run examples/showcase/medical_record.ledge       # diagnosis with audit trail
 ```
 
-```bash
-ledge run examples/showcase/financial_analysis.ledge
-```
-```
-=== CREDIT RISK ANALYSIS ===
-
-Applicant A001: APPROVE
-  AI Confidence: 0
-  Factors: [healthy_debt_ratio, history_inconclusive]
-  Decision based on 2 factors
-
-Applicant A002: REJECT
-  AI Confidence: 0
-  Factors: [high_debt_ratio, history_inconclusive]
-  Decision based on 2 factors
-
-Applicant A003: APPROVE
-  AI Confidence: 0
-  Factors: [healthy_debt_ratio, history_inconclusive]
-  Decision based on 2 factors
-
-Total audited decisions: 3
-Audit chain intact: true
-```
-
-```bash
-ledge run examples/showcase/legal_contracts.ledge
-```
-```
-=== LEGAL CLAUSE EXTRACTOR ===
-
-Contract C001:
-  HUMAN REVIEW REQUIRED (confidence=0 < 0.8)
-Contract C002:
-  HUMAN REVIEW REQUIRED (confidence=0 < 0.8)
-Contract C003:
-  HUMAN REVIEW REQUIRED (confidence=0 < 0.8)
-
-Auto-processed: 0/3
-Require human review: 3/3
-
-Without a real backend: all go to review (confidence=0).
-Audit entries: 3 | Chain intact: true
-```
-
-```bash
-ledge run examples/showcase/email_scanner.ledge
-```
-```
-=== CORPORATE EMAIL PHISHING SCANNER ===
-Backend: none
-
-EMAIL E001: QUARANTINED -- confidence=0 (human review)
-EMAIL E002: QUARANTINED -- confidence=0 (human review)
-EMAIL E003: QUARANTINED -- confidence=0 (human review)
-
-Total decisions in audit trail: 3
-Audit chain intact: true
-
-Guarantee 1 confirmed: without backend, confidence = 0.
-All emails quarantined -- zero automatic decisions made.
-```
-
-```bash
-ledge run examples/showcase/hiring_screen.ledge
-```
-```
-=== HIRING SCREENING SYSTEM ===
-Role: Senior ML Engineer
-Typechecker: active -- unsafe AI use is a compile-time error
-
-CANDIDATE C001 (Alice Chen): Needs human review (confidence=0)
-CANDIDATE C002 (Bob Martin): Needs human review (confidence=0)
-CANDIDATE C003 (Carol Smith): Needs human review (confidence=0)
-
-Guarantee 2 confirmed: every AI result is checked before use.
-The typechecker rejects 'show r' -- confidence was never verified.
-Decisions logged: 3 | Chain intact: true
-```
-
-```bash
-ledge run examples/showcase/loan_approval.ledge
-```
-```
-=== AUTOMATED LOAN APPROVAL SYSTEM ===
-Regulatory framework: Basel III + EU AI Act Article 14
-Backend: none
-
-APPLICATION L001 (Maria Santos): PENDING HUMAN REVIEW
-  Amount=$25000 | DTI=0.14 | AI confidence=0
-  EU AI Act Art.14: high-stakes automated decision requires human oversight
-APPLICATION L002 (James Cooper): DECLINED
-  Reason: DTI=0.54 exceeds Basel III ceiling of 0.43
-APPLICATION L003 (Priya Nair): PENDING HUMAN REVIEW
-  Amount=$15000 | DTI=0.08 | AI confidence=0
-  EU AI Act Art.14: high-stakes automated decision requires human oversight
-
-Total applications audited: 2
-Audit chain intact: true
-
-Guarantee 4 confirmed: without backend, confidence = 0.
-No loan auto-approved -- all AI-assessed applications sent to human review.
-```
-
-```bash
-ledge run examples/showcase/medical_record.ledge
-```
-```
-=== MEDICAL DIAGNOSIS AUDIT SYSTEM ===
-
-PATIENT MR-001: INDETERMINATE -- confidence=0
-  Ordered by Dr.JONES -- refer to specialist
-PATIENT MR-002: INDETERMINATE -- confidence=0
-  Ordered by Dr.PATEL -- refer to specialist
-PATIENT MR-003: INDETERMINATE -- confidence=0
-  Ordered by Dr.CHEN -- refer to specialist
-
-Diagnoses recorded in audit trail: 3
-Cryptographic chain intact: true
-
-Each entry is SHA-256 linked to the previous one.
-Any modification to any field breaks the chain.
-Guarantee 3 confirmed: tamper-evident log -- every diagnosis is permanently traceable.
-```
+All show the same pattern: without a real AI backend, every decision escalates to human review. No automatic decisions without evidence.
 
 ---
 
@@ -428,17 +300,16 @@ Honestly: it is a working prototype with real, verifiable guarantees.
 
 What works today:
 - The four guarantees (verified by 284 conformance tests + 338 unit tests)
-- Cryptographic audit trail with hash chains
+- Cryptographic audit trail with hash chains and external anchor verification
+- OpenAI backend using real token log-probabilities for confidence
 - Domain calibration with Brier score, ECE, and false accept/reject rates
-- OpenAI and Anthropic backends with documented confidence computation
+- Weighted chain confidence with position decay and weak-step penalization
 - Compliance-supporting regulatory export
 
 What does not yet exist:
 - Distributed audit storage
 - A mature package ecosystem
 - Known production deployments
-
-See [TECHNICAL_REPORT.md](TECHNICAL_REPORT.md) for the formal language specification, BNF grammar, experimental evaluation, and comparison with related work.
 
 ---
 
@@ -458,7 +329,7 @@ Audits whether LLM API providers execute the model they claim. Ledge audits whet
 
 **SAUP** — Zhao et al., 2024  
 [arxiv:2412.01033](https://arxiv.org/abs/2412.01033)  
-Uncertainty propagation through multi-step LLM agent reasoning at runtime. Ledge implements this as `chain_confidence()` at the language level and enforces it at analysis time.
+Uncertainty propagation through multi-step LLM agent reasoning at runtime using situational weights. Ledge implements transitive uncertainty propagation as `chain_confidence()` at the language level — using position-weighted confidence decay and weak-step penalization — and enforces it at analysis time.
 
 **On the research gap:**  
 We found no published work combining pre-execution enforcement of AI confidence handling with empirical domain calibration and cryptographic audit trails in a single language. If you know of relevant work we missed, open an issue.
