@@ -223,7 +223,7 @@ class TestFormatterProperties:
         from ledge_lang.formatter import format_ledge
         root = os.path.join(os.path.dirname(__file__), '..', '..', 'examples', 'tour.ledge')
         if os.path.exists(root):
-            with open(root) as f:
+            with open(root, encoding='utf-8') as f:
                 src = f.read()
             fmt1 = format_ledge(src)
             fmt2 = format_ledge(fmt1)
