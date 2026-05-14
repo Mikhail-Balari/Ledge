@@ -313,7 +313,7 @@ The export meets the structural requirements of Ledge's Article 12/13 evidence s
 Honestly: it is a working prototype with real, verifiable guarantees.
 
 What works today:
-- The four guarantees (verified by 284 conformance tests + 338 unit tests)
+- The four guarantees (verified by 284 conformance tests + 339 unit tests)
 - Cryptographic audit trail with hash chains and external anchor verification
 - OpenAI backend using real token log-probabilities for confidence
 - Domain calibration with Brier score, ECE, and false accept/reject rates

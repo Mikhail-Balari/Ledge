@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ledge-lang"
-version = "1.1.5"
+version = "1.1.6"
 description = "Ledge is a programming language and governance runtime for auditable, uncertainty-aware AI decisions."
 readme = "README.md"
 license = { text = "MIT" }
