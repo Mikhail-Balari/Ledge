@@ -11,16 +11,6 @@ and calibrates thresholds from real-world accuracy.
 
 ---
 
-## What is Ledge?
-
-**For non-technical readers:**  
-Every AI system — ChatGPT, Claude, any model — sometimes gives answers it is not sure about. The problem is it does not always tell you when. Ledge is a programming language where, if a developer tries to use an AI answer without first checking how confident the AI was, the program refuses to run. Not as a suggestion. As a hard rule. And every decision the system makes is recorded in a tamper-evident log that can be verified mathematically.
-
-**For technical readers:**  
-Ledge enforces `Uncertain[T]` as a first-class type. Unsafe use of an uncertain value is caught by a static pre-execution typechecker — the program does not run. The type system, runtime, cryptographic audit trail, and calibration layer form a governance stack for AI decisions. Confidence is not trusted; it is recorded, compared against outcomes, and used to derive statistically grounded thresholds per model and domain.
-
----
-
 ## Why does this matter?
 
 Most general-purpose languages allow code like this to run with no error:
@@ -52,16 +42,29 @@ else:
     show "Refer to specialist — confidence too low"
 ```
 
+### But aren't confidence scores arbitrary?
+
+Model confidence scores are imperfect. OpenAI logprobs are not calibrated for your domain. Anthropic's structured self-assessment is self-reported. Ledge does not claim these scores are ground truth.
+
+What Ledge does: it forces you to handle them, records every decision, captures real outcomes, and measures empirically whether the confidence scores from your chosen model are actually predictive in your domain. If your model says 0.9 confidence but only achieves 70% accuracy on your medical data, Ledge detects that and raises your threshold automatically.
+
+You cannot know if confidence is useful until you measure it. Ledge gives you the infrastructure to measure it.
+
 ---
 
-## Core position
+## Why a language and not a Python library?
 
-Ledge does not claim that model confidence is inherently trustworthy.  
-Although confidence quantification in LLMs remains an open research problem — with active challenges in scalability, interpretability, and robustness — Ledge takes a different stance:
+A library can ask you to call `check_confidence()`. It cannot prevent you from forgetting.
 
-**"Although confidence may be imperfect, your system cannot ignore it. And Ledge gives you infrastructure to measure empirically whether it is useful."**
+In Python, this code compiles, runs, and nobody is warned:
 
-That is the claim. It is defensible.
+```python
+result = model.classify(patient_symptoms)
+send_treatment_recommendation(result["diagnosis"])
+# model was 30% confident. nobody checked.
+```
+
+A Python typechecker cannot detect that `result` carries uncertainty without explicit annotations on every function that touches AI output — annotations developers routinely omit. Ledge is a language because the only way to *guarantee* — not suggest, guarantee — that uncertain values are handled before use is to own the type system entirely. A library enforces conventions. Ledge enforces correctness.
 
 ---
 
@@ -203,6 +206,8 @@ backend = anthropic_backend(api_key="sk-ant-...", model="claude-3-haiku-20240307
 **Important:** "Confidence from backend" does not mean "the model is 92% sure in an absolute sense." It means the backend returned a score using the method above. For OpenAI logprobs, this is a token-probability-derived confidence estimate — more grounded than self-reported confidence, but not assumed to be calibrated for your domain. For Anthropic structured output, it is a self-reported score. Treat both as signals, not ground truth. The calibration layer (Layer 3) exists precisely because these scores may not reflect real accuracy.
 
 ### Layer 3 — Domain calibration
+
+This is the answer to "but confidence scores are arbitrary" — see the framing above.
 
 Ledge compares declared confidence against real outcomes per model and domain:
 

@@ -9,7 +9,7 @@ description = "Ledge is a programming language and governance runtime for audita
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Mikhail Balari" }]
-keywords = ["programming-language", "interpreter", "ai", "language-design"]
+keywords = ["programming-language", "interpreter", "ai", "language-design", "ai-governance", "uncertainty", "llm", "confidence", "audit-trail", "compliance", "type-safety", "regulated-ai", "interpretable-ai"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
