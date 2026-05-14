@@ -44,6 +44,8 @@ else:
 
 ### But aren't confidence scores arbitrary?
 
+Ledge does not trust confidence scores. It measures them.
+
 Model confidence scores are imperfect. OpenAI logprobs are not calibrated for your domain. Anthropic's structured self-assessment is self-reported. Ledge does not claim these scores are ground truth.
 
 What Ledge does: it forces you to handle them, records every decision, captures real outcomes, and measures empirically whether the confidence scores from your chosen model are actually predictive in your domain. If your model says 0.9 confidence but only achieves 70% accuracy on your medical data, Ledge detects that and raises your threshold automatically.
@@ -65,6 +67,8 @@ send_treatment_recommendation(result["diagnosis"])
 ```
 
 A Python typechecker cannot detect that `result` carries uncertainty without explicit annotations on every function that touches AI output — annotations developers routinely omit. Ledge is a language because the only way to *guarantee* — not suggest, guarantee — that uncertain values are handled before use is to own the type system entirely. A library enforces conventions. Ledge enforces correctness.
+
+This is not solved by mypy or static type checkers. mypy verifies type consistency — it cannot verify that you checked confidence before unwrapping a value. Expressing that constraint requires dependent types or effect systems that Python does not have. Ledge has them because it owns the type system entirely.
 
 ---
 
@@ -148,6 +152,8 @@ Guarantee verified: any modification breaks the chain.
 
 Every AI decision is recorded with a SHA-256 hash chain. Changing any field — confidence, timestamp, result — breaks the chain and is detected immediately. An external anchor file (`~/.ledge/anchors.jsonl`) records chain state every 10 decisions — if the SQLite database is deleted and regenerated, the anchors detect the inconsistency.
 
+**Deleting and regenerating the database is detected.** The anchor file lives outside the database. If the database is wiped and rebuilt, the anchors show a state discontinuity. An attacker would need to control both the database and the anchor file to forge a clean history.
+
 ```bash
 ledge audit --verify-anchors   # verify anchor file against current database
 ```
@@ -175,6 +181,9 @@ Uncertain output → forced handling → logged decision
      → recorded outcome → calibrated threshold
           → safer future decision
 ```
+
+**What about multi-step chains?**
+Confidence degrades across reasoning steps. If each step is 0.85 confident, five steps yield 0.85^5 = 0.44 — not 0.85. Ledge handles this with `chain_confidence()`, which applies position-weighted decay and penalizes weak steps. The result is a single propagated confidence value for the full chain, subject to the same enforcement rules as any other uncertain value.
 
 ### Layer 1 — Pre-execution uncertainty safety
 
@@ -316,6 +325,9 @@ What does not yet exist:
 - A mature package ecosystem
 - Known production deployments
 
+**Zero production deployments — why should I trust this?**  
+You should not trust it — you should verify it. Every guarantee in this document is checkable in under 5 minutes with no API key and no account. The guarantees either hold when you run them or they do not. That is the answer to zero production deployments.
+
 ---
 
 ## How Ledge relates to existing work
@@ -374,6 +386,8 @@ python -m pytest tests/unit/  # 338 passed, 1 pre-existing Windows encoding fail
 - Native compiler requires `gcc` (experimental)
 - Ledge Studio requires `pip install "ledge-lang[studio]"`
 - Known production deployments: zero
+- Audit trail protects against post-hoc modification by any actor with database access, including the system operator. It does not protect against an attacker who also controls the anchor file.
+- Designed for Python/JavaScript developers working with LLMs today — not a theoretically optimal type system. Languages with dependent types (Haskell, Idris) offer stronger guarantees at much higher adoption cost.
 
 ---
 
