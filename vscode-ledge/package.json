@@ -1,8 +1,8 @@
 {
   "name": "ledge-lang",
   "displayName": "Ledge",
-  "description": "Language support for Ledge \u2014 the first programming language designed for AI generation",
-  "version": "1.1.6",
+  "description": "Language support for Ledge \u2014 an experimental DSL for making AI uncertainty explicit in program flow",
+  "version": "1.2.0",
   "publisher": "ledge-lang",
   "icon": "icon.png",
   "engines": {

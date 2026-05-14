@@ -67,17 +67,19 @@ The calibrated threshold is derived from your actual outcome data.
 
 ## Is the audit trail legally acceptable?
 
-The audit trail exports in EU AI Act Article 12/13 compliant
-JSON-LD format:
+The audit trail exports in a JSON-LD format structured against the
+EU AI Act Article 12/13 evidence schema:
 
     ledge audit --export-regulatory report.json
     ledge audit --validate-regulatory report.json
 
-Output: "VALIDATION PASSED — EU AI Act Article 12/13 compliant"
+Output: "VALIDATION PASSED — Article 12/13 evidence export is structurally valid"
 
-Note: Legal acceptance depends on jurisdiction and use case.
-The format meets the technical documentation requirements of
-the EU AI Act. Consult legal counsel for specific regulatory guidance.
+This is supporting evidence, not a compliance certification.
+Generating a structurally valid JSON-LD is a necessary but not
+sufficient condition for any specific regulatory regime. Whether
+the export satisfies legal compliance in your jurisdiction is a
+question for counsel.
 
 ## Does it integrate with real stacks?
 
@@ -94,10 +96,13 @@ that compares behavior with and without a real backend.
 ## Is this a demo language or production-ready?
 
 Honest answer: Ledge is early-stage and experimental.
-What is production-ready:
-- The four guarantees (verified by 338 unit tests + 284 conformance tests)
-- The cryptographic audit trail
-- The EU AI Act regulatory export
+What is working today (see CI/test suite for authoritative counts):
+- The four runtime properties (covered by the unit suite and the
+  conformance harness; see GUARANTEES.md)
+- The SHA-256 chained audit log with external anchor (limited threat
+  model — see GUARANTEES.md Property 3)
+- The Article 12/13 evidence export (structural only — not a
+  compliance certification)
 - The OpenAI and Anthropic backends
 
 What is not production-ready:

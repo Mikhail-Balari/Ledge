@@ -1,15 +1,15 @@
-# Ledge: A Programming Language for Governed AI Decisions
+# Ledge: An Experimental DSL for Governed AI Decisions
 
-**Technical Report — v1.1.0**  
-Mikhail Balari  
-May 2026  
+**Technical Report — v1.2.0**
+Mikhail Balari
+May 2026
 https://github.com/Mikhail-Balari/Ledge
 
 ---
 
 ## Abstract
 
-We present Ledge, a programming language where the use of an AI model output without explicit confidence verification is a static analysis error. Ledge introduces `Uncertain[T]` as a first-class type: values produced by AI inference operations carry uncertainty metadata that the type system tracks and enforces before execution. We describe the language design, its formal grammar, four verifiable runtime guarantees, a domain calibration infrastructure for empirical confidence measurement, and a cryptographic audit trail for decision traceability. We report performance measurements on the reference implementation and compare Ledge with concurrent work on typed LLM inference and uncertainty quantification.
+We present Ledge, an experimental DSL whose static checker rejects direct use of an AI model output that has not passed through a recognized confidence-handling construct. Ledge surfaces `Uncertain[T]` as a runtime type: values produced by AI inference operations carry uncertainty metadata that the static analyzer tracks intraprocedurally and rejects before execution unless the value is extracted via a confidence guard, the `when(...)` builtin, or the explicit `unsafe_value_of(...)` escape hatch. We describe the language design, its grammar, four verifiable runtime properties, a domain calibration infrastructure for empirical confidence measurement, and a SHA-256 chained audit log for decision traceability. We report performance measurements on the reference implementation and compare Ledge with concurrent work on typed LLM inference and uncertainty quantification. The static checker is not a formal type system: it is a single-file, flow-sensitive AST walker with documented limitations and no mechanized soundness proof.
 
 **Note on methodology:** The experimental evaluation in Section 6 was conducted on the reference implementation using synthetic benchmarks. No external user studies or production deployments exist at the time of writing. Results are reported with this context.
 
@@ -21,7 +21,7 @@ This report makes the following contributions:
 
 1. **Uncertain[T] as a language primitive.** We define a type system where AI inference results carry confidence metadata enforced at static analysis time. Unsafe use — consuming an uncertain value without confidence verification — prevents program execution. The typechecker raises `TypecheckerInternalError` on internal bugs rather than silently returning an empty result.
 
-2. **Four verifiable runtime guarantees.** We specify and demonstrate four properties of the Ledge runtime: zero confidence without a connected backend, pre-execution enforcement of confidence handling, cryptographic audit trail integrity, and safe failure by design. Each guarantee is verifiable in under five minutes without an API key.
+2. **Four verifiable runtime properties.** We specify and demonstrate four properties of the Ledge runtime: zero confidence without a connected backend, pre-execution enforcement of confidence handling, hash-chained audit log with a documented threat model, and safe failure by design. Each property is verifiable in under five minutes without an API key.
 
 3. **Domain calibration infrastructure.** We implement a calibration layer that compares declared model confidence against empirically recorded outcomes per (model, domain) pair, computing Brier score, Expected Calibration Error (ECE), false accept rate, false reject rate, and calibrated decision thresholds.
 
@@ -146,9 +146,11 @@ This produces a more conservative estimate than simple multiplication. For a thr
 
 ---
 
-## 4. Formal Grammar
+## 4. Grammar
 
-The following grammar is extracted directly from the reference parser (`ledge_lang/parser.py`). AI primitives are marked.
+The following grammar is a description of what the reference parser
+(`ledge_lang/parser.py`) accepts. It is not a normative specification
+with a mechanized equivalence proof. AI primitives are marked.
 
 ```bnf
 -- ── Program ─────────────────────────────────────────────────
@@ -283,19 +285,19 @@ DEDENT          ::= decrease in indentation
 
 ---
 
-## 5. Four Verifiable Guarantees
+## 5. Four Verifiable Runtime Properties
 
 **G1 — Zero confidence without a backend.**
-Without a connected AI model, every AI primitive returns `confidence = 0.0`. This is enforced by the runtime, not by convention. Any system where the decision threshold is above 0.0 will fail safe — escalating every decision rather than acting on fabricated certainty. Verifiable: `python demo_guarantee1.py`
+Without a connected AI model, every AI primitive returns `confidence = 0.0`. This is a runtime property, not a static one. Any system where the decision threshold is above 0.0 will fail safe — escalating every decision rather than acting on fabricated certainty. Verifiable: `python demo_guarantee1.py`
 
-**G2 — Unsafe AI use is a pre-execution error.**
-The typechecker runs before any code executes. Unsafe use of an `Uncertain` value — passing it to `show`, arithmetic, or function calls without confidence verification — produces an error that prevents execution. Verifiable: `python demo_guarantee2.py`
+**G2 — Direct use of `Uncertain[T]` is rejected before execution.**
+The static analyzer runs before any code executes. Direct use of an `Uncertain` value — passing it to `show`, arithmetic, function calls, boolean conditions, or `value_of` outside a recognized confidence guard — produces an error that prevents execution. This is a static-analysis property, not a soundness theorem. Verifiable: `python demo_guarantee2.py`
 
-**G3 — Cryptographic audit trail integrity.**
-Every AI decision is recorded with a SHA-256 hash chain. Each entry includes: operation type, input hash, confidence score, model identifier, and timestamp. The chain hash links each entry to the previous. Any modification to any field breaks the chain and is detected by `verify()`. The trail persists to SQLite between sessions. Verifiable: `python demo_guarantee3.py`
+**G3 — Hash-chained audit log with a documented threat model.**
+Every AI decision is recorded with a SHA-256 hash chain. Each entry includes: operation type, input hash, confidence score, model identifier, and timestamp. The chain hash links each entry to the previous. Modifying any field breaks the chain and is detected by `verify()`. An external anchor file (`~/.ledge/anchors.jsonl`) detects deletion-and-rebuild. The threat model is limited: an attacker who controls both the SQLite store and the anchor file can forge a clean history. Verifiable: `python demo_guarantee3.py`
 
 **G4 — Safe failure by design.**
-Without a backend, the system does not act. This is a consequence of G1, not a configuration option. A system where `confidence = 0.0` and where the threshold for automatic action is `>= 0.85` cannot take automatic action. Verifiable: `python demo_guarantee4.py`
+Without a backend, the system does not act. This is a consequence of G1 for programs following the escalation pattern, not a property of the runtime itself. A program that hard-codes `value_of(r) or "approve"` will still approve. Verifiable: `python demo_guarantee4.py`
 
 ---
 
@@ -398,7 +400,7 @@ The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA
 
 **Current limitations:**
 
-- No formal proofs of the type system properties — the four guarantees are demonstrated empirically, not proved
+- No formal proofs of the static analysis rules — the four properties are demonstrated by runnable scripts, not proved. The static checker is a flow-sensitive AST walker with documented limitations (intraprocedural, no early-return narrowing, no `not is_uncertain(x)` narrowing, single-hop alias only).
 - No distributed audit trail — currently local SQLite with external anchor file; not suitable for distributed deployments
 - No package ecosystem beyond 15 included utility packages
 - Native compilation to C99 is experimental and requires `gcc`
@@ -417,8 +419,8 @@ The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA
 **Future directions:**
 
 - Python static analyzer applying Ledge's enforcement rules to existing Python codebases without language migration
-- Formal type system specification and mechanized proofs
-- Distributed audit trail with cryptographic guarantees across nodes
+- A more formal type-rules document with judgment-style notation, plus either a paper-and-pencil soundness argument or a mechanized proof
+- Distributed audit trail with cross-node hash chaining
 - Automated calibration pipelines for structured-outcome domains
 
 ---

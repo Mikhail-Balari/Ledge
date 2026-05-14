@@ -45,8 +45,35 @@ show upper(r)
     def test_confidence_of_is_safe(self):
         clean('define r as analyze("x") using y\nshow confidence_of(r)')
 
-    def test_value_of_is_safe(self):
-        clean('define r as analyze("x") using y\nshow value_of(r)')
+    def test_value_of_without_guard_is_error(self):
+        """value_of(x) on an Uncertain x outside a confidence guard is rejected.
+        This is the central guarantee of the strengthened checker: explicit
+        extraction alone is not enough — the extraction must be inside a
+        recognized guard, or use the explicit unsafe_value_of escape hatch."""
+        assert has_error('define r as analyze("x") using y\nshow value_of(r)')
+
+    def test_value_of_inside_confidence_guard_is_safe(self):
+        """Inside `if confidence_of(r) >= t:`, r is narrowed and value_of(r)
+        is legal in that block."""
+        clean('''
+define r as analyze("x") using y
+if confidence_of(r) >= 0.85:
+    show value_of(r)
+''')
+
+    def test_value_of_inside_is_confident_guard_is_safe(self):
+        """is_confident(r) is also a recognized narrowing guard."""
+        clean('''
+define r as analyze("x") using y
+if is_confident(r):
+    show value_of(r)
+''')
+
+    def test_unsafe_value_of_is_allowed_outside_guard(self):
+        """unsafe_value_of(x) is the explicit escape hatch — the deliberately
+        ugly name signals that confidence was not checked. The checker permits
+        it anywhere; the badge of unsafety is the function name itself."""
+        clean('define r as analyze("x") using y\nshow unsafe_value_of(r)')
 
     def test_is_confident_is_safe(self):
         clean('define r as analyze("x") using y\nshow is_confident(r)')
@@ -144,12 +171,23 @@ for each item in results:
     show confidence_of(item)
 ''')
 
-    def test_map_classify_value_of_is_safe(self):
-        clean('''
+    def test_map_classify_value_of_without_guard_is_error(self):
+        """Same rule applies to elements of list[uncertain[T]] — value_of(item)
+        in the loop body without a confidence guard is rejected."""
+        assert has_error('''
 define items as list ["a", "b"]
 define results as map(items, given x: classify(x) using ["pos","neg"])
 for each item in results:
     show value_of(item)
+''')
+
+    def test_map_classify_unsafe_value_of_is_allowed(self):
+        """unsafe_value_of in the loop body is permitted (explicit escape)."""
+        clean('''
+define items as list ["a", "b"]
+define results as map(items, given x: classify(x) using ["pos","neg"])
+for each item in results:
+    show unsafe_value_of(item)
 ''')
 
     def test_map_non_ai_lambda_is_safe(self):

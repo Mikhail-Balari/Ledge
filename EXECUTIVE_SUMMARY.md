@@ -1,103 +1,89 @@
-# Ledge v1.1.0 — Executive Summary
+# Ledge — One-page summary
 
-**A programming language designed from scratch for AI-first software.**
+**Version 1.2.0**
+
+A small experimental DSL for making AI uncertainty explicit in program flow.
+Surrounds AI calls with a static analysis pass that rejects direct use of
+uncertain results, records every AI decision in a SHA-256 chained audit log,
+and compares declared confidence against real outcomes so the threshold can
+be recalibrated.
 
 ---
 
-## The problem it solves
+## The thirty-second pitch
 
-The most common bug in AI code in production:
+The most common production bug in AI code is "I forgot to check confidence":
 
 ```python
-# Python — fails silently 30% of the time
+# Python — runs fine, silently acts on low-confidence outputs
 result = model.classify(email)
-if result["label"] == "spam":   # ← using the result without checking confidence
-    delete_email()              # ← may delete legitimate emails
-```
-
-In Ledge this **does not compile**:
-
-```ledge
-define result as classify(email) using ["spam", "ok"]
-if result = "spam":             # TYPECHECKER ERROR — result not extracted
+if result["label"] == "spam":
     delete_email()
 ```
 
-The only correct way to write it:
+In Ledge the static analyzer rejects this:
 
 ```ledge
+define result as classify(email) using ["spam", "ok"]
+if value_of(result) = "spam":   # ERROR — value_of outside a confidence guard
+    delete_email()
+```
+
+The accepted form is one of:
+
+```ledge
+# (1) Recognized confidence guard:
 if confidence_of(result) >= 0.9:
     if value_of(result) = "spam":
         delete_email()
+    else:
+        # legitimate, do nothing
 else:
     send_to_human_review()
+
+# (2) Runtime-checked extraction:
+if when(result, 0.9, "ok") = "spam":
+    delete_email()
+
+# (3) Explicit escape hatch (deliberately ugly name):
+if unsafe_value_of(result) = "spam":
+    delete_email()
 ```
 
-**This is not a convention. It is a property of the type system, formally verified.**
+This is a static-analysis property, not a formal theorem. The checker is a
+single-file, flow-sensitive AST walker with documented limitations. See
+[GUARANTEES.md](GUARANTEES.md) for the precise contract and the explicit
+list of cases it does NOT yet recognize.
 
 ---
 
-## Technical evidence
+## What's in the box
 
-| Claim | Evidence |
-|-------|----------|
-| Unsafe AI use = typechecker ERROR | `experiments/safety_proof.py` — THEOREM PROVED |
-| 6/6 unsafe patterns caught, 0 false positives | `tests/test_security.py` — 26 tests |
-| confidence=0.0 always without backend | 50 inputs × 5 ops = 250 cases — 0 failures |
-| Faster than CPython (numeric code) | **18.5x** fib(28) in CI; **27-80x** on real hardware |
-| JIT compiler | Hot functions → native .so (experimental, requires gcc) |
-| 284/284 conformance + 324 unit tests | `python tests/conformance.py` + `pytest tests/unit/` |
-
----
-
-## For Google (language/infra)
-
-- **Native compiler**: Ledge → C99 → gcc → binary (`ledge compile`)
-- **JIT**: hot functions compiled in background
-- **GC**: reference counting in the C runtime
-- **Profiler**: `from ledge_lang.profiler import profile`
-- **15 packages**: math, text, data, ai_utils, http, validation, datetime, cache, metrics, crypto, env, audit, io, strings, collections
-- **Formal type system**: `docs/TYPE_SYSTEM.md` with inference rules
+| Component | Status |
+|---|---|
+| Static analyzer (intraprocedural Uncertain tracking) | works, 35 tests |
+| Runtime `Uncertain[T]` / `AIDerived` / `UncertainChain` | works |
+| Tree-walker interpreter + bytecode VM | works, 1500-program differential |
+| SHA-256 chained audit log with external anchor file | works, threat model documented |
+| Domain calibration (Brier, ECE, false accept/reject) | works |
+| Model migration comparison | works |
+| EU AI Act Article 12/13 evidence export (JSON-LD) | works (structural only — see caveats) |
+| OpenAI backend (token logprobs) | works (logprobs are signals, not calibrated probabilities) |
+| Anthropic backend (structured self-assessment) | works (self-reported, not derived from weights) |
+| LSP server, formatter, debugger | works |
+| Native C99 compiler (experimental, requires gcc) | partial |
+| 284 conformance tests + 343 unit tests | passing on Linux/macOS/Windows |
 
 ---
 
-## For OpenAI (AI tooling)
+## What this is NOT
 
-- **OpenAI backend**: `from ledge_lang.backends import openai_backend`
-- **Anthropic backend**: `from ledge_lang.backends import anthropic_backend`
-- **Auto-detect**: `from ledge_lang import get_backend; backend = get_backend()`
-- **Streaming**: `streaming_backend(openai_backend(), on_token=callback)`
-- **Function calling**: `tools_backend(tools=[tool_def])`
-- **Working demo**: `examples/ai_pipeline_demo.ledge`
-
----
-
-## For Anthropic (safety + research)
-
-- **Executable formal proof**: `python experiments/safety_proof.py`
-- **Verified lemmas**:
-  - L1: confidence=0.0 without backend (50 inputs × 5 operations)
-  - L2: 6/6 dangerous patterns caught, 0 false positives
-- **Quantitative study**: `docs/AI_SAFETY_STUDY.md`
-  - Python: 70% of AI programs have confidence bugs on first attempt
-  - Ledge: 0% — the typechecker rejects them before running
-- **Automatic audit trail**: zero additional lines of code
-
----
-
-## Authorized claims (with evidence)
-
-✓ "Ledge makes it structurally impossible to use AI results without handling confidence"
-✓ "Compiled Ledge is 5-80x faster than CPython for numeric code"
-✓ "Automatic audit trail on every AI call — no extra code"
-✓ "Zero fabricated AI confidence without backend — runtime invariant"
-✓ "284/284 conformance + 324 unit tests, formal semantics, idempotent formatter"
-
-## Claims NOT yet authorized
-
-✗ "Mature package ecosystem" (15 packages; Python has 400k)
-✗ "Ready for critical production without supervision" (no OS sandbox, no GC for cycles)
-✗ "Faster than Python for any program" (only for intensive numeric computation)
+- Not a formal type system. No mechanized soundness proof.
+- Not a calibrated uncertainty framework. Backend confidence is a signal.
+- Not a legal compliance product. Regulatory export is supporting evidence.
+- Not tamper-proof against an attacker who controls both the DB and the anchor file.
+- Not a replacement for evals, monitoring, or human review.
+- Not a general-purpose replacement for Python.
 
 ---
 
@@ -105,16 +91,23 @@ else:
 
 ```bash
 pip install ledge-lang
-pip install ledge-lang[openai]      # + OpenAI backend
-pip install ledge-lang[anthropic]   # + Anthropic backend
+ledge demo medical_triage             # runs without an API key
 ```
 
-## Audit score
+Optional extras:
 
-**970/1000** in the 970+ Protocol for Public Release.
-The only non-technical gap: HG-10 requires 2 external installations by real users.
-Everything technical: verified, tested, documented.
+```bash
+pip install "ledge-lang[studio]"      # web IDE
+```
+
+OpenAI / Anthropic backends are pulled in as needed via their own SDKs;
+no Ledge-specific extras required.
 
 ---
 
-*Ledge v1.1.0 — `github.com/[your-username]/ledge`*
+## Where to go next
+
+- [README.md](README.md) — full quickstart, the precise checker contract, FAQ, comparisons.
+- [GUARANTEES.md](GUARANTEES.md) — each runtime property paired with a runnable demo and its threat model.
+- [CALIBRATION_GUIDE.md](CALIBRATION_GUIDE.md) — minimum sample sizes, drift handling, what calibration doesn't fix.
+- [HACKER_NEWS_READINESS.md](HACKER_NEWS_READINESS.md) — what was softened, strengthened, and what remains before a formal PL claim could be made.

@@ -1,6 +1,7 @@
 # Legal contracts — Ledge AI-first
 # Extracts clauses from contracts and automatically flags low-confidence ones.
-# The system guarantees that NO low-confidence clause passes without review.
+# Under the program's escalation pattern, low-confidence clauses are routed
+# to human review rather than acted on automatically.
 
 define MIN_CONFIDENCE_CLAUSE as 0.80
 

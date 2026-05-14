@@ -1,8 +1,11 @@
-# Ledge Grammar — EBNF Formal Specification
+# Ledge Grammar — EBNF Reference
 ## Version 1.0.0 — Synchronized with parser.py
 
-This grammar is normative. Every construct that appears here parses in the
-reference implementation. Every parseable public construct appears here.
+This grammar is a description of the language as accepted by the reference
+parser, not a normative formal specification with a mechanized
+equivalence proof. Every construct that appears here parses in the
+reference implementation, and every parseable public construct is
+intended to appear here.
 Grammar marked [EXPERIMENTAL] parses but has incomplete runtime support.
 Grammar marked [ROADMAP] is planned but not yet parseable.
 

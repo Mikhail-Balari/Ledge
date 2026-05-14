@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
-ledge — Ledge programming language toolchain v0.2
+ledge — Ledge programming language toolchain
 
 Usage:
   ledge                        Start interactive REPL
   ledge run <file.ledge>       Run a Ledge program
+  ledge demo [name]            List or run a bundled demo (works after `pip install`,
+                               no clone needed). `ledge demo` lists available demos;
+                               `ledge demo medical_triage` runs that demo.
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -59,6 +62,10 @@ def main():
             _run_nl(target, extra_args=args[2:])
         else:
             _run_file(target, extra_args=args[2:])
+        return
+
+    if args[0] == "demo":
+        _demo(args[1:])
         return
 
     if args[0] == "check":
@@ -131,6 +138,31 @@ def main():
         _run_file(args[0], extra_args=args[1:])
     else:
         _repl()
+
+
+def _demo(args):
+    """List or run a bundled demo. Works after `pip install ledge-lang` —
+    no need to clone the repository."""
+    from ledge_lang.demos import list_demos, demo_path
+
+    if not args:
+        names = list_demos()
+        if not names:
+            print("ledge demo: no bundled demos found")
+            sys.exit(1)
+        print("Bundled demos (run with `ledge demo <name>`):")
+        for n in names:
+            print(f"  {n}")
+        return
+
+    name = args[0]
+    path = demo_path(name)
+    if not path:
+        print(f"ledge demo: unknown demo '{name}'", file=sys.stderr)
+        print("Run `ledge demo` (no argument) to list available demos.",
+              file=sys.stderr)
+        sys.exit(1)
+    _run_file(path, extra_args=args[1:])
 
 
 def _run_file(path, extra_args=None):

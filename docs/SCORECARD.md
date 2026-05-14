@@ -53,14 +53,14 @@ All verified at runtime on every CI run:
 |---|---|---|
 | Novedad | 7/10 | Uncertain[T] + Stream + Contracts + AuditTrail + Linter |
 | Claridad conceptual | 9/10 | One form per concept, English-natural |
-| Rigor formal | 8/10 | SEMANTICS.md independent of impl, GRAMMAR.md synced |
+| Reference completeness | 8/10 | SEMANTICS.md + GRAMMAR.md describe the implementation; not mechanized proofs |
 | Implementabilidad | 9/10 | 984 tests, 1500-program random differential, 0 divergences |
 | Coherencia semántica | 9/10 | All 10 invariants tested |
 | Sistema de tipos | 8/10 | Uncertain[T] + flow typing + ERROR on unsafe use |
 | Robustez | 9/10 | 984 tests, 0 crashes, RecursionError caught |
 | Tooling | 8/10 | Formatter+Linter+LSP+Debugger+REPL+VS Code+CI |
 | Experiencia de desarrollador | 8/10 | 20/20 error messages with Fix/Tip |
-| Innovación real | 8/10 | Uncertain+AuditTrail+Contracts+FlowTyping = unique |
+| Innovación real | 7/10 | Combination of Uncertain+AuditTrail+Contracts+FlowTyping at language level (individual ideas have analogues elsewhere) |
 | Interoperabilidad | 8/10 | import "python:numpy" works |
 | Seguridad semántica | 9/10 | Zero fake confidence + linter + flow typing |
 | Performance actual | 4/10 | ~26x CPython (acceptable for AI workloads) |

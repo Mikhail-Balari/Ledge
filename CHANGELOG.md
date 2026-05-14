@@ -61,18 +61,22 @@ Breaking changes only occur on MAJOR version bumps.
 
 ## [1.0.0] — 2025
 
-First stable release. The language semantics are now stable.
-Backwards compatibility is guaranteed within major version 1.
+First stable release. The language semantics are intended to remain
+stable within major version 1; the project aims to preserve backward
+compatibility but no formal compatibility guarantee is offered while
+Ledge is pre-1.x-stable.
 
 ### AI-Native Features (new in 1.0)
 
 - **`Uncertain[T]`** — first-class type for all AI operation results
-- **Zero confidence without backend** — `analyze/classify/generate/ask/embed` 
+- **Zero confidence without backend** — `analyze/classify/generate/ask/embed`
   return `confidence=0.0` and `value=nothing` when no AI backend is connected.
-  This is a hard safety guarantee. The language never invents confident results.
+  Runtime fail-safe default; the language never returns a non-zero
+  confidence in the absence of a connected backend.
 - **Automatic audit trail** — every AI call is automatically logged with
-  input hash, confidence, model, and timestamp. `audit_query()` and `audit_export()`
-  for GDPR/HIPAA/regulatory compliance.
+  input hash, confidence, model, and timestamp. `audit_query()` and
+  `audit_export()` produce supporting evidence for governance review;
+  not by themselves a GDPR/HIPAA/regulatory compliance claim.
 - **Typechecker enforcement** — using `Uncertain[T]` without extracting the value
   is a type ERROR (not warning). Safe extraction: `when(r, 0.8, fallback)`.
 - **Contracts** — `requires:` / `ensures:` blocks in function definitions.
@@ -110,7 +114,7 @@ Backwards compatibility is guaranteed within major version 1.
 
 ### Documentation (new in 1.0)
 
-- `docs/SEMANTICS.md` — formal operational semantics independent of implementation
+- `docs/SEMANTICS.md` — implementation-oriented semantics (reference for implementors)
 - `docs/FEATURE_MATRIX.md` — honest shipped/experimental/roadmap status
 - `docs/GOVERNANCE.md` — versioning policy, proposal process, bus factor plan
 - `docs/RED_TEAM.md` — live list of strongest criticisms with resolution status

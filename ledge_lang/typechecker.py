@@ -1,20 +1,56 @@
 """
-Ledge Type Checker v1.0
-=======================
-Static analysis for Ledge programs with AI-native type safety.
+Ledge static analysis pass
+==========================
+A lightweight, flow-sensitive analysis over the parsed AST. This is not a
+formal type system, not a dependent type system, and not an effect system.
+It is a single-file checker that tracks which variables currently hold
+Uncertain[T] values and rejects a small set of unsafe uses.
 
 Two levels of severity:
-  ERROR   — unsafe use of Uncertain[T] as if it were T without extraction
+  ERROR   — direct use of an Uncertain[T] value where a plain T was expected
   WARNING — type annotation mismatch (advisory for non-AI types)
 
-AI-native rules (ERRORS, not warnings):
-  1. Using result of analyze/classify/generate/ask/embed directly
-     without checking confidence or extracting value is an ERROR.
-  2. Assigning Uncertain value to a declared typed variable is an ERROR.
+Rules (ERRORS, not warnings):
+  1. Using the result of analyze/classify/generate/ask/embed directly
+     (in show, arithmetic, function calls, boolean conditions, or assigning
+     to a non-uncertain typed variable) is an ERROR.
+  2. `value_of(x)` on an Uncertain `x` is an ERROR outside of a recognized
+     confidence guard. Inside a guard such as `if confidence_of(x) >= t:`
+     or `if is_confident(x):` the variable is narrowed and `value_of(x)`
+     becomes legal in that block.
+  3. `unsafe_value_of(x)` is permitted anywhere. It is the explicit escape
+     hatch — the deliberately ugly name signals to readers (and reviewers)
+     that confidence was not checked.
 
-This design is intentional: in a language built for AI, using AI output
-as if it were certain is the primary source of bugs. The type checker
-enforces safe handling.
+Safe handling constructs the checker recognizes:
+  - `if confidence_of(x) >= threshold:` — narrows `x` inside the block.
+  - `if is_confident(x):` — narrows `x` inside the block.
+  - `define c as confidence_of(x); if c >= t:` — alias-aware narrowing.
+  - `when(x, threshold, fallback)` — runtime-checked extraction.
+  - `unsafe_value_of(x)` — explicit unchecked extraction.
+  - Early-return guard clauses: `if confidence_of(x) < t: return ...`,
+    `if is_uncertain(x): return ...`, `if not is_confident(x): return ...`,
+    or the alias form `if c < t: return ...`. After such a block (which
+    must always Return), the checker treats `x` as narrowed for the rest
+    of the enclosing block — the fallthrough only runs when the negation
+    holds. The recognized check forms are exactly the four above; other
+    conditions do not narrow.
+
+Documented limitations of this checker:
+  - Intraprocedural only — does not track Uncertain across function calls
+    in either direction. (Function parameters/returns annotated as
+    `uncertain[T]` are honored at the boundary; the runtime AIDerived
+    wrapper preserves provenance.)
+  - Conservative flow: only the patterns listed above are recognized as
+    guards. Conditional flow through loops, try/except, or non-Return
+    terminators is not analyzed.
+  - Early-return narrowing applies to single-branch ifs with no `else`.
+    `if low: return else: act` is also fine but uses positive narrowing
+    in the else, not the post-block fallthrough.
+  - No alias analysis beyond a single `define c as confidence_of(x)`.
+  - Lambdas in `map(...)` propagate inner Uncertain via list[uncertain[T]]
+    typing, but more complex higher-order patterns may not.
+  - This is an AST-walking analysis, not a soundness-proved type system.
 
 Usage:
     from ledge_lang.typechecker import check_types
@@ -79,13 +115,20 @@ AI_RETURNING_NODES = {
     "EmbedExpr":    "uncertain[list]",
 }
 
+# Builtins that accept an Uncertain[T] argument without a confidence guard.
+# `value_of` is intentionally NOT here — direct unwrap without a guard is an
+# error. Use `unsafe_value_of(x)` to opt out of the check explicitly.
 UNCERTAIN_SAFE_BUILTINS = {
-    "confidence_of", "value_of", "is_uncertain", "is_confident",
-    "when", "confidence_of", "uncertainty_of",
+    "confidence_of", "is_uncertain", "is_confident",
+    "when", "uncertainty_of", "unsafe_value_of",
 }
 
+# Function names treated as "extracting from Uncertain" — the call expression
+# returns the inner value's type ("any"). `value_of` is omitted here for the
+# same reason; outside a guard it falls through to the unsafe-argument check.
 SAFE_UNWRAP_PATTERNS = {
-    "when", "value_of", "confidence_of", "is_confident", "is_uncertain", "type", "str", "repr",
+    "when", "unsafe_value_of", "confidence_of",
+    "is_confident", "is_uncertain", "type", "str", "repr",
 }
 
 
@@ -151,6 +194,17 @@ class TypeChecker:
             if node.else_block:
                 self._check_block(node.else_block.stmts, env.child())
 
+            # Early-return narrowing: a single-branch `if cond: return` (no
+            # else) where `cond` is a recognized low-confidence check leaves
+            # the rest of the enclosing block guarded on the negation.
+            if (len(node.branches) == 1
+                    and not node.else_block
+                    and self._block_always_returns(node.branches[0][1].stmts)):
+                cond_only = node.branches[0][0]
+                post_narrowed = self._extract_negative_narrowing(cond_only)
+                for var_name in post_narrowed:
+                    self._uncertain.discard(var_name)
+
         elif t == "For":
             iter_type = self._infer_type(node.iterable, env) if hasattr(node, 'iterable') else None
             c = env.child()
@@ -215,7 +269,8 @@ class TypeChecker:
                     line=getattr(node, 'line', 0),
                     suggestion=(
                         f"Use: define {node.name} as when(ai_result, 0.8, fallback_value)\n"
-                        f"  Or: define {node.name} as value_of(ai_result)  # only if confident"
+                        f"  Or guard with: if confidence_of(ai_result) >= 0.85: ...\n"
+                        f"  Or (escape hatch): define {node.name} as unsafe_value_of(ai_result)"
                     )
                 )
         else:
@@ -293,10 +348,10 @@ class TypeChecker:
                 f"checked before use.",
                 line=getattr(node, 'line', 0),
                 suggestion=(
-                    f"show value_of({var_name})                       -- extract value (skip if low-confidence)\n"
-                    f"  show when({var_name}, 0.8, 'fallback')          -- safe extraction with threshold\n"
-                    f"  show confidence_of({var_name})                  -- show the confidence score\n"
-                    f"  if confidence_of({var_name}) >= 0.85: show ...   -- guard then use"
+                    f"if confidence_of({var_name}) >= 0.85: show value_of({var_name})  -- guard then use\n"
+                    f"  show when({var_name}, 0.8, 'fallback')              -- runtime-checked extraction\n"
+                    f"  show confidence_of({var_name})                       -- inspect the confidence score\n"
+                    f"  show unsafe_value_of({var_name})                     -- escape hatch (no confidence check)"
                 )
             )
 
@@ -327,8 +382,10 @@ class TypeChecker:
             # Check: calling a safe unwrap on uncertain → returns inner type
             if hasattr(node.callee, 'name'):
                 fn_name = node.callee.name
-                if fn_name in ("when", "value_of"):
-                    return "any"  # extracting from Uncertain
+                if fn_name in ("when", "unsafe_value_of"):
+                    # These always return the inner value's type; the argument
+                    # being Uncertain is the expected use, not an error.
+                    return "any"
                 if fn_name in ("confidence_of",):
                     return "number"
                 if fn_name in ("is_confident", "is_uncertain", "type", "str", "repr"):
@@ -451,6 +508,61 @@ class TypeChecker:
                 line=getattr(node, 'line', 0),
                 suggestion=f"if confidence_of({node.name}) >= 0.85:"
             )
+
+    def _block_always_returns(self, stmts) -> bool:
+        """Conservative: True if the last statement of the block is a Return.
+        Does not chase through nested ifs/loops — keeps the analysis simple
+        and predictable. Other terminators (Raise, etc.) are not recognized."""
+        if not stmts:
+            return False
+        return type(stmts[-1]).__name__ == "Return"
+
+    def _extract_negative_narrowing(self, cond) -> set:
+        """When a branch is known to always Return, the fallthrough sees the
+        NEGATION of `cond`. Return the set of variable names that become safe
+        in the fallthrough. Patterns:
+          - confidence_of(x) < t       — fallthrough: confidence >= t
+          - confidence_of(x) <= t      — fallthrough: confidence > t
+          - is_uncertain(x)            — fallthrough: x is not uncertain
+          - not is_confident(x)        — fallthrough: x is confident
+          - c < t / c <= t  where c was bound via `define c as confidence_of(r)`
+        Any other condition returns an empty set (no narrowing) — silence is
+        the safe default for an unrecognized check.
+        """
+        narrowed = set()
+        t = type(cond).__name__
+
+        if t == "BinOp" and cond.op in ("<", "<="):
+            left = cond.left
+            if (type(left).__name__ == "Call"
+                    and hasattr(left, 'callee')
+                    and getattr(left.callee, 'name', None) == "confidence_of"
+                    and left.args):
+                arg = left.args[0]
+                if type(arg).__name__ == "Identifier":
+                    narrowed.add(arg.name)
+            elif (type(left).__name__ == "Identifier"
+                    and left.name in self._confidence_aliases):
+                narrowed.add(self._confidence_aliases[left.name])
+
+        elif t == "Call" and hasattr(cond, 'callee'):
+            fn = getattr(cond.callee, 'name', None)
+            if fn == "is_uncertain" and cond.args:
+                arg = cond.args[0]
+                if type(arg).__name__ == "Identifier":
+                    narrowed.add(arg.name)
+
+        elif t == "UnaryOp" and cond.op == "not":
+            op = cond.operand
+            if (type(op).__name__ == "Call"
+                    and hasattr(op, 'callee')
+                    and getattr(op.callee, 'name', None) == "is_confident"
+                    and op.args):
+                arg = op.args[0]
+                if type(arg).__name__ == "Identifier":
+                    narrowed.add(arg.name)
+
+        return narrowed
 
     def _extract_confidence_narrowing(self, cond) -> set:
         """

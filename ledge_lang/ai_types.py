@@ -1,14 +1,21 @@
 """
-Ledge v1.0 — AI-Native Type System
+Ledge runtime types for AI-uncertainty handling.
 
-Introduces types that no other language has:
-  - Uncertain[T]: a value with a confidence level
-  - Stream[T]: a potentially infinite, reactive sequence
-  - Pipeline: a composable, declarative data transformation
-  - Contract: compile-time verified pre/postconditions
-  - AuditTrail: automatic logging of every AI operation
+Provides the runtime representation of language-level constructs used by
+the interpreter and exposed to user code:
+  - Uncertain[T] : a value paired with a confidence score in [0.0, 1.0]
+  - UncertainChain: composes uncertainty across a sequence of AI steps
+  - AIDerived    : provenance-preserving wrapper for values extracted
+                   from Uncertain (so caller code can still detect AI origin)
+  - LedgeStream  : lazy iterator with filter/transform/take operators
+  - LedgePipeline: composable processing stages
+  - AuditTrail   : in-memory hash-chained log of AI operations
 
-These aren't libraries. They're built into the language.
+Similar concepts exist in other ecosystems (Rx for streams, statically-typed
+optional/maybe types for Uncertain-like flows, the various conformal-prediction
+and PSI libraries for uncertainty). This file is the Ledge-specific runtime,
+not a claim of novelty. The static rules around when an Uncertain value may
+be used live in `ledge_lang/typechecker.py`.
 """
 
 import math
@@ -27,17 +34,17 @@ from .core_types import (
 
 class Uncertain:
     """
-    A value paired with a confidence level [0.0, 1.0].
-    
+    A value paired with a confidence score in [0.0, 1.0].
+
     In Ledge:
         define result as analyze("text") using sentiment
-        # result is Uncertain[Map], not Map
-        
-        show result when result.confidence > 0.8 else "not sure"
-    
-    No other language has this as a first-class type.
-    Python would require: if result.get("confidence", 0) > 0.8: ...
-    which is verbose, error-prone, and easy to forget.
+        # result has runtime type Uncertain (not Map), and the static
+        # checker rejects direct uses unless they go through a recognized
+        # confidence guard, when(...), or an explicit unsafe_value_of(...).
+
+    The confidence score is supplied by the backend (token logprobs for
+    OpenAI, structured self-assessment for Anthropic) and is NOT assumed
+    to be a calibrated correctness probability. See CALIBRATION_GUIDE.md.
     """
     
     def __init__(self, value: Any, confidence: float, source: str = "unknown",
@@ -241,24 +248,15 @@ class AIDerived:
 
 class LedgeStream:
     """
-    A potentially infinite, reactive sequence of values.
-    
+    A lazy, potentially infinite sequence of values with filter/transform/take.
+
     In Ledge:
         define temps as stream from "mqtt://sensors/temp"
         define alerts as temps where value > 90
-        
-        when alerts has new item as t:
-            notify("Temperature: {t}°C")
-    
-    Streams can come from:
-      - generators (finite or infinite)
-      - files (live tail)
-      - network (MQTT, WebSocket, SSE)
-      - other streams (transformed)
-      - timers (interval)
-    
-    No other mainstream language has streams as a first-class type
-    with reactive 'when' semantics.
+
+    Similar in spirit to Rx Observables, Python generators with itertools,
+    and Java Streams. The Ledge-specific part is the language-level syntax
+    integration, not the underlying abstraction.
     """
     
     def __init__(self, source, name: str = "<stream>"):
@@ -471,18 +469,24 @@ class LedgePipeline:
 
 class AuditTrail:
     """
-    Automatic, tamper-evident log of every AI operation.
-    
-    In Ledge, every call to analyze/generate/classify/ask/embed
-    is automatically recorded with:
+    In-memory hash-chained log of AI operations performed during a run.
+
+    Every call to analyze/generate/classify/ask/embed is recorded with:
       - timestamp
-      - input hash (not the input itself — privacy-preserving)
-      - model version
-      - output summary
+      - input hash (the input itself is NOT stored)
+      - model identifier
+      - output type and confidence
       - caller context
-    
-    This is required by GDPR, HIPAA, financial regulations.
-    No other language provides this automatically.
+      - SHA-256 chain hash linking to the previous entry
+
+    Threat model and limitations:
+      - Detects post-hoc modification of records by an actor without
+        access to the anchor file (see audit_store.py).
+      - Does NOT protect against an attacker who controls both the
+        SQLite store and the on-disk anchor file.
+      - Does NOT prove correctness of the AI outputs themselves.
+      - Recording this trail does not by itself satisfy any specific
+        regulatory regime — it is supporting evidence, not compliance.
     """
     
     _global = None
@@ -809,7 +813,18 @@ def make_ai_native_builtins(audit: AuditTrail = None):
         "confidence_of": _n("confidence_of", lambda a,k,u:
             a[0].confidence if isinstance(a[0], Uncertain) else 1.0),
         
+        # value_of and unsafe_value_of share the same runtime behavior — they
+        # both extract the inner value as an AIDerived wrapper. The difference
+        # is enforced by the static checker: `value_of(x)` on an Uncertain `x`
+        # outside a confidence guard is rejected; `unsafe_value_of(x)` is the
+        # explicit, deliberately ugly escape hatch.
         "value_of": _n("value_of", lambda a,k,u:
+            AIDerived(a[0].value, a[0].confidence,
+                      getattr(a[0], 'source', 'unknown') or 'unknown')
+            if isinstance(a[0], Uncertain)
+            else a[0]),
+
+        "unsafe_value_of": _n("unsafe_value_of", lambda a,k,u:
             AIDerived(a[0].value, a[0].confidence,
                       getattr(a[0], 'source', 'unknown') or 'unknown')
             if isinstance(a[0], Uncertain)

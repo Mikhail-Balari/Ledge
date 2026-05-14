@@ -45,7 +45,7 @@ If it requires >100 lines of glue code per Ledge feature, the criticism is inval
 The "AI as primitive" is syntactic sugar.
 
 **Rebuttal evidence:**
-1. `Uncertain[T]` forces error handling at the type level — impossible in Python without mypy + custom types
+1. `Uncertain[T]` forces error handling at the type level — not enforced by ordinary Python runtime semantics without additional tooling (a mypy plugin, a Pyright plugin, or a custom linter could approximate this; ordinary Python does not)
 2. Zero confidence without backend = language-level safety, not convention
 3. Audit trail is automatic for every AI call — no Python library does this by default
 4. Typechecker errors on unsafe `Uncertain` use — structural AI safety

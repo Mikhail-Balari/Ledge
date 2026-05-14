@@ -1,7 +1,7 @@
-# Ledge — GitHub Deployment Guide
+# Ledge — Deployment Guide
 
-**Estado actual:** instalable con `pip install -e .`
-El paquete no está en PyPI público todavía.
+**Current status:** published on PyPI as `ledge-lang`. Also installable
+from source with `pip install -e .` for development work.
 
 ---
 
@@ -10,7 +10,7 @@ El paquete no está en PyPI público todavía.
 1. Go to **https://github.com/new**
 2. Fill in:
    - Repository name: `ledge`
-   - Description: `The first programming language designed for AI-first software`
+   - Description: `A small experimental DSL for making AI uncertainty explicit in program flow`
    - Visibility: **Public**
    - Do NOT check "Add a README file" (we have our own)
 3. Click **Create repository**
@@ -67,7 +67,7 @@ pip install ledge-lang
 1. Go to your repo's main page
 2. Click the gear icon next to "About" (top right of the code section)
 3. Add:
-   - Description: `The first programming language designed for AI-first software`
+   - Description: `A small experimental DSL for making AI uncertainty explicit in program flow`
    - Topics: `programming-language`, `interpreter`, `ai`, `python`, `language-design`, `ledge`
 
 ---
@@ -82,21 +82,31 @@ pip install ledge-lang
 ```markdown
 ## Ledge v1.1.0
 
-AI-first programming language with mandatory uncertainty types, automatic audit trail, and contracts.
+A small DSL for making AI uncertainty explicit in program flow.
+The static analyzer rejects direct use of an Uncertain[T] value unless it
+passes through a recognized confidence guard, `when(...)`, or the explicit
+`unsafe_value_of(...)` escape hatch. See README.md for the precise contract.
 
 ### What's included
-- Complete interpreter: lexer, parser, tree-walking evaluator
-- 284/284 conformance tests, 324/326 unit tests passing
-- AI-native types: Uncertain[T], audit trail, confidence enforcement
+- Tree-walker interpreter and bytecode VM (1500-program differential)
+- 284 conformance tests, 343 unit tests passing
+- Runtime: Uncertain[T], AIDerived, UncertainChain, SHA-256 chained audit log
 - Contracts (requires/ensures), streams, parallel execution
-- Python FFI: full ecosystem in one line
-- CLI: ledge run / ledge check / ledge version
+- Python FFI with safe-mode allowlist
+- CLI: ledge run / check / demo / debug / fmt / audit / studio
 
 ### Install
-pip install -e .  (PyPI release coming)
+```
+pip install ledge-lang
+ledge demo medical_triage    # runs without an API key
+```
 
-### Try it
-ledge run examples/showcase/triage_medico.ledge
+### Try a showcase example (requires clone)
+```
+git clone https://github.com/Mikhail-Balari/Ledge
+cd Ledge
+ledge run examples/showcase/medical_triage.ledge
+```
 ```
 
 5. Click **Publish release**
@@ -108,7 +118,7 @@ ledge run examples/showcase/triage_medico.ledge
 ### Posts to write
 
 **Hacker News** — title suggestion:
-> Ledge: A programming language where AI uncertainty is a first-class type
+> Ledge: a small DSL that turns "I forgot to check confidence" into a static error
 
 **Reddit communities:**
 - r/ProgrammingLanguages

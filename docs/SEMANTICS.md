@@ -1,9 +1,11 @@
-# Ledge Formal Operational Semantics
-## Version 1.0 — Normative Reference
+# Ledge Implementation-Oriented Semantics
+## Version 1.0 — Reference description
 
-This document defines the meaning of Ledge programs independently of any
-implementation. A conforming implementation must produce exactly the results
-described here for all valid programs.
+This document describes the runtime behavior of Ledge programs as
+implemented by the reference interpreter. It is intended as a reference
+for implementors, not as a formal semantics with a mechanized soundness
+proof. Conforming implementations are expected to produce the same
+observable results for valid programs.
 
 ---
 

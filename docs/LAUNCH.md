@@ -174,7 +174,7 @@ I think there's a Cambrian explosion of languages coming — the bottleneck was 
 
 For the past several weeks I've been working on a question: if AI generates most of the code being written today, why is it still using languages designed for human fingers in 1991?
 
-Today I'm releasing Ledge v0.1 — the first programming language designed primarily for AI generation, with human readability as a strong secondary constraint.
+Today I'm releasing Ledge v0.1 — an experimental DSL designed primarily for AI generation, with human readability as a strong secondary constraint.
 
 **The core design decisions:**
 

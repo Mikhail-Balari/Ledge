@@ -28,7 +28,7 @@ if label == "spam":              # ← may act on a 30%-confidence classificatio
     block_email(email)
 ```
 
-### Ledge — IMPOSSIBLE BY DESIGN
+### Ledge — rejected by the static checker under the documented checker rules
 
 ```ledge
 define result as classify(text) using ["spam", "ok"]
@@ -56,7 +56,7 @@ print(result["label"])           # "positive" — but how reliable?
 print(result.get("confidence", 1.0))  # 1.0 by default if no score
 ```
 
-### Ledge — IMPOSSIBLE BY DESIGN
+### Ledge — rejected by the static checker under the documented checker rules
 
 ```ledge
 # Without backend configured:
@@ -152,10 +152,14 @@ define score: number as r        # ← TYPECHECKER ERROR immediately
 
 ## Conclusion
 
-Ledge's type system makes **structurally impossible** the most common
-class of bugs in AI-first code: using an AI result without explicitly handling
-uncertainty. This is not a tooling feature — it is a language property
-verifiable across 615 tests.
+Ledge's static checker rejects the most common class of bugs in AI-using
+code under its documented rules: passing an `Uncertain[T]` value to a
+function that expects `T` without going through one of the recognized
+extraction constructs. This is a static-analysis property, not a
+soundness theorem. It is checkable by running the test suite.
 
-The claim "Ledge prevents the most common class of bugs in AI-first code" is
-backed by verifiable technical evidence, not marketing.
+The narrow claim ("the checker rejects the documented patterns") is
+supported by the tests in `tests/unit/test_typechecker.py`. The broader
+claim ("Ledge prevents this class of bugs") is true only to the extent
+that programmers do not reach for `unsafe_value_of`, and only within the
+documented checker limitations (see TYPE_SYSTEM.md).

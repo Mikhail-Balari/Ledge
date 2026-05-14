@@ -22,10 +22,16 @@ _LEDGE_VERSION = "1.1.0"
 
 class AuditStore:
     """
-    Persistent, tamper-evident SQLite audit store.
+    Persistent SQLite audit store with a hash-chained log of AI decisions.
 
     Each program_id has its own chain rooted at GENESIS.
     chain_hash = SHA256(prev_hash + id + operation + input_hash + str(confidence) + model)
+
+    Threat model: detects post-hoc modification by an actor with read/write
+    access to this database but not to the external anchor file
+    (~/.ledge/anchors.jsonl). An attacker who controls both can compute a
+    fresh consistent chain and forge a clean history. Not tamper-proof
+    against a malicious local operator.
     """
 
     _SCHEMA = """

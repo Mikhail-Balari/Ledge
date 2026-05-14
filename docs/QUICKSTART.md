@@ -210,7 +210,8 @@ show "Total AI decisions: {len(log)}"
 ```
 
 **Without an AI backend, all operations return `confidence=0.0` and `value=nothing`.**
-This is a safety guarantee — Ledge never invents confident AI results.
+This is the runtime fail-safe default — Ledge never returns a non-zero
+confidence in the absence of a connected backend.
 
 To connect a backend, pass it when running programmatically:
 ```python
@@ -274,6 +275,6 @@ syntax highlighting, autocompletion, and inline type checking.
 ## Next steps
 
 - `docs/SPEC.md` — full language specification
-- `docs/SEMANTICS.md` — formal operational semantics
+- `docs/SEMANTICS.md` — implementation-oriented semantics
 - `examples/` — real-world programs (sensors, medical AI, agents)
 - `docs/COMPARATIVE_POSITIONING.md` — how Ledge compares to Python

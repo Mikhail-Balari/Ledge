@@ -24,7 +24,12 @@ Ledge v1.0 is that language.
 
 ---
 
-## The 7 concepts that exist in no other language
+## The 7 concepts Ledge makes language-level
+
+These concepts have well-known analogues in other ecosystems (Option/Maybe
+types, Rx observables, design-by-contract libraries, etc.). Ledge's choice
+is to make them language-level rather than library-level. The novelty is
+the combination and the static-checker contract, not the individual ideas.
 
 ### 1. Uncertainty as a first-class type
 
@@ -155,7 +160,7 @@ show result
 ### 6. Compile-time verifiable contracts
 
 ```ledge
-# The compiler guarantees that certain invariants are true
+# The runtime checks these contracts; the static checker doesn't prove them
 
 define process_medical_data(patient: Record) requires:
     patient has "id" of type text

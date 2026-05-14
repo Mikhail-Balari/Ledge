@@ -1,6 +1,7 @@
 # Ledge Medical AI Pipeline
 # Demonstrates: Uncertain types, contracts, audit trail
-# Every AI decision is automatically auditable — HIPAA compliant by design.
+# Every AI decision is recorded in the hash-chained audit log — useful as
+# supporting evidence for review; not by itself a HIPAA compliance claim.
 
 # Type: patient record
 type PatientRecord has:
@@ -11,7 +12,8 @@ type PatientRecord has:
     history:     text
 
 # Contract-verified risk assessment
-# The compiler guarantees these invariants before and after execution
+# The runtime checks these invariants (requires:/ensures:) before and
+# after execution; the static checker does not prove them.
 define assess_risk(patient: PatientRecord):
     requires:
         patient.id != ""
@@ -39,8 +41,13 @@ define assess_risk(patient: PatientRecord):
     else if patient.age < 5:
         set age_factor to 1.2
 
-    define analysis_val as value_of(symptom_analysis) or map {}
-    define base_risk as analysis_val["severity_score"] or 0.5
+    # Only call value_of inside a recognized confidence guard.
+    define base_risk as 0.5
+    if confidence_of(symptom_analysis) >= 0.85:
+        define analysis_val as value_of(symptom_analysis)
+        define inner_risk as analysis_val["severity_score"]
+        if inner_risk != nothing:
+            set base_risk to inner_risk
     define adjusted_risk as clamp(base_risk * age_factor, 0, 1)
 
     define recommendation as "routine"
@@ -91,5 +98,5 @@ for each result in results:
 show ""
 show "=== Audit Trail ==="
 show "Total AI decisions recorded: {len(audit_query())}"
-show "All decisions are tamper-evident and reproducible."
+show "All decisions are stored in a hash-chained audit log (limited threat model — see GUARANTEES.md)."
 show "AI confidence scores are attached to every recommendation."

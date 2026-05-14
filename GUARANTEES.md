@@ -1,7 +1,8 @@
-# What Ledge guarantees — and what it does not
+# Ledge runtime properties — what is true, with proofs, and what is not
 
-> Each guarantee comes with code you can copy, paste, and run right now.
-> No API keys. No setup. No blind trust.
+> Each property comes with code you can copy, paste, and run.
+> No API keys, no setup, no blind trust. The word "guarantee" is reserved
+> for the precise statements below; everything else is supporting infrastructure.
 
 ---
 
@@ -13,7 +14,7 @@ Without an AI model connected, all AI operations
 
 The system does not invent answers. It does not guess. It does not act.
 
-**Proof you can run yourself:**
+**Verify it yourself:**
 
 ```python
 # Run from repo root: python demo_garantia1.py
@@ -44,19 +45,27 @@ generate   without backend → confidence = 0
 Guarantee verified: without backend, confidence = 0 in all cases.
 ```
 
-**Why it matters:** A system that returns `confidence=0.5` when there is no model
-is inventing certainty. Ledge does not do that.
+**What this means:** Without a connected backend, every AI primitive returns
+`confidence = 0.0`. Code with a non-zero decision threshold will therefore
+take the low-confidence branch (typically escalate-to-human) rather than act
+on a fabricated certainty.
+
+**What this does not mean:** It does not mean the model, once connected, is
+correct. It does not mean confidence > 0 reflects actual accuracy. See the
+calibration discussion in the README for that gap.
 
 ---
 
-## Guarantee 2: Unsafe use of AI results = error at analysis time
+## Property 2: Direct use of an Uncertain[T] value is rejected statically
 
-If you use an AI result without verifying confidence first,
-the Ledge typechecker detects it **before running the program**.
+The Ledge static analyzer rejects direct uses of `Uncertain[T]` values
+before any code runs. The set of "direct uses" the checker rejects is
+listed precisely below.
 
-Not a warning. Not a lint hint. An error that blocks execution.
+This is a static-analysis property, not a soundness theorem. The checker is
+a single-file, flow-sensitive AST walker with documented limitations.
 
-**Proof you can run yourself:**
+**Verify it yourself:**
 
 ```python
 # Run from repo root: python demo_garantia2.py
@@ -95,37 +104,62 @@ print("\nGuarantee verified: typechecker blocks unsafe use at analysis time.")
 Unsafe code ('show r' without guard):
   Errors detected: 1
   Message: Unsafe use of Uncertain value 'r' in 'show' — confidence was never verified.
-  Suggestion: show value_of(r)                       -- extract value
+  Suggestion: if confidence_of(r) >= 0.85: show value_of(r)  -- guard then use
 
 Safe code (explicit confidence guard):
   Errors detected: 0
 
-Guarantee verified: typechecker blocks unsafe use at analysis time.
+Property verified: the checker rejects direct use at analysis time.
 ```
 
-**What it detects:**
-- `show r` where `r` is `Uncertain[T]` → **ERROR**
-- `upper(r)` with `r` Uncertain → **ERROR** (use in function expecting text)
-- `define name: text as analyze(...)` → **ERROR** (incompatible type)
-- `set x to r` where `x` is a typed variable → **ERROR**
-- `map(list, given x: classify(x) using [...])` + `for each item in result: show item` → **ERROR**
-- `define c as confidence_of(r); if c >= 0.85: show r` → **clean** (confidence alias recognized)
+**What it rejects (errors):**
+- `show r` where `r` is `Uncertain[T]`
+- `upper(r)` or any function call with Uncertain `r` (except the recognized safe builtins)
+- `r + 1` and other arithmetic on Uncertain values
+- `if r:` and other boolean uses of Uncertain values
+- `define name: text as analyze(...)` — Uncertain to typed variable
+- `set x to r` where `x` is a typed variable
+- `value_of(r)` outside a recognized confidence guard
+- Iterating `list[uncertain[T]]` and using the element directly
 
-**What it does not detect yet (honest limitations):**
-- Lambda in variable: `define f as given x: classify(x) using [...]` then `map(list, f)` — result type inferred as `list`, not `list[uncertain]`
-- Multi-hop alias: `define d as c; if d >= 0.85:` where `c` is already an alias — only one level of aliasing
-- Functions that internally call AI and return the extracted value — the caller does not see the AI behind it
-- Inverted conditional: `0.85 <= confidence_of(r)` — only detects the form `confidence_of(r) >= threshold`
+**What it accepts (clean):**
+- `when(r, 0.85, fallback)` — runtime-checked extraction
+- `confidence_of(r)`, `is_confident(r)`, `is_uncertain(r)` — inspection
+- `value_of(r)` inside `if confidence_of(r) >= t:` or `if is_confident(r):`
+- `define c as confidence_of(r); if c >= 0.85: value_of(r)` — alias-aware guard
+- `unsafe_value_of(r)` — the explicit escape hatch (deliberately ugly name)
+
+**Documented limitations (the checker does NOT yet recognize):**
+- **Intraprocedural only.** Uncertain is not tracked across function call boundaries.
+  Function parameters/returns annotated as `uncertain[T]` are honored at the boundary;
+  the runtime `AIDerived` wrapper preserves provenance for callers that look for it.
+- **Early-return guards.** `if confidence_of(r) < t: return; use(r)` does not narrow
+  the rest of the block. Use `if ... >= t: ... else:` or `unsafe_value_of(r)`.
+- **`not is_uncertain(x)`** is not recognized — only the positive forms.
+- **Multi-hop alias.** `define d as c` where `c = confidence_of(r)` — only one hop.
+- **Inverted operators.** `0.85 <= confidence_of(r)` — only the form `confidence_of(r) >= t`.
+- **Lambdas stored in variables.** `define f as given x: classify(x) using [...]; map(list, f)` —
+  the literal-lambda case in `map(list, given x: ...)` is recognized; the stored-in-variable case is not.
 
 ---
 
-## Guarantee 3: Cryptographic audit trail
+## Property 3: SHA-256 chained audit log detects post-hoc modification
 
-Every AI call is recorded with a chained SHA-256 hash
-(blockchain-style). If anyone modifies any field of any
-entry in the log, `audit_verify()` returns `false`.
+Every AI call is recorded with a SHA-256 hash that incorporates the
+previous entry's hash. Modifying any field of any entry breaks the chain
+and `audit_verify()` returns `false`. An external anchor file
+(`~/.ledge/anchors.jsonl`) records chain state every 10 entries; deleting
+and rebuilding the SQLite store leaves the anchors inconsistent.
 
-**Proof you can run yourself:**
+**Threat model and limits.** This detects post-hoc modification by an actor
+who can read/write the SQLite store but not the anchor file. An attacker
+who controls both the database and the anchor file can compute a fresh
+consistent chain and forge a clean history. An attacker with access to the
+in-memory `AuditTrail` object can rewrite entries and recompute hashes
+trivially. This is supporting evidence for governance review, not a
+tamper-proof boundary against a malicious local operator.
+
+**Verify it yourself:**
 
 ```python
 # Run from repo root: python demo_garantia3.py
@@ -179,19 +213,29 @@ After inserting fake entry:    False
 Guarantee verified: any modification to the log breaks the chain.
 ```
 
-**Why it matters:** In high-risk systems (health, finance, legal), knowing
-that the log is mathematically intact — not just "saved in a database" —
-is the difference between auditable and truly auditable.
+**What this means in practice.** A reviewer can verify the chain
+independently of the recording process. If the chain verifies and the
+anchors match, no entry has been altered or removed by anyone without
+write access to both the store and the anchor file. That is a useful
+piece of supporting evidence; it is not, by itself, a guarantee that the
+decisions recorded were correct.
 
 ---
 
-## Guarantee 4: Fail-safe by design
+## Property 4: Fail-safe default when no backend is configured
 
-Without a backend, the system does not invent answers.
-It does not approve loans. It does not classify patients. It does not sign contracts.
-It escalates to a human.
+Property 4 is a consequence of Property 1: without a backend,
+`confidence = 0.0`, so any decision threshold above 0.0 causes the
+low-confidence branch to run. For programs whose low-confidence branch
+escalates to human review, the system therefore does not act on
+fabricated certainty.
 
-**Proof you can run yourself:**
+This is a consequence, not an independent guarantee. It depends on the
+program's threshold being non-zero and the low-confidence branch being
+sensible. A program that hard-codes `value_of(r) or "approve"` will still
+approve.
+
+**Verify it yourself:**
 
 ```python
 # Run from repo root: python demo_garantia4.py
@@ -237,9 +281,11 @@ Patients classified automatic: 0
 Guarantee verified: without backend, zero automatic decisions.
 ```
 
-**Why it matters:** A system that "fails open" (approves when uncertain)
-is more dangerous than no system at all. Ledge fails closed: if there is no
-certainty, it does not act.
+**Caveat.** "Fails closed" is a property of programs that follow the
+escalation pattern, not a property of the runtime itself. Ledge makes the
+escalation pattern idiomatic and rejects programs that violate the static
+contract; it does not prevent a developer from writing a program that
+hard-codes a permissive default.
 
 ---
 

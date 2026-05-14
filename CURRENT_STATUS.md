@@ -1,49 +1,84 @@
 # Ledge — Current Status
-## Version 1.1.0 — May 2026
+
+**Version 1.2.0 — May 2026**
+
+## Quickstart (after `pip install ledge-lang`)
+
+```bash
+ledge demo medical_triage
+```
+
+No clone, no API key, no setup. The bundled demo escalates every patient to
+human review because there is no AI backend connected — that is the
+safe-failure default.
 
 ## What works today
 
-### Core guarantees (run these yourself)
-    python demo_guarantee1.py  # Zero confidence without backend
-    python demo_guarantee2.py  # Unsafe AI use = compile error
-    python demo_guarantee3.py  # Cryptographic audit trail
-    python demo_guarantee4.py  # Safe failure by design
+### The four runtime properties (see GUARANTEES.md for proofs)
 
-### New in this version
-    ledge audit --stats              # Real accuracy by model/domain
-    ledge audit --verify             # Verify cryptographic chain
-    ledge audit --calibration gpt-4 medical  # Calibration report
-    ledge audit --compare gpt-4 claude medical  # Model comparison
-    ledge audit --export-regulatory report.json  # EU AI Act export
-    ledge run "classify this as spam or not"     # Natural language
+    python demo_guarantee1.py  # confidence = 0 without a backend
+    python demo_guarantee2.py  # static checker rejects direct use of Uncertain
+    python demo_guarantee3.py  # SHA-256 chained audit log detects modification
+    python demo_guarantee4.py  # zero automatic decisions without a backend
 
-### Tests
-- Conformance: 284/284
-- Unit tests: 337 passing
-- 2 pre-existing failures (Windows console encoding)
+### Toolchain
 
-## Six features that make Ledge unique
+    ledge run program.ledge                      # interpret a Ledge program
+    ledge check --types program.ledge            # run the static analyzer
+    ledge demo medical_triage                    # run a bundled demo
+    ledge audit --verify                         # verify the chain
+    ledge audit --verify-anchors                 # cross-check anchors vs store
+    ledge audit --calibration <model> <domain>   # measured vs declared accuracy
+    ledge audit --calibration-metrics <m> <d>    # Brier, ECE, false accept/reject
+    ledge audit --compare <m_a> <m_b> <domain>   # migration risk between models
+    ledge audit --export-regulatory report.json  # EU AI Act Article 12/13 JSON-LD
+    ledge audit --validate-regulatory report.json
 
-1. Persistent audit trail (SQLite) — decisions survive 
-   between sessions. Auditable days later.
+### Breaking change in 1.2.0
 
-2. Interprocedural uncertainty propagation — uncertainty 
-   does not disappear inside function boundaries.
+`value_of(x)` on an Uncertain `x` is now a static analysis error outside
+of a recognized confidence guard (`if confidence_of(x) >= t:`,
+`if is_confident(x):`, alias-aware variants, or `when(x, t, fallback)`).
+The runtime behavior of `value_of` is unchanged. The escape hatch is the
+new `unsafe_value_of(x)`, which is allowed anywhere and signals to readers
+that confidence was not checked.
 
-3. Automatic domain calibration — learns real model 
-   accuracy per domain from historical outcomes.
+Migration:
 
-4. Automatic model comparison — tells you exactly which 
-   decisions would change if you switch models.
+```ledge
+# Before (1.1.x — accepted by checker, silently unsafe):
+show value_of(r)
 
-5. Regulatory export — EU AI Act Article 12/13 compliant 
-   JSON-LD with one command.
+# After (1.2.0 — pick one):
+if confidence_of(r) >= 0.85: show value_of(r)   # idiomatic
+show when(r, 0.85, "fallback")                  # runtime-checked
+show unsafe_value_of(r)                         # explicit unchecked
+```
 
-6. Natural language interface — describe what you want 
-   in English, Ledge generates and runs the safe program.
+## Tests
 
-## Known limitations
-- Audit trail is local SQLite (not distributed)
-- NL interface uses heuristics (no LLM required)
-- Native compiler requires gcc
-- Not on PyPI public registry yet
+- Conformance: 284 / 284 passing
+- Unit suite: 343 / 343 passing
+- 0 known failures on Linux, macOS, Windows
+
+(See CI for the authoritative numbers.)
+
+## Known limitations of the static checker
+
+- Intraprocedural only — does not track Uncertain across function calls.
+- Conservative on early-return guards: `if c < t: return; use(r)` does not
+  narrow the rest of the block. Use `if c >= t: ... else:` instead.
+- No `not is_uncertain(x)` — only positive forms.
+- One-hop alias support; no multi-hop.
+- No flow narrowing inside lambda bodies.
+
+See [GUARANTEES.md](GUARANTEES.md) Property 2 for the full list.
+
+## What does not yet exist
+
+- Distributed audit storage (audit is per-process, optionally persisted to
+  local SQLite via the audit store).
+- A mature package ecosystem.
+- IDE tooling beyond the bundled LSP server.
+- Mechanized proofs of the static rules.
+- Known production deployments.

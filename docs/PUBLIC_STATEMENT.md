@@ -10,9 +10,12 @@ This document contains the ONLY claims authorized for use in:
 
 ## What Ledge is (permitted claims)
 
-Ledge is an experimental programming language designed from first principles
-for AI-first software. It is production-quality in its interpreter implementation,
-with 556 tests at 100% pass rate and a formal specification.
+Ledge is an experimental DSL for making AI uncertainty explicit in
+program flow. It ships an interpreter, a static checker, a SHA-256
+chained audit log, and reference documentation. The grammar and runtime
+behavior are described in `docs/GRAMMAR.md` and `docs/SEMANTICS.md`;
+those documents are references for implementors, not formal
+specifications with mechanized proofs.
 
 **Permitted claims:**
 
@@ -35,10 +38,12 @@ with 556 tests at 100% pass rate and a formal specification.
 
 ## Recommended public framing
 
-> "Ledge is an AI-native programming language that makes uncertainty explicit at the type level.
-> It's a serious engineering project — 556 tests, formal semantics, working LSP and debugger —
-> designed for developers who build AI-first applications and need more than Python offers
-> for handling uncertain AI outputs safely. Try it: `pip install ledge-lang`."
+> "Ledge is an experimental DSL that makes AI uncertainty explicit in
+> program flow. The static checker rejects direct use of uncertain
+> values; the runtime records every AI call in a hash-chained audit
+> log. It's designed for developers who want a narrower surface area
+> than a Python library for the AI-decision layer. Try it:
+> `pip install ledge-lang`."
 
 ## Score context
 

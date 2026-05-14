@@ -13,7 +13,7 @@ define diagnose(req: DiagnosisRequest):
     requires:
         len(req.symptoms) > 0
 
-    # Every call to analyze() is automatically recorded in the tamper-evident audit trail.
+    # Every call to analyze() is automatically recorded in the hash-chained audit log (limited threat model — see GUARANTEES.md).
     define result as analyze(req.symptoms) using differential_diagnosis
 
     if confidence_of(result) < MIN_CONFIDENCE:
@@ -44,4 +44,4 @@ show "Cryptographic chain intact: {audit_verify()}"
 show ""
 show "Each entry is SHA-256 linked to the previous one."
 show "Any modification to any field breaks the chain."
-show "Guarantee 3 confirmed: tamper-evident log -- every diagnosis is permanently traceable."
+show "Property 3 demonstrated: hash-chained audit log (limited threat model -- see GUARANTEES.md)."

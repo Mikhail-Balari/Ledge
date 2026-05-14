@@ -1,5 +1,10 @@
-# Ledge Type System — Formal Specification
-## Version 1.1.0
+# Ledge Type System — Static Analysis Rules
+## Version 1.2.0
+
+> This document describes the rules the static checker implements. It is
+> not a formal type-system specification — there is no mechanized proof
+> and no judgment-style soundness theorem. The "Theorem (Informal)"
+> further down is a paragraph claim, not a formal result.
 
 ---
 
@@ -119,12 +124,15 @@ Compatibility rules:
 Γ ⊢ if confidence_of(r) >= θ: body : S
 ```
 
-### The prohibition rule (makes Ledge unique)
+### The prohibition rule (the central check)
+
+Note: the checker rejects bare `value_of` outside a recognized guard.
+`unsafe_value_of` is the explicit escape hatch — see README.
 
 ```
-Γ ⊢ r : Uncertain[T]    f not in {when, value_of, confidence_of, is_confident, is_uncertain, type}
+Γ ⊢ r : Uncertain[T]    f not in {when, unsafe_value_of, confidence_of, is_confident, is_uncertain, type}
 ──────────────────────────────────────────────────────────────────────────────────────────────────── [UNSAFE-USE — ERROR]
-Γ ⊢ f(r) : ⊥   (type error: must extract from Uncertain before passing to f)
+Γ ⊢ f(r) : ⊥   (analysis error: must extract from Uncertain before passing to f)
 ```
 
 ---
@@ -139,16 +147,24 @@ Uncertain[T] ≮: T   (critical: no implicit coercion)
 
 ---
 
-## 5. Soundness Property (Partial)
+## 5. Intended static-analysis property (informal)
 
-**Theorem (Informal):** If Γ ⊢ e : T and T ≠ Uncertain[_], then evaluating e
-will not produce an Uncertain value that was not explicitly extracted.
+**Informal claim:** If the checker assigns Γ ⊢ e : T with T ≠ Uncertain[_]
+and reports no errors, the program does not use an Uncertain value at e
+without going through one of the extraction constructs above.
 
-**Status:** Heuristic enforcement — the typechecker implements these rules
-as checks, not a full formal proof. Gaps exist for:
+**Status:** This is a description of what the checker tries to enforce,
+not a theorem. There is no mechanized proof, and known gaps include:
 - Higher-order functions passing Uncertain through function arguments
-- Collections containing Uncertain values
+- Collections containing Uncertain values (only `list[uncertain[T]]` from
+  literal-lambda `map` is recognized)
 - Dynamic dispatch via `any` type
+- Early-return guards (`if confidence_of(x) < t: return; ...`)
+- Inverted operators (`0.85 <= confidence_of(x)`)
+- `not is_uncertain(x)` is not recognized
+
+The runtime escape hatch is `unsafe_value_of(x)`; the deliberately ugly
+name signals to readers that confidence was not checked.
 
 **Evidence of correctness:** 615 tests, 0 false positives in 50-program benchmark.
 

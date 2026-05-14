@@ -1,0 +1,52 @@
+# Medical triage — bundled demo for `ledge demo medical_triage`.
+#
+# What this demonstrates:
+#   - AI uncertainty is a first-class value (Uncertain[T] in the runtime).
+#   - The static checker rejects direct uses of an Uncertain value.
+#   - The idiomatic safe pattern is `if confidence_of(x) >= threshold:`
+#     which narrows `x` so `value_of(x)` becomes legal in that block.
+#   - Without a backend, every AI call returns confidence = 0.0, so the
+#     low-confidence branch is the only branch that runs.
+#
+# Run it:                       ledge demo medical_triage
+# Type-check first:             ledge check --types <path-to-this-file>
+
+define MIN_CONFIDENCE as 0.85
+
+type Patient has:
+    id:       text
+    symptoms: text
+    age:      number
+
+define classify_patient(patient: Patient):
+    requires:
+        len(patient.symptoms) > 0
+        patient.age > 0
+
+    define analysis as analyze(patient.symptoms) using medical_triage
+
+    if confidence_of(analysis) >= MIN_CONFIDENCE:
+        define result as value_of(analysis) or map {"risk_level": "unknown"}
+        define level  as result["risk_level"] or "unknown"
+        if level = "critical" or level = "high":
+            show "PATIENT {patient.id}: URGENT — {level} (confidence={confidence_of(analysis)})"
+        else:
+            show "PATIENT {patient.id}: ROUTINE — {level} (confidence={confidence_of(analysis)})"
+        return map {"level": level, "confidence": confidence_of(analysis)}
+    else:
+        show "PATIENT {patient.id}: ESCALATE TO HUMAN (confidence={confidence_of(analysis)})"
+        return map {"level": "escalate", "reason": "low_confidence"}
+
+define patients as list [
+    Patient(id="P001", symptoms="severe chest pain, shortness of breath, left arm pain", age=72),
+    Patient(id="P002", symptoms="mild headache, fatigue", age=34),
+    Patient(id="P003", symptoms="high fever, rash, difficulty swallowing", age=8)
+]
+
+show "=== MEDICAL TRIAGE DEMO ==="
+for each p in patients:
+    classify_patient(p)
+
+show ""
+show "Decisions logged in audit trail: {len(audit_query())}"
+show "Cryptographic chain intact: {audit_verify()}"
