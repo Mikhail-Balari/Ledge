@@ -16,20 +16,31 @@ def get_version_from(path, pattern):
         return None
 
 
+# Source of truth: pyproject.toml. All other version locations must match it.
+EXPECTED_VERSION = get_version_from('pyproject.toml', r'version = "([^"]+)"')
+assert EXPECTED_VERSION, "Could not read version from pyproject.toml — test cannot run"
+
+
 def test_version_in_init():
     from ledge_lang import __version__
-    assert __version__ == "1.1.1", f"Wrong version in __init__.py: {__version__}"
+    assert __version__ == EXPECTED_VERSION, (
+        f"__init__.py version {__version__!r} does not match "
+        f"pyproject.toml version {EXPECTED_VERSION!r}"
+    )
 
 
 def test_version_in_pyproject():
-    v = get_version_from('pyproject.toml', r'version = "([^"]+)"')
-    assert v == "1.1.1", f"Wrong version in pyproject.toml: {v}"
+    # Sanity check: pyproject.toml has a parseable version string.
+    assert EXPECTED_VERSION, "pyproject.toml has no parseable version"
 
 
 def test_version_in_vscode():
     v = get_version_from('vscode-ledge/package.json', r'"version":\s*"([^"]+)"')
     if v:  # VS Code extension may not be present in all environments
-        assert v == "1.1.1", f"Wrong version in vscode package.json: {v}"
+        assert v == EXPECTED_VERSION, (
+            f"vscode-ledge/package.json version {v!r} does not match "
+            f"pyproject.toml version {EXPECTED_VERSION!r}"
+        )
 
 
 def test_no_claims_not_in_feature_matrix():
