@@ -18,18 +18,18 @@ def get_version_from(path, pattern):
 
 def test_version_in_init():
     from ledge_lang import __version__
-    assert __version__ == "1.1.0", f"Wrong version in __init__.py: {__version__}"
+    assert __version__ == "1.1.1", f"Wrong version in __init__.py: {__version__}"
 
 
 def test_version_in_pyproject():
     v = get_version_from('pyproject.toml', r'version = "([^"]+)"')
-    assert v == "1.1.0", f"Wrong version in pyproject.toml: {v}"
+    assert v == "1.1.1", f"Wrong version in pyproject.toml: {v}"
 
 
 def test_version_in_vscode():
     v = get_version_from('vscode-ledge/package.json', r'"version":\s*"([^"]+)"')
     if v:  # VS Code extension may not be present in all environments
-        assert v == "1.1.0", f"Wrong version in vscode package.json: {v}"
+        assert v == "1.1.1", f"Wrong version in vscode package.json: {v}"
 
 
 def test_no_claims_not_in_feature_matrix():

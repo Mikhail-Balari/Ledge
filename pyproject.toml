@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ledge-lang"
-version = "1.1.0"
+version = "1.1.1"
 description = "Ledge is a programming language and governance runtime for auditable, uncertainty-aware AI decisions."
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Ledge Language Project" }]
+authors = [{ name = "Mikhail Balari" }]
 keywords = ["programming-language", "interpreter", "ai", "language-design"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -34,9 +34,9 @@ studio = ["flask>=3.0", "flask-socketio>=5.0"]
 ledge = "ledge_lang.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/ledge-lang/ledge"
-Documentation = "https://github.com/ledge-lang/ledge/blob/main/README.md"
-"Issue Tracker" = "https://github.com/ledge-lang/ledge/issues"
+Homepage = "https://github.com/Mikhail-Balari/Ledge"
+Documentation = "https://github.com/Mikhail-Balari/Ledge/blob/main/README.md"
+"Issue Tracker" = "https://github.com/Mikhail-Balari/Ledge/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

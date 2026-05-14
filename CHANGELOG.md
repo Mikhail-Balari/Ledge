@@ -5,6 +5,19 @@ Breaking changes only occur on MAJOR version bumps.
 
 ---
 
+## [1.1.1] — 2026-05-14
+
+### Bug fixes
+
+- **PyPI metadata** — `[project.urls]` in `pyproject.toml` pointed at the
+  placeholder `github.com/ledge-lang/ledge` repository, which does not exist.
+  All three URLs (`Homepage`, `Documentation`, `Issue Tracker`) now point at
+  the real repository `github.com/Mikhail-Balari/Ledge`.
+- **Author metadata** — `authors` updated from the generic
+  "Ledge Language Project" placeholder to `Mikhail Balari`.
+
+---
+
 ## [1.1.0] — 2025
 
 ### New features

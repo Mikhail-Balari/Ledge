@@ -32,7 +32,7 @@ try:
 except Exception:
     pass
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __all__ = [
     "run", "run_file", "compile_ledge", "LedgeREPL",
     "LexError", "ParseError", "LedgeError",
