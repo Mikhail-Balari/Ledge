@@ -373,7 +373,7 @@ For server deployments where users submit Ledge code: run inside Docker.
 
 ```bash
 python tests/conformance.py   # 284/284 passed
-python -m pytest tests/unit/  # 338 passed, 1 pre-existing Windows encoding failure
+python -m pytest tests/unit/  # 339 passed
 ```
 
 ---
