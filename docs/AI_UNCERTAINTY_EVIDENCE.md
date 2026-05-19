@@ -1,8 +1,8 @@
-# Ledge AI Advantage Study
+# Ledge AI Uncertainty Evidence
 ## Current Evidence For AI-First Tasks
 
-This document records internal evidence for Ledge's AI-uncertainty workflow.
-It is not a user study, a proof, or a formal soundness result.
+This document records current internal evidence for Ledge's AI-uncertainty
+workflow. It is not a user study, a proof, or a formal soundness result.
 
 ## Hypotheses
 

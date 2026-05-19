@@ -108,6 +108,11 @@ and raises `LedgeError` without executing the program if type issues are found.
 `from ledge_lang import run` remains the low-level direct execution API for
 interpreter and test harness use; it bypasses the static checker by design.
 
+For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
+For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
+For the path from alpha software toward production-critical readiness, see
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ---
 
 ## The checker's contract, precisely
@@ -317,7 +322,7 @@ ledge audit --validate-regulatory report.json
 
 ## Why a DSL instead of a Python library, mypy plugin, Pyright plugin, linter, or framework?
 
-The honest version, not the marketing version.
+The plain version, without inflated claims.
 
 **A plain Python library** would have to ask you to call
 `check_confidence()`. It cannot prevent you from forgetting. This is a real
@@ -475,7 +480,7 @@ similar OS-level isolation. `--safe-mode` is not a substitute for that.
 
 ```bash
 python tests/conformance.py   # 284/284 passed
-python -m pytest tests/unit/  # 343 passed
+python -m pytest tests/unit/  # 348 passed
 ```
 
 The test count moves over time. The conformance harness and the unit suite
@@ -502,8 +507,8 @@ data. See [CALIBRATION_GUIDE.md](CALIBRATION_GUIDE.md).
 The export is structurally valid evidence. Whether it satisfies legal
 compliance is for your counsel.
 
-**Is this production-ready?**
-No. It is a working prototype with verifiable runtime properties.
+**Can I use this for production-critical decisions?**
+Not yet. It is a working prototype with checkable runtime properties.
 
 What works today:
 - The static contract above (enforced by the tests in `tests/unit/test_typechecker.py`)

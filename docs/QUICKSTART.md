@@ -6,14 +6,19 @@
 ## 1. Install
 
 ```bash
-pip install ledge-lang
+python -m pip install --user build
+python -m build
+python -m pip install dist/ledge_lang-1.2.0-py3-none-any.whl
 ```
 
 Verify:
 ```bash
 ledge version
-# Ledge 1.0.0
+# Ledge 1.2.0
 ```
+
+After Ledge 1.2.0 is published to PyPI, the install command becomes
+`pip install ledge-lang`.
 
 ---
 
@@ -191,7 +196,7 @@ always:
 
 ---
 
-## 9. AI operations — the Ledge advantage
+## 9. AI operations and uncertainty
 
 ```ledge
 # Every AI operation returns Uncertain[T]
@@ -290,5 +295,7 @@ syntax highlighting, autocompletion, and inline type checking.
 
 - `docs/SPEC.md` — full language specification
 - `docs/SEMANTICS.md` — implementation-oriented semantics
+- `docs/STATIC_CHECKER.md` — static `Uncertain[T]` checker behavior
+- `docs/THREAT_MODEL.md` — current security and deployment assumptions
+- `docs/ROADMAP.md` — path from alpha to production-critical readiness
 - `examples/` — real-world programs (sensors, medical AI, agents)
-- `docs/COMPARATIVE_POSITIONING.md` — how Ledge compares to Python

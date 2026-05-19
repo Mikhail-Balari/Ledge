@@ -72,7 +72,7 @@ list of cases it does NOT yet recognize.
 | Anthropic backend (structured self-assessment) | works (self-reported, not derived from weights) |
 | LSP server, formatter, debugger | works |
 | Native C99 compiler (experimental, requires gcc) | partial |
-| 284 conformance tests + 343 unit tests | passing on Linux/macOS/Windows |
+| 284 conformance tests + 348 unit tests | passing on Linux/macOS/Windows |
 
 ---
 
@@ -81,7 +81,7 @@ list of cases it does NOT yet recognize.
 - Not a formal type system. No mechanized soundness proof.
 - Not a calibrated uncertainty framework. Backend confidence is a signal.
 - Not a legal compliance product. Regulatory export is supporting evidence.
-- Not tamper-proof against an attacker who controls both the DB and the anchor file.
+- Not a security boundary against an attacker who controls both the DB and the anchor file.
 - Not a replacement for evals, monitoring, or human review.
 - Not a general-purpose replacement for Python.
 
@@ -90,9 +90,12 @@ list of cases it does NOT yet recognize.
 ## Installation
 
 ```bash
-pip install ledge-lang
+python -m pip install dist/ledge_lang-1.2.0-py3-none-any.whl
 ledge demo medical_triage             # runs without an API key
 ```
+
+After Ledge 1.2.0 is published to PyPI, replace the local wheel install with
+`pip install ledge-lang`.
 
 Optional extras:
 
@@ -110,4 +113,6 @@ no Ledge-specific extras required.
 - [README.md](README.md) — full quickstart, the precise checker contract, FAQ, comparisons.
 - [GUARANTEES.md](GUARANTEES.md) — each runtime property paired with a runnable demo and its threat model.
 - [CALIBRATION_GUIDE.md](CALIBRATION_GUIDE.md) — minimum sample sizes, drift handling, what calibration doesn't fix.
-- [HACKER_NEWS_READINESS.md](HACKER_NEWS_READINESS.md) — what was softened, strengthened, and what remains before a formal PL claim could be made.
+- [docs/STATIC_CHECKER.md](docs/STATIC_CHECKER.md) — checked CLI and Python execution paths.
+- [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — current boundaries and non-goals.
+- [docs/ROADMAP.md](docs/ROADMAP.md) — path from alpha to production-critical readiness.

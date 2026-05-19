@@ -49,7 +49,8 @@ send_treatment_recommendation(result["diagnosis"])
 
 The developer must remember to check. In practice, they forget.
 
-Ledge makes this class of bug structurally impossible. The equivalent program:
+Ledge makes this class of bug visible to the checker before execution. The
+equivalent program:
 
 ```ledge
 define result as classify(symptoms) using ["urgent", "routine", "monitor"]
@@ -84,7 +85,7 @@ Every AI inference operation returns a value of type `Uncertain[T]`, where `T` i
 - The underlying value (inaccessible without explicit extraction)
 - A confidence score in [0.0, 1.0]
 - The operation that produced it (`classify`, `analyze`, `generate`)
-- A unique decision ID for audit purposes
+- A stable decision ID for audit purposes
 
 Three operations are defined:
 
@@ -427,7 +428,15 @@ The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA
 
 ## 10. Conclusion
 
-Ledge demonstrates that AI uncertainty can be treated as a typed, auditable, empirically calibrated property of a programming language rather than an informal engineering convention. The four guarantees are individually verifiable without an API key. The calibration layer provides infrastructure to measure whether declared model confidence is predictive for a given domain and to adapt decision thresholds accordingly. The OpenAI backend uses real token log-probabilities for confidence estimation. The audit trail includes external anchoring to detect database deletion and regeneration.
+Ledge demonstrates that AI uncertainty can be treated as a typed, auditable,
+empirically measured property of a programming language rather than an informal
+engineering convention. The four runtime properties are individually checkable
+without an API key. The calibration layer provides infrastructure to measure
+whether declared model confidence is predictive for a given domain and to adapt
+decision thresholds accordingly. The OpenAI backend uses real token
+log-probabilities for confidence estimation. The audit trail includes external
+anchoring to detect database deletion and regeneration within the documented
+threat model.
 
 The language is available at: https://github.com/Mikhail-Balari/Ledge
 

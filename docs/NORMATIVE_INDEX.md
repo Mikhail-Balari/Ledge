@@ -2,7 +2,7 @@
 ## Version 1.1.0
 
 Every normative rule in Ledge with its conformance test.
-A rule without a conformance test is not normatively verified.
+A rule without a conformance test is not part of the checked conformance surface.
 
 ---
 

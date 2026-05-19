@@ -93,7 +93,7 @@ Yes. Real OpenAI and Anthropic backends are included:
 See examples/showcase/con_backend_real.py for a full demo
 that compares behavior with and without a real backend.
 
-## Is this a demo language or production-ready?
+## Is this a demo language or ready for critical deployment?
 
 Honest answer: Ledge is early-stage and experimental.
 What is working today (see CI/test suite for authoritative counts):
@@ -105,11 +105,11 @@ What is working today (see CI/test suite for authoritative counts):
   compliance certification)
 - The OpenAI and Anthropic backends
 
-What is not production-ready:
+What is not ready for critical deployment:
 - No package ecosystem beyond 15 included packages
 - No distributed audit trail
 - No formal security audit
 - Adoption: zero known production deployments
 
-The design patterns Ledge enforces are production-relevant.
+The design patterns Ledge enforces are relevant to production systems.
 The implementation is a working prototype.

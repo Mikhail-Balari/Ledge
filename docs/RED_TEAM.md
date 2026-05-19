@@ -36,7 +36,7 @@ If it requires >100 lines of glue code per Ledge feature, the criticism is inval
 
 ---
 
-### C-02: "The AI claim is marketing without substance"
+### C-02: "The AI claim lacks substance"
 
 **Strength:** Very high  
 **Status:** Partially mitigated  

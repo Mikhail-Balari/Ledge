@@ -1,12 +1,12 @@
 # Ledge Compatibility Policy
-## Version 1.0.0
+## Version 1.2.0
 
-This document defines what is guaranteed to remain stable across Ledge
-versions, and what may change.
+This document describes the compatibility policy Ledge intends to follow across
+versions, and what may change while the project remains alpha software.
 
 ---
 
-## Stability guarantees
+## Stability policy
 
 ### What will NOT break between patch versions (1.0.x → 1.0.y)
 
@@ -139,5 +139,6 @@ behavior of the language. Any change that causes a conformance test failure
 is a breaking change, regardless of version bump.
 
 Third-party implementations should run `tests/conformance.py` to verify
-their implementation. A conforming implementation that passes all tests
-is guaranteed to work with code written for any other conforming implementation.
+their implementation. A conforming implementation that passes all tests is
+expected to work with code written for any other conforming implementation,
+subject to the alpha-stage limitations documented in this policy.

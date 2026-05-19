@@ -2,8 +2,8 @@
 ## Version 1.2.0
 
 Public claims should be backed by a command, test, or source file. This registry
-tracks the claims that are currently reasonable to make; it is not a marketing
-scorecard and it is not a proof of formal soundness.
+tracks the claims that are currently reasonable to make; it is an accountability
+document, not a proof of formal soundness.
 
 ## AI And Uncertainty
 
@@ -27,7 +27,7 @@ scorecard and it is not a proof of formal soundness.
 
 | Claim | Why |
 |---|---|
-| Ledge is production-ready for critical systems. | It is alpha software with no known production deployments. |
+| Ledge is ready for critical production systems. | It is alpha software with no known production deployments. |
 | Ledge has a mechanized proof or formal soundness theorem. | The current checker is an implementation-level static analysis pass. |
 | The audit log resists every local attacker. | It has a limited threat model and does not protect against an attacker who controls both store and anchor files. |
-| Ledge is legally compliant with EU AI Act, GDPR, HIPAA, or any other regime. | The project can produce supporting evidence artifacts, not legal certification. |
+| Ledge provides legal or regulatory certification for EU AI Act, GDPR, HIPAA, or any other regime. | The project can produce supporting evidence artifacts, not legal certification. |

@@ -1,8 +1,7 @@
 # Release Readiness - Ledge 1.2.0
 
-This document records the final technical readiness state for Ledge 1.2.0.
-It replaces the temporary Hacker News working logs with a durable release
-checklist for the public repository.
+This document records the final technical readiness state for Ledge 1.2.0 as a
+durable release checklist for the public repository.
 
 ## Final Guarantee Statement
 
@@ -31,6 +30,13 @@ legal compliance certification.
   `checked_run(...)`.
 - The low-level Python API `ledge_lang.run(source)` executes source directly and
   bypasses the checker by design for interpreter and test harness use.
+
+## Durable Review Documents
+
+- `docs/STATIC_CHECKER.md` documents the checked CLI and Python execution paths.
+- `docs/THREAT_MODEL.md` documents the current boundary and non-goals.
+- `docs/ROADMAP.md` documents the path from alpha software toward
+  production-critical readiness.
 
 ## Verification Commands Run
 
@@ -81,16 +87,9 @@ legal compliance certification.
 
 ## Files Removed From Public Release Surface
 
-Temporary launch-process logs were removed from the public repository:
-
-- `HACKER_NEWS_FINAL_PASS_LOG.md`
-- `HACKER_NEWS_READINESS.md`
-- `hn_risky_phrases.txt`
-- `hn_example_typecheck_results.txt`
-- `hn_pre_hn_check_results.txt`
-- `hn_packaging_verification.txt`
-
-Future `hn_*.txt` scratch files are ignored by `.gitignore`.
+Temporary process logs and channel-specific readiness notes were removed from
+the public repository. Future scratch verification logs are ignored by
+`.gitignore`.
 
 ## Remaining Risks
 

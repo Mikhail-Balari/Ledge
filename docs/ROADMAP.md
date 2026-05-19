@@ -1,176 +1,134 @@
-# Ledge Technical Roadmap
-## Path to: Faster than Python | WASM | ARM32 | Serverless
+# Roadmap
 
----
+This roadmap is for expert review before production-critical use. It is not a promise of dates or a claim that Ledge is already suitable for regulated deployment.
 
-## Current state (v1.1.0)
+## Current Release: 1.2.0 Alpha
 
-| Metric | Value |
-|--------|-------|
-| Interpreter speed | ~25x slower than CPython |
-| LLVM IR generation | ✓ Implemented, generates valid .ll files |
-| Native compilation | Needs `clang` installed |
-| WASM compilation | Needs `emcc` installed |
-| Score | 960/1000 — Candidato técnico de clase mundial |
+What exists now:
 
----
+- A small DSL with `Uncertain[T]` values for AI outputs.
+- A static checker that rejects unchecked uncertain values before `ledge run`.
+- Explicit bypass via `ledge run --unsafe`.
+- Safe Python entry points via `checked_run(...)` and `checked_run_file(...)`.
+- Low-level direct execution via `run(...)` for tests and embedding.
+- A hash-chained local audit log with a limited threat model.
+- Unit, conformance, official example, demo, package build, and clean wheel verification through `scripts/pre_release_check.py` plus release-readiness checks.
 
-## Phase 1: Native binary (v1.2.0) — 2-4 weeks
+What is not claimed:
 
-**Goal:** `ledge compile program.ledge -o program && ./program` runs faster than Python.
+- No whole-program soundness.
+- No sandbox boundary.
+- No compliance certification.
+- No production-critical validation.
+- No guarantee that model confidence is calibrated.
 
-### What's already built
-- `ledge_lang/compiler/codegen.py` — Ledge → LLVM IR
-- `ledge_lang/compiler/targets.py` — native/wasm/arm32/serverless
-- `ledge compile` CLI command
-- 27 compiler tests at 100%
+## 1. Stronger Static Checker
 
-### What's needed for v1.2.0
+Planned work:
 
-**Step 1: String runtime in IR** (1-2 weeks)
-The codegen currently emits `0.0` for strings. Add a string runtime:
+- Interprocedural tracking for functions that receive, return, or store `Uncertain[T]`.
+- More precise alias tracking across local assignments and container operations.
+- Better narrowing for guard patterns and early returns.
+- Clearer diagnostics with source spans and repair suggestions.
+- A public checker conformance corpus, including negative examples that must fail.
 
-```llvm
-; String representation: {i64 len, i8* data}
-; All string operations as LLVM IR functions
+Exit criteria:
 
-declare i8* @ledge_string_concat(i8*, i8*)
-declare i64 @ledge_string_len(i8*)
-declare i8* @ledge_num_to_str(double)
-```
+- The checker rejects the documented unsafe patterns across the conformance corpus.
+- Known limitations are explicit and covered by regression tests.
+- Safe patterns remain ergonomic enough for real examples.
 
-This is ~300 lines of LLVM IR in `ledge_lang/compiler/runtime.ll`.
+## 2. Python Integration and Adapters
 
-**Step 2: List/Map runtime in IR** (1-2 weeks)  
-Lists and maps as heap-allocated structs:
+Planned work:
 
-```llvm
-; List: {i64 len, i64 cap, ptr* items}
-declare ptr @ledge_list_new()
-declare void @ledge_list_append(ptr, ptr)
-declare ptr @ledge_list_get(ptr, i64)
-```
+- Thin adapters for common Python AI clients that return `Uncertain[T]` values.
+- A documented boundary between checked Ledge execution and low-level Python embedding.
+- Integration examples for services that want to run Ledge snippets as policy-checked decision steps.
+- Better packaging smoke tests across supported Python versions and operating systems.
 
-**Step 3: Hook clang into CI** (1 day)
-```yaml
-- name: Compile and run Ledge programs natively
-  run: |
-    sudo apt install -y clang
-    python -c "from ledge_lang.compiler import compile_to_native; compile_to_native('show 42', 'test_out')"
-    ./test_out  # should print 42
-```
+Exit criteria:
 
-### Expected performance after v1.2.0
-- Numeric compute: 2-5x FASTER than CPython
-- String-heavy: ~1x CPython
-- Mixed: 1.5-3x faster
+- External callers can adopt the checked path without rewriting their entire application.
+- Bypass paths remain explicit and documented.
 
----
+## 3. Policy Engine
 
-## Phase 2: WASM target (v1.3.0) — 3-6 weeks
+Planned work:
 
-**Goal:** `ledge compile program.ledge --target wasm -o program.wasm` + runs in browser.
+- First-class policy configuration for thresholds, fallback requirements, and allowed escape hatches.
+- CI-friendly reports for policy violations.
+- Per-domain policy examples for triage, hiring, legal review, finance, and moderation.
 
-### What's already built
-- `targets.py::compile_to_wasm()` — complete implementation
-- Node.js wrapper for serverless deployment
-- WASM target triple in codegen
+Exit criteria:
 
-### What's needed
+- Teams can review confidence policy separately from business logic.
+- Policy failures are machine-readable and human-readable.
 
-**Step 1: Install emscripten in CI**
-```yaml
-- uses: mymindstorm/setup-emsdk@v12
-- run: ledge compile program.ledge --target wasm -o out.wasm
-```
+## 4. Audit Anchoring
 
-**Step 2: Browser playground**
-```html
-<script>
-const response = await fetch('program.wasm');
-const bytes = await response.arrayBuffer();
-const { instance } = await WebAssembly.instantiate(bytes);
-instance.exports.main();
-</script>
-```
+Planned work:
 
-**Step 3: WASM-specific runtime**
-Replace `printf` calls with JavaScript imports for browser output.
+- External append-only anchoring options for audit-chain roots.
+- Rotation and retention guidance.
+- Tamper-evidence wording that is precise about the attacker model.
+- Export formats with stable schemas.
 
-### Expected: v1.3.0 ships WASM builds for all examples
+Exit criteria:
 
----
+- Audit records can be independently reconciled against an external anchor.
+- Documentation states exactly what compromise scenarios remain out of scope.
 
-## Phase 3: ARM32 / ARM64 (v1.4.0) — 1-2 weeks after Phase 1
+## 5. CI Gates and Release Discipline
 
-**Goal:** Run Ledge on Raspberry Pi, medical devices, robotics controllers.
+Planned work:
 
-This is nearly free once LLVM is working:
+- CI jobs for unit tests, conformance tests, official example typechecks, demo execution, package build, and wheel install smoke tests.
+- Published release checklist matching `scripts/pre_release_check.py`.
+- Negative-example inventory that is excluded from expected-to-pass example lists.
 
-```python
-# compile_to_native already supports this:
-compile_to_native(source, "program_arm32", target="arm32")
-compile_to_native(source, "program_arm64", target="arm64")
-```
+Exit criteria:
 
-Just needs cross-compilation toolchain in CI:
-```yaml
-- run: sudo apt install -y clang gcc-arm-linux-gnueabi
-```
+- A release cannot pass CI while official examples fail, package data is missing, or the console command is broken.
 
----
+## 6. Security Review
 
-## Phase 4: Serverless (v1.5.0) — 1 week after Phase 1
+Planned work:
 
-**Goal:** `ledge compile program.ledge --target serverless` → zip to deploy to AWS Lambda.
+- Review of file access, module loading, audit storage, export formats, CLI entry points, and Python embedding APIs.
+- Explicit guidance for sandboxing and host-language isolation.
+- Dependency and packaging review.
 
-Already implemented in `targets.py::compile_to_serverless()`.
-Just needs native compilation working first.
+Exit criteria:
 
-```bash
-ledge compile program.ledge --target serverless -o lambda.zip
-aws lambda create-function --zip-file fileb://lambda.zip --runtime provided.al2
-```
+- Security assumptions are documented.
+- Known bypasses are intentional, named, tested, and marked unsafe where appropriate.
 
----
+## 7. Third-Party Validation
 
-## Phase 5: "Faster than Python" claim (v1.2.0)
+Planned work:
 
-The claim is achievable specifically for:
-- Numeric compute (fibonacci, numeric algorithms): 2-5x faster
-- Loop-heavy code: 2-3x faster
-- AI pipelines: comparable (bottleneck is AI backend, not Ledge)
+- Independent review of the static checker and threat model.
+- External reproduction of the release verification script.
+- Public issue tracking for review findings and fixes.
 
-NOT faster for:
-- String manipulation (C library calls have overhead)
-- I/O bound (disk/network)
-- Short scripts (startup overhead)
+Exit criteria:
 
-**Honest claim:** "Ledge compiled programs run 2-5x faster than CPython for numeric workloads."
+- Core safety claims have been reviewed by people outside the project.
+- Findings are resolved or documented as limitations.
 
----
+## 8. Production Pilot Criteria
 
-## Full timeline summary
+A production pilot should not start until all of the following are true:
 
-| Version | Target | Time from now |
-|---------|--------|---------------|
-| v1.2.0 | Native binary, faster than Python | 2-4 weeks |
-| v1.3.0 | WASM, browser playground | 3-6 weeks |
-| v1.4.0 | ARM32/ARM64 (Raspberry Pi, robotics) | 4-7 weeks |
-| v1.5.0 | AWS Lambda serverless packaging | 5-8 weeks |
-| v2.0.0 | Full runtime in IR, GC, sandbox, package registry | 3-6 months |
+- The relevant domain has calibration measurements for the target model and task.
+- Thresholds, fallbacks, and escape hatches have owner approval.
+- CI runs the checker and release verification on every change.
+- Audit records are anchored outside the local process boundary if they matter operationally.
+- Human review exists for consequential decisions.
+- Rollback and incident-response procedures are documented.
+- The deployment treats Ledge as one control among several, not a replacement for monitoring, evals, or review.
 
----
+## Final Target
 
-## What an AI can do that humans would take months for
-
-The key insight: the IR codegen (`ledge_lang/compiler/codegen.py`) already
-handles all the hard structural work — two-pass compilation, scope management,
-recursion, control flow. What remains is mechanical:
-
-1. Add string/list/map runtime functions (~300 lines of LLVM IR)
-2. Hook these into codegen (~100 lines of Python)
-3. Install clang in CI (1 command)
-
-This is NOT 6-12 months of work. It's 2-4 weeks of focused implementation.
-The 6-12 month estimate was for building LLVM from scratch. We're not doing that.
+The long-term goal is a small, auditable execution layer that makes uncertainty handling visible in code and enforceable at the entry points teams actually use. Getting there requires stronger analysis, operational controls, and independent validation.

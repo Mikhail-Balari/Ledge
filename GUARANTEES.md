@@ -1,12 +1,12 @@
-# Ledge runtime properties — what is true, with proofs, and what is not
+# Ledge runtime properties - what is true, how to check it, and what is not
 
 > Each property comes with code you can copy, paste, and run.
-> No API keys, no setup, no blind trust. The word "guarantee" is reserved
-> for the precise statements below; everything else is supporting infrastructure.
+> No API keys, no setup, no blind trust. The properties below are implementation
+> checks with explicit caveats, not formal proofs.
 
 ---
 
-## Guarantee 1: Zero confidence without a backend
+## Property 1: Zero confidence without a backend
 
 Without an AI model connected, all AI operations
 (`classify`, `analyze`, `generate`, `ask`, `embed`) return
@@ -17,7 +17,7 @@ The system does not invent answers. It does not guess. It does not act.
 **Verify it yourself:**
 
 ```python
-# Run from repo root: python demo_garantia1.py
+# Run from repo root: python demo_guarantee1.py
 import sys; sys.path.insert(0, '.')
 from ledge_lang import run
 
@@ -33,7 +33,7 @@ for name, code in cases:
     print(f"{name:10s} without backend → confidence = {conf}")
     assert conf == '0', f"FAILED: expected 0, got {conf}"
 
-print("\nGuarantee verified: without backend, confidence = 0 in all cases.")
+print("\nProperty checked: without backend, confidence = 0 in all cases.")
 ```
 
 **Expected output:**
@@ -42,7 +42,7 @@ classify   without backend → confidence = 0
 analyze    without backend → confidence = 0
 generate   without backend → confidence = 0
 
-Guarantee verified: without backend, confidence = 0 in all cases.
+Property checked: without backend, confidence = 0 in all cases.
 ```
 
 **What this means:** Without a connected backend, every AI primitive returns
@@ -68,7 +68,7 @@ a single-file, flow-sensitive AST walker with documented limitations.
 **Verify it yourself:**
 
 ```python
-# Run from repo root: python demo_garantia2.py
+# Run from repo root: python demo_guarantee2.py
 import sys; sys.path.insert(0, '.')
 from ledge_lang.typechecker import check_types
 
@@ -96,7 +96,7 @@ issues2 = check_types(safe)
 errors2 = [i for i in issues2 if i.is_error]
 print(f"\nSafe code (explicit confidence guard):")
 print(f"  Errors detected: {len(errors2)}")
-print("\nGuarantee verified: typechecker blocks unsafe use at analysis time.")
+print("\nProperty checked: typechecker blocks unsafe use at analysis time.")
 ```
 
 **Expected output:**
@@ -109,7 +109,7 @@ Unsafe code ('show r' without guard):
 Safe code (explicit confidence guard):
   Errors detected: 0
 
-Property verified: the checker rejects direct use at analysis time.
+Property checked: the checker rejects direct use at analysis time.
 ```
 
 **What it rejects (errors):**
@@ -156,13 +156,13 @@ who can read/write the SQLite store but not the anchor file. An attacker
 who controls both the database and the anchor file can compute a fresh
 consistent chain and forge a clean history. An attacker with access to the
 in-memory `AuditTrail` object can rewrite entries and recompute hashes
-trivially. This is supporting evidence for governance review, not a
-tamper-proof boundary against a malicious local operator.
+trivially. This is supporting evidence for governance review, not a security
+boundary against a malicious local operator.
 
 **Verify it yourself:**
 
 ```python
-# Run from repo root: python demo_garantia3.py
+# Run from repo root: python demo_guarantee3.py
 import sys; sys.path.insert(0, '.')
 from ledge_lang import run
 from ledge_lang.ai_types import GLOBAL_AUDIT
@@ -197,7 +197,7 @@ fake = LedgeMap({
 })
 GLOBAL_AUDIT._entries.insert(1, fake)
 print(f"\nAfter inserting fake entry:    {GLOBAL_AUDIT.verify()}")
-print("\nGuarantee verified: any modification to the log breaks the chain.")
+print("\nProperty checked: modifying the log breaks the chain.")
 ```
 
 **Expected output:**
@@ -210,7 +210,7 @@ Chain after tamper:            False
 
 After inserting fake entry:    False
 
-Guarantee verified: any modification to the log breaks the chain.
+Property checked: modifying the log breaks the chain.
 ```
 
 **What this means in practice.** A reviewer can verify the chain
@@ -238,7 +238,7 @@ approve.
 **Verify it yourself:**
 
 ```python
-# Run from repo root: python demo_garantia4.py
+# Run from repo root: python demo_guarantee4.py
 import sys; sys.path.insert(0, '.')
 from ledge_lang import run
 
@@ -260,7 +260,7 @@ print()
 print(f"Patients escalated to human:   {len(escalated)}")
 print(f"Patients classified automatic: {len(automatic)}")
 assert len(automatic) == 0, "FAILED: classified patients without a backend"
-print("\nGuarantee verified: without backend, zero automatic decisions.")
+print("\nProperty checked: without backend, zero automatic decisions.")
 ```
 
 **Expected output:**
@@ -278,7 +278,7 @@ Triage system output WITHOUT AI backend:
 Patients escalated to human:   3
 Patients classified automatic: 0
 
-Guarantee verified: without backend, zero automatic decisions.
+Property checked: without backend, zero automatic decisions.
 ```
 
 **Caveat.** "Fails closed" is a property of programs that follow the
@@ -292,7 +292,7 @@ hard-codes a permissive default.
 ## What Ledge does NOT guarantee
 
 **1. That the AI model is correct.**
-Ledge guarantees that you use the result explicitly. It does not guarantee
+Ledge checks that the result is handled explicitly. It does not guarantee
 the result is good. A model that always responds "urgent" with
 `confidence=0.95` would pass all Ledge checks without issue.
 
@@ -316,9 +316,9 @@ the typechecker does not infer the result is `list[uncertain]`. It only detects
 literal lambdas in direct calls to `map`.
 
 **6. That Python code calling Ledge is safe.**
-If you use the Python API (`from ledge_lang import run`) and access results
-without checking confidence, Ledge cannot protect you. The guarantees
-apply inside the Ledge language.
+If you use the low-level Python API (`from ledge_lang import run`) and access
+results without checking confidence, Ledge cannot protect you. Use
+`checked_run(...)` or the checked CLI path when you want the static safety gate.
 
 **7. That `audit_verify()` detects OS-level compromise.**
 If someone has access to the process in memory and can modify the

@@ -1,17 +1,18 @@
 # Ledge Feature Matrix
-## Version 1.1.0 — Normative Reference
+## Version 1.2.0 - Reference
 
-This document is the authoritative record of every feature in Ledge.
-Status definitions are strict and verifiable:
+This document records the implemented and planned features in Ledge.
+Status definitions are intended to be checked against code, tests, and examples:
 
 | Status | Meaning |
 |---|---|
-| **[SHIPPED]** (shipped) | Passes the 7×1 standard: syntax, grammar, semantics, runtime, typechecker, tests, working example |
+| **[SHIPPED]** (shipped) | Implemented and covered by the relevant syntax, runtime, typechecker, tests, or examples |
 | **[EXPERIMENTAL]** | Implemented in runtime but not all 7 checks pass — may change |
 | **[ROADMAP]** | Planned (roadmap), not implemented. Not available in any current release |
 | **removed** | Was experimental, removed for design reasons |
 
-**Rule:** If a feature is not in this matrix, it does not exist in Ledge.
+**Rule:** If a feature is not in this matrix, treat it as unsupported unless it
+is documented elsewhere in the repository.
 
 ---
 

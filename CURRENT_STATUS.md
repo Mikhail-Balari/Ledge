@@ -2,11 +2,15 @@
 
 **Version 1.2.0 — May 2026**
 
-## Quickstart (after `pip install ledge-lang`)
+## Quickstart
 
 ```bash
 ledge demo medical_triage
 ```
+
+Before Ledge 1.2.0 is published to PyPI, install the locally built wheel from
+`dist/`. After 1.2.0 is published, `pip install ledge-lang` should provide the
+same command.
 
 No clone, no API key, no setup. The bundled demo escalates every patient to
 human review because there is no AI backend connected — that is the
@@ -14,7 +18,7 @@ safe-failure default.
 
 ## What works today
 
-### The four runtime properties (see GUARANTEES.md for proofs)
+### The four runtime properties (see GUARANTEES.md for caveats)
 
     python demo_guarantee1.py  # confidence = 0 without a backend
     python demo_guarantee2.py  # static checker rejects direct use of Uncertain
@@ -59,7 +63,7 @@ show unsafe_value_of(r)                         # explicit unchecked
 ## Tests
 
 - Conformance: 284 / 284 passing
-- Unit suite: 343 / 343 passing
+- Unit suite: 348 / 348 passing
 - 0 known failures on Linux, macOS, Windows
 
 (See CI for the authoritative numbers.)
@@ -83,3 +87,12 @@ See [GUARANTEES.md](GUARANTEES.md) Property 2 for the full list.
 - IDE tooling beyond the bundled LSP server.
 - Mechanized proofs of the static rules.
 - Known production deployments.
+
+## Checked execution paths
+
+- `ledge run file.ledge` typechecks before execution.
+- `ledge run file.ledge --unsafe` bypasses that static check explicitly.
+- `ledge check --types file.ledge` reports type issues without execution.
+- `checked_run(source)` is the safety-gated Python API.
+- `run(source)` remains the low-level direct execution API for interpreter and
+  test harness use.
