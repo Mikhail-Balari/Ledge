@@ -1,4 +1,4 @@
-# Email phishing scanner -- Guarantee 1: zero confidence without backend.
+# Email phishing scanner -- Property 1: zero confidence without backend.
 # Without a real AI backend, confidence is always 0.
 # No email is ever auto-classified -- every uncertain case goes to human review.
 
@@ -13,18 +13,18 @@ type Email has:
 define scan_email(email: Email):
     define result as classify(email.body) using ["phishing", "legitimate"]
 
-    # Guarantee 1: confidence = 0 without a backend -> always goes to human review.
-    if confidence_of(result) < THRESHOLD:
+    # Property 1: confidence = 0 without a backend -> always goes to human review.
+    if confidence_of(result) >= THRESHOLD:
+        # Only reached when a real backend provides high-confidence classification.
+        if value_of(result) = "phishing":
+            show "EMAIL {email.id}: BLOCKED -- phishing detected (confidence={confidence_of(result)})"
+            return "blocked"
+
+        show "EMAIL {email.id}: DELIVERED -- legitimate (confidence={confidence_of(result)})"
+        return "delivered"
+    else:
         show "EMAIL {email.id}: QUARANTINED -- confidence={confidence_of(result)} (human review)"
         return "quarantine"
-
-    # Only reached when a real backend provides high-confidence classification.
-    if value_of(result) = "phishing":
-        show "EMAIL {email.id}: BLOCKED -- phishing detected (confidence={confidence_of(result)})"
-        return "blocked"
-
-    show "EMAIL {email.id}: DELIVERED -- legitimate (confidence={confidence_of(result)})"
-    return "delivered"
 
 define emails as list [
     Email(id="E001", sender="security@bankupdate.net", subject="URGENT: Verify account", body="Click now or your account is suspended in 24 hours"),
@@ -43,5 +43,5 @@ show ""
 show "Total decisions in audit trail: {len(audit_query())}"
 show "Audit chain intact: {audit_verify()}"
 show ""
-show "Guarantee 1 confirmed: without backend, confidence = 0."
+show "Property 1 confirmed: without backend, confidence = 0."
 show "All emails quarantined -- zero automatic decisions made."

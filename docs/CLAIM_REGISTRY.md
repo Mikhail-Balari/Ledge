@@ -1,65 +1,33 @@
 # Ledge Claim Registry
-## Version 1.1.0
+## Version 1.2.0
 
-Every public claim about Ledge must appear here with a link to verifiable evidence.
-Claims without evidence are prohibited in README, blog posts, CLI output and demos.
+Public claims should be backed by a command, test, or source file. This registry
+tracks the claims that are currently reasonable to make; it is not a marketing
+scorecard and it is not a proof of formal soundness.
 
----
-
-## Claims about AI-native semantics
-
-| Claim | Evidence | Status |
-|-------|----------|--------|
-| AI operations never fabricate confidence without a backend | tests/integration/test_install_smoke.py::test_ai_safety_invariant | ✓ VERIFIED |
-| classify() returns uncertain[text], never a fabricated label | tests/unit/test_ai_native.py | ✓ VERIFIED |
-| Uncertain[T] use without extraction is a typechecker ERROR | tests/unit/test_typechecker.py | ✓ VERIFIED |
-| Audit trail logs all AI calls with input hash, not plaintext | tests/integration/test_install_smoke.py::test_audit_trail_works | ✓ VERIFIED |
-| After `if is_confident(r):` guard, r is narrowed to safe type | tests/unit/test_typechecker.py (flow typing) | ✓ VERIFIED |
-
-## Claims about language correctness
+## AI And Uncertainty
 
 | Claim | Evidence | Status |
-|-------|----------|--------|
-| 284 conformance tests pass at 100% | python tests/conformance.py | ✓ VERIFIED |
-| 556 total tests pass at 100% | python -m ledge_lang.test_runner tests/ | ✓ VERIFIED |
-| 0 divergences between VM and tree-walker (1500 random programs) | tests/differential/ | ✓ VERIFIED |
-| true ≠ 1, false ≠ 0, nothing ≠ false (strict semantic invariants) | tests/unit/test_core_language.py | ✓ VERIFIED |
-| divide(x, 0) returns nothing, never crashes | tests/conformance.py | ✓ VERIFIED |
-| Recursion depth exceeded → LedgeError with actionable message | tests/integration/test_install_smoke.py | ✓ VERIFIED |
-| 0 crashes in parser fuzzing (adversarial corpus) | tests/fuzz_suite/test_fuzzer.py | ✓ VERIFIED |
+|---|---|---|
+| Without an AI backend, AI operations report `confidence=0.0`. | `tests/unit/`, `python scripts/pre_release_check.py` | Checked |
+| Unchecked `Uncertain[T]` use is rejected by the static checker. | `tests/unit/test_typechecker.py`, `tests/integration/test_cli_run_typecheck.py` | Checked |
+| `ledge run <file.ledge>` runs the static checker before execution by default. | `tests/integration/test_cli_run_typecheck.py` | Checked |
+| `ledge run <file.ledge> --unsafe` is the explicit CLI bypass. | `tests/integration/test_cli_run_typecheck.py` | Checked |
 
-## Claims about tooling
+## Language And Tooling
 
 | Claim | Evidence | Status |
-|-------|----------|--------|
-| Formatter is idempotent on all official examples | tests/unit/test_properties.py | ✓ VERIFIED |
-| Formatter preserves program semantics (round-trip) | tests/unit/test_properties.py::test_format_preserves_semantics | ✓ VERIFIED |
-| LSP includes AI-native completions (analyze, when, confidence_of) | ledge_lang/lsp.py + manual inspection | ✓ VERIFIED |
-| Debugger shows Uncertain values with confidence | ledge_lang/debugger.py | ✓ VERIFIED |
+|---|---|---|
+| The conformance suite passes. | `python tests/conformance.py` | Checked in release verification |
+| Unit tests pass. | `python -m pytest tests/unit/` | Checked in release verification |
+| Official `.ledge` examples typecheck under `ledge check --types`. | `python scripts/pre_release_check.py` | Checked in release verification |
+| The bundled `medical_triage` demo ships in the wheel. | `python scripts/pre_release_check.py` and clean wheel install verification | Checked |
 
-## Claims about performance
+## Claims Not To Make Yet
 
-| Claim | Evidence | Status |
-|-------|----------|--------|
-| Tree-walker is ~25x slower than CPython on loop benchmarks | audit/benchmark_results.json | ✓ HONEST |
-| LLVM IR generation produces valid .ll files | tests/compiler/test_codegen.py | ✓ VERIFIED |
-| Native binary compilation needs clang (v1.2 roadmap) | docs/ROADMAP.md | ✓ ACCURATE |
-
-## Claims about security
-
-| Claim | Evidence | Status |
-|-------|----------|--------|
-| --restrict-ffi blocks non-allowlisted Python modules | tests/integration (allowed_modules tests) | ✓ VERIFIED |
-| Iteration limiter raises LedgeError at N iterations | tests/integration | ✓ VERIFIED |
-| Input secrets not logged in plaintext to audit trail | tests/integration::test_audit_trail_works | ✓ VERIFIED |
-
-## PROHIBITED CLAIMS (not yet proven)
-
-The following claims are NOT allowed in public materials:
-
-| Prohibited Claim | Why | When Allowed |
-|-----------------|-----|--------------|
-| "Ledge runs faster than Python" | Requires clang compilation (v1.2) | After v1.2 release |
-| "Supports WASM/ARM32/serverless" | Requires emcc/clang | After v1.3 release |
-| "Ready for production critical systems" | No formal sandbox or GC | After v2.0 |
-| "Ecosystem of packages" | 0 native packages exist | When packages exist |
+| Claim | Why |
+|---|---|
+| Ledge is production-ready for critical systems. | It is alpha software with no known production deployments. |
+| Ledge has a mechanized proof or formal soundness theorem. | The current checker is an implementation-level static analysis pass. |
+| The audit log resists every local attacker. | It has a limited threat model and does not protect against an attacker who controls both store and anchor files. |
+| Ledge is legally compliant with EU AI Act, GDPR, HIPAA, or any other regime. | The project can produce supporting evidence artifacts, not legal certification. |

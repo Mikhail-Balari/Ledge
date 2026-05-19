@@ -1,5 +1,5 @@
-# Medical triage — Ledge AI-first
-# Guarantee: never acts with confidence < 0.85, always escalates to human if uncertain.
+# Medical triage -- Ledge AI-first
+# Property: never acts with confidence < 0.85, always escalates to human if uncertain.
 # Automatic audit trail: every decision is traceable and verifiable.
 
 define MIN_CONFIDENCE as 0.85
@@ -16,18 +16,18 @@ define classify_patient(patient: Patient):
 
     define analysis as analyze(patient.symptoms) using medical_triage
 
-    # Ledge core guarantee: never acts if confidence < MIN_CONFIDENCE
+    # Ledge core pattern: never acts if confidence < MIN_CONFIDENCE
     if confidence_of(analysis) < MIN_CONFIDENCE:
         show "PATIENT {patient.id}: ESCALATE TO HUMAN (confidence={confidence_of(analysis)})"
         return map {"level": "escalate", "reason": "low_confidence"}
 
-    define result as value_of(analysis) or map {"risk_level": "unknown"}
+    define result as when(analysis, MIN_CONFIDENCE, map {"risk_level": "unknown"})
     define level as result["risk_level"] or "unknown"
 
     if level = "critical" or level = "high":
-        show "PATIENT {patient.id}: URGENT — {level} (confidence={confidence_of(analysis)})"
+        show "PATIENT {patient.id}: URGENT -- {level} (confidence={confidence_of(analysis)})"
     else:
-        show "PATIENT {patient.id}: ROUTINE — {level} (confidence={confidence_of(analysis)})"
+        show "PATIENT {patient.id}: ROUTINE -- {level} (confidence={confidence_of(analysis)})"
 
     return map {"level": level, "confidence": confidence_of(analysis)}
 

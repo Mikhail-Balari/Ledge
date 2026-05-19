@@ -1,63 +1,33 @@
 # Ledge Capability Matrix
-## Version 1.1.0
+## Version 1.2.0
 
-## Para Google (language/infra engineer)
+This matrix is a sober snapshot of implemented capabilities and known gaps.
+Release-readiness results live in `RELEASE_READINESS.md`.
 
-### native_compiler
-- **Status:** SHIPPED
-- Ledge → C99 → gcc → native binary
-- Evidence: `tests/compiler/test_native.py — 28 tests, 100%`
+## Language And Runtime
 
-### gc
-- **Status:** SHIPPED (reference counting)
-- Reference-counted GC in C runtime (ccodegen.py)
-- Evidence: `ledge_lang/compiler/ccodegen.py (ldg_incref/ldg_decref)`
+- Tree-walker interpreter: implemented.
+- Bytecode VM: implemented for a core subset.
+- Python FFI: implemented, with security caveats documented in `docs/SECURITY.md`.
+- Native compilation experiments: present, but no broad performance claim is made for this release.
 
-### profiler
-- **Status:** SHIPPED
-- Integrated profiler with TW vs native comparison
-- Evidence: `ledge_lang/profiler.py`
+## AI And Audit
 
-### package_system
-- **Status:** SHIPPED (5 packages)
-- Evidence: `packages/`
+- AI operations return `Uncertain[T]`.
+- `ledge check --types` rejects unchecked `Uncertain[T]` use.
+- `ledge run` typechecks before execution by default.
+- `ledge run --unsafe` is the explicit bypass.
+- The audit store records AI decisions with input hashes and a hash chain under a limited threat model.
 
+## Packaging
 
-### Honest limitations
-- No JIT yet — each function compiled AOT
-- No garbage collection for cycles (by design)
-- String/list operations in native are boxing-based (optimization opportunity)
-- No concurrent GC (single-threaded memory model for compiled code)
+- The package builds as sdist and wheel.
+- The wheel contains `ledge_lang/demos/medical_triage.ledge`.
+- Clean wheel install verification passed for the local 1.2.0 wheel.
 
-## Para OpenAI
+## Known Gaps
 
-### backends
-- **Status:** SHIPPED
-
-### streaming
-- **Status:** SHIPPED
-- Streaming AI responses via streaming_backend() wrapper
-
-### function_calling
-- **Status:** SHIPPED
-- OpenAI function calling via tools_backend()
-
-### typed_prompts
-- **Status:** SHIPPED
-- Schema enforcement on AI outputs via typed_backend()
-
-### uncertainty_type
-- **Status:** SHIPPED
-- Uncertain[T] enforced by typechecker — prevents most AI safety bugs
-
-## Para Anthropic
-
-### ai_safety_study
-- **Status:** SHIPPED
-
-### uncertainty_invariants
-- **Status:** SHIPPED — 26 security tests at 100%
-
-### real_case_studies
-- **Status:** PARTIAL — examples run, no third-party deployments yet
-
+- No known production deployments.
+- No mechanized proof or formal soundness theorem.
+- No legal compliance certification.
+- PyPI 1.2.0 has not been uploaded yet.

@@ -1,7 +1,7 @@
 # Ledge AI Pipeline Demo
 # ========================
 # Content moderation pipeline with proper uncertainty handling.
-# Demonstrates the core Ledge safety guarantee:
+# Demonstrates the core Ledge safety property:
 # AI results CANNOT be used without explicit confidence handling.
 
 define posts as list [

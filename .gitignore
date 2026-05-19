@@ -15,6 +15,7 @@ venv/
 .mypy_cache/
 .pytest_cache/
 *.log
+hn_*.txt
 .DS_Store
 Thumbs.db
 *.db

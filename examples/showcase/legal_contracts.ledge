@@ -25,8 +25,8 @@ define extract_clauses(contract: Contract):
 
     if conf >= MIN_CONFIDENCE_CLAUSE:
         define ai_result as value_of(analysis) or map {}
-        define clauses as ai_result["clauses"] or list []
-        set extracted_clauses to clauses
+        if has(ai_result, "clauses"):
+            set extracted_clauses to ai_result["clauses"]
         show "  {len(extracted_clauses)} clauses extracted with high confidence ({conf})"
     else:
         # Low confidence: entire contract goes to human review

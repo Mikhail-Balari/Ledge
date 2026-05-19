@@ -1,6 +1,6 @@
 # LLM calibration evaluator — Ledge AI-first
 # Measures whether a model says what it actually knows.
-# Uses native type system to guarantee results are Uncertain[T]
+# Uses the static checker so AI results remain Uncertain[T]
 # and confidence is never accidentally discarded.
 
 define MIN_CONFIDENCE_TO_COUNT as 0.5

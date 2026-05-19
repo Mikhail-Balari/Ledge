@@ -52,6 +52,16 @@ the model; it just makes "I forgot to check" turn into a static error.
 
 ## Install and run in 2 minutes
 
+For a local checkout before the 1.2.0 wheel is published:
+
+```bash
+python -m build
+pip install dist/ledge_lang-1.2.0-py3-none-any.whl
+ledge demo medical_triage
+```
+
+After the same version is published to PyPI, the install step becomes:
+
 ```bash
 pip install ledge-lang
 ledge demo medical_triage
@@ -87,6 +97,15 @@ git clone https://github.com/Mikhail-Balari/Ledge
 cd Ledge
 ledge run examples/showcase/financial_analysis.ledge
 ```
+
+`ledge run` runs the static Uncertain checker before execution. If you are
+deliberately experimenting with unchecked extraction, use
+`ledge run program.ledge --unsafe` to bypass the checker.
+
+Python API note: `from ledge_lang import run` is a low-level execution API.
+It does not enforce the static checker by itself. Library callers who need the
+same gate as the CLI should run `ledge_lang.typechecker.check_types(source)`
+before calling `run(...)`.
 
 ---
 
@@ -173,7 +192,7 @@ SQLite database is deleted and rebuilt, the anchors detect the discontinuity.
 **Threat model.** This detects post-hoc modification by an actor who can
 read/write the SQLite store but not the anchor file. An attacker who controls
 both the database and the anchor file can forge a clean history. This is not
-tamper-proof against a malicious local operator. See `GUARANTEES.md` for the
+resistant to a malicious local operator who controls both files. See `GUARANTEES.md` for the
 full threat model.
 
 ```bash
@@ -442,6 +461,9 @@ Python FFI imports are blocked by default in safe mode:
 ledge run program.ledge --safe-mode               # block all imports + cap iterations
 ledge run program.ledge --allow-import=math,json  # whitelist specific modules
 ```
+
+These execution flags still run the static checker first. Add `--unsafe` only
+when you explicitly want to skip the Uncertain contract check.
 
 For server deployments where users submit Ledge code, run inside Docker or
 similar OS-level isolation. `--safe-mode` is not a substitute for that.

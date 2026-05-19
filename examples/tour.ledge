@@ -408,7 +408,7 @@ show "Category: " + when(category, 0.7, "unclassified")
 show "Confidence: " + confidence_of(category)
 
 
-# ─── 33: Audit Trail — automatic, tamper-evident ────────────────────
+# --- 33: Audit Trail - automatic, hash-chained ----------------------
 # Every AI call is automatically logged — no extra code needed.
 
 define r1 as analyze("great product") using sentiment

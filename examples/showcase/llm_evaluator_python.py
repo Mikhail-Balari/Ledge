@@ -1,5 +1,5 @@
 """
-LLM evaluator — Python version without Ledge guarantees.
+LLM evaluator - Python version without Ledge's checked patterns.
 Demonstrates how calibration can fail silently.
 """
 
@@ -40,7 +40,7 @@ def evaluate_python_with_calibration_bug(questions, ai_fn):
 
 def evaluate_python_correct(questions, ai_fn, min_confidence=0.5):
     """
-    Python version that tries to do what Ledge guarantees.
+    Python version that tries to mirror Ledge's checked pattern.
     But: depends on the developer remembering to include it.
     """
     correct = 0

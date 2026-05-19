@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-ledge — Ledge programming language toolchain
+ledge - Ledge programming language toolchain
 
 Usage:
   ledge                        Start interactive REPL
-  ledge run <file.ledge>       Run a Ledge program
+  ledge run <file.ledge>       Typecheck, then run a Ledge program
+  ledge run <file.ledge> --unsafe
+                               Skip static typechecking and run anyway
   ledge demo [name]            List or run a bundled demo (works after `pip install`,
                                no clone needed). `ledge demo` lists available demos;
                                `ledge demo medical_triage` runs that demo.
@@ -29,6 +31,7 @@ Usage:
 
 Examples:
   ledge run hello.ledge
+  ledge run unsafe_experiment.ledge --unsafe
   ledge fmt program.ledge
   ledge debug --break 10 program.ledge
   ledge check *.ledge
@@ -56,7 +59,7 @@ def main():
 
     if args[0] == "run":
         if len(args) < 2:
-            print("Usage: ledge run <file.ledge>"); sys.exit(1)
+            print("Usage: ledge run <file.ledge> [--unsafe]"); sys.exit(1)
         target = args[1]
         if not target.endswith(".ledge") and not os.path.isfile(target):
             _run_nl(target, extra_args=args[2:])
@@ -133,7 +136,7 @@ def main():
             print("Benchmark suite not found")
         return
 
-    # No subcommand: file path → run it, or start REPL
+    # No subcommand: file path -> run it, or start REPL
     if os.path.isfile(args[0]):
         _run_file(args[0], extra_args=args[1:])
     else:
@@ -141,7 +144,7 @@ def main():
 
 
 def _demo(args):
-    """List or run a bundled demo. Works after `pip install ledge-lang` —
+    """List or run a bundled demo. Works after `pip install ledge-lang` -
     no need to clone the repository."""
     from ledge_lang.demos import list_demos, demo_path
 
@@ -172,6 +175,7 @@ def _run_file(path, extra_args=None):
     
     # Parse extra flags
     extra_args = extra_args or []
+    unsafe = "--unsafe" in extra_args
     restrict_ffi = "--restrict-ffi" in extra_args or "--safe-mode" in extra_args
     safe_mode = "--safe-mode" in extra_args
     allowed_modules = None
@@ -195,6 +199,19 @@ def _run_file(path, extra_args=None):
             allowed_modules = ["math", "json", "re", "datetime", "collections", "itertools"]
         if max_iterations is None:
             max_iterations = 100_000
+
+    if not unsafe:
+        from ledge_lang.typechecker import check_file
+        issues = check_file(path)
+        if issues:
+            print(
+                "ledge: static typecheck failed; refusing to run. "
+                "Use --unsafe to execute anyway.",
+                file=sys.stderr
+            )
+            for issue in issues:
+                print(str(issue), file=sys.stderr)
+            sys.exit(1)
     
     from ledge_lang import LexError, ParseError, compile_ledge
     from ledge_lang.interpreter import Interpreter, LedgeError
@@ -283,10 +300,10 @@ def _run_tests(args):
         result = subprocess.run([sys.executable, test_file], capture_output=True, text=True)
         if result.returncode == 0:
             passed += 1
-            print(f"✓ {os.path.basename(test_file)}")
+            print(f"PASS: {os.path.basename(test_file)}")
         else:
             failed += 1
-            print(f"✗ {os.path.basename(test_file)}")
+            print(f"FAIL: {os.path.basename(test_file)}")
             if result.stdout:
                 for line in result.stdout.split('\n')[-5:]:
                     if line: print(f"  {line}")
@@ -319,9 +336,9 @@ def _audit(args):
     if "--verify" in args:
         valid, bad_id = store.verify()
         if valid:
-            print("Chain valid: True  — all entries intact.")
+            print("Chain valid: True  - all entries intact.")
         else:
-            print(f"Chain valid: False — first invalid entry: {bad_id}")
+            print(f"Chain valid: False - first invalid entry: {bad_id}")
         return
 
     if "--verify-anchors" in args:
@@ -365,7 +382,7 @@ def _audit(args):
         for r in rows:
             n_out = r["with_outcome"] or 0
             n_ok  = r["correct"] or 0
-            acc   = f"{n_ok/n_out:.1%}" if n_out else "—"
+            acc   = f"{n_ok/n_out:.1%}" if n_out else "-"
             print(f"  {r['model'][:14]:14}  {r['program_id'][:16]:16}  "
                   f"{r['total']:6}  {r['avg_confidence']:8.3f}  "
                   f"{n_out:8}  {acc:>6}")
@@ -460,10 +477,10 @@ def _audit(args):
             print(f"  [{mark}] {c['name']}")
         print()
         if result["valid"]:
-            print("VALIDATION PASSED — EU AI Act Article 12/13 compliant")
+            print("VALIDATION PASSED - EU AI Act Article 12/13 evidence fields present")
         else:
             failed = [c["name"] for c in result["checks"] if not c["passed"]]
-            print(f"VALIDATION FAILED — {len(failed)} check(s) failed: {', '.join(failed)}")
+            print(f"VALIDATION FAILED - {len(failed)} check(s) failed: {', '.join(failed)}")
             sys.exit(1)
         return
 

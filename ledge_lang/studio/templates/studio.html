@@ -179,7 +179,7 @@ select:focus { outline: none; border-color: #38bdf8; color: #e2e8f0; }
   color: #fde68a;
 }
 
-/* ── Guarantees bar ──────────────────────────────────────────────────────── */
+/* Properties bar */
 .guarantees {
   background: #1e293b;
   border-top: 1px solid #334155;
@@ -278,9 +278,9 @@ show when(result, 0.8, &quot;connect an AI backend for real analysis&quot;)"></t
 
 </div>
 
-<!-- ── Guarantees bar ── -->
+<!-- Properties bar -->
 <div class="guarantees">
-  <span class="g-label">Guarantees</span>
+  <span class="g-label">Properties</span>
   <span class="badge badge-pending" id="g1" title="G1: confidence=0 always without AI backend">
     <span class="badge-dot"></span>G1
   </span>
@@ -416,7 +416,7 @@ function loadFile(name) {
     });
 }
 
-// ── Guarantees ────────────────────────────────────────────────────────────────
+// Properties
 function loadGuarantees() {
   fetch('/api/guarantees')
     .then(r => r.json())

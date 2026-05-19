@@ -29,20 +29,27 @@ define evaluate_credit(app: Applicant):
         set factors to append(factors, "healthy_debt_ratio")
 
     define conf as confidence_of(analysis)
-    define history_risk as "unknown"
-
-    if conf >= 0.75:
-        define ai_result as value_of(analysis) or map {}
-        set history_risk to ai_result["risk"] or "moderate"
-        set factors to append(factors, "history_analyzed")
-    else:
-        set factors to append(factors, "history_inconclusive")
 
     define decision as "approve"
-    if debt_ratio > 0.5 or history_risk = "high":
+    if conf >= 0.75:
+        define ai_result as value_of(analysis) or map {}
+        define history_risk as "moderate"
+        if has(ai_result, "risk"):
+            set history_risk to ai_result["risk"]
+        set factors to append(factors, "history_analyzed")
+        if debt_ratio > 0.5 or history_risk = "high":
+            set decision to "reject"
+        else if debt_ratio > 0.35 or history_risk = "moderate":
+            set decision to "review"
+    else:
+        set factors to append(factors, "history_inconclusive")
+        if debt_ratio > 0.5:
+            set decision to "reject"
+        else if debt_ratio > 0.35:
+            set decision to "review"
+
+    if debt_ratio > 0.5:
         set decision to "reject"
-    else if debt_ratio > 0.35 or history_risk = "moderate":
-        set decision to "review"
 
     return map {
         "applicant_id": app.id,

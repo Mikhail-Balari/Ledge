@@ -1,126 +1,18 @@
 {
-  "version": "1.1.0",
-  "timestamp": "2026-03-29T13:04:10Z",
-  "tests": "643/643 (100%)",
-  "for_google": {
-    "native_compiler": {
-      "status": "SHIPPED",
-      "description": "Ledge \u2192 C99 \u2192 gcc \u2192 native binary",
-      "speedup_fib": "27-80x faster than CPython (hardware dependent)",
-      "speedup_container": "4-10x (constrained CI environment)",
-      "evidence": "tests/compiler/test_native.py \u2014 28 tests, 100%",
-      "command": "ledge compile program.ledge --target native"
-    },
-    "gc": {
-      "status": "SHIPPED (reference counting)",
-      "description": "Reference-counted GC in C runtime (ccodegen.py)",
-      "note": "No cycles in Ledge design \u2014 RC is correct here",
-      "evidence": "ledge_lang/compiler/ccodegen.py (ldg_incref/ldg_decref)"
-    },
-    "profiler": {
-      "status": "SHIPPED",
-      "description": "Integrated profiler with TW vs native comparison",
-      "api": "from ledge_lang.profiler import profile; result = profile(src)",
-      "evidence": "ledge_lang/profiler.py"
-    },
-    "package_system": {
-      "status": "SHIPPED (5 packages)",
-      "packages": [
-        "ledge_math",
-        "ledge_text",
-        "ledge_data",
-        "ledge_ai_utils",
-        "ledge_http"
-      ],
-      "install": "pip install ledge-lang[packages]",
-      "evidence": "packages/"
-    },
-    "honest_limitations": [
-      "No JIT yet \u2014 each function compiled AOT",
-      "No garbage collection for cycles (by design)",
-      "String/list operations in native are boxing-based (optimization opportunity)",
-      "No concurrent GC (single-threaded memory model for compiled code)"
-    ]
+  "version": "1.2.0",
+  "release_readiness": "See RELEASE_READINESS.md",
+  "implemented": {
+    "interpreter": "Tree-walker interpreter",
+    "bytecode_vm": "Core subset bytecode VM",
+    "python_ffi": "Python import bridge with documented security caveats",
+    "uncertain_checker": "Unchecked Uncertain[T] use is rejected by ledge check --types and default ledge run",
+    "audit_store": "Hash-chained audit store with limited threat model",
+    "packaging": "Local 1.2.0 wheel builds and includes bundled demos"
   },
-  "for_openai": {
-    "backends": {
-      "status": "SHIPPED",
-      "openai": "from ledge_lang.backends import openai_backend",
-      "anthropic": "from ledge_lang.backends import anthropic_backend",
-      "auto": "from ledge_lang import get_backend; backend = get_backend()",
-      "evidence": "ledge_lang/backends.py"
-    },
-    "streaming": {
-      "status": "SHIPPED",
-      "description": "Streaming AI responses via streaming_backend() wrapper",
-      "api": "streaming_backend(openai_backend(), on_token=callback)"
-    },
-    "function_calling": {
-      "status": "SHIPPED",
-      "description": "OpenAI function calling via tools_backend()",
-      "api": "tools_backend(tools=[tool_def])"
-    },
-    "typed_prompts": {
-      "status": "SHIPPED",
-      "description": "Schema enforcement on AI outputs via typed_backend()",
-      "api": "typed_backend(backend, schema={'field': type})"
-    },
-    "uncertainty_type": {
-      "status": "SHIPPED",
-      "description": "Uncertain[T] enforced by typechecker \u2014 prevents most AI safety bugs",
-      "evidence": "tests/test_security.py::TestUncertainEnforcement"
-    },
-    "honest_limitations": [
-      "No native async (uses sync API calls \u2014 wrap in asyncio if needed)",
-      "No streaming at language level yet (wrapper only)",
-      "No retry/rate-limit logic built in (use tenacity or similar)"
-    ]
-  },
-  "for_anthropic": {
-    "ai_safety_study": {
-      "status": "SHIPPED",
-      "description": "Quantitative study showing 70% \u2192 0% reduction in AI uncertainty bugs",
-      "evidence": "docs/AI_SAFETY_STUDY.md"
-    },
-    "uncertainty_invariants": {
-      "status": "SHIPPED \u2014 26 security tests at 100%",
-      "invariants": [
-        "confidence = 0.0 always without backend (never fabricated)",
-        "Uncertain[T] use without extraction = typechecker ERROR",
-        "AI inputs hashed not stored in plaintext audit trail",
-        "Zero fake labels (classify returns nothing without backend)"
-      ],
-      "evidence": "tests/test_security.py"
-    },
-    "real_case_studies": {
-      "status": "PARTIAL \u2014 examples run, no third-party deployments yet",
-      "examples": [
-        "medical_triage.ledge",
-        "document_pipeline.ledge",
-        "industrial_sensors.ledge"
-      ]
-    },
-    "honest_limitations": [
-      "No third-party production deployments (research/exploration phase)",
-      "AI advantage study is internal \u2014 no LLM head-to-head test yet",
-      "No formal verification of safety properties (type theory, not proofs)"
-    ]
-  },
-  "all_three": {
-    "claims_now_defensible": [
-      "Ledge compiled programs are faster than CPython for numeric code (verified)",
-      "Uncertain[T] prevents the most common AI safety bugs structurally (verified)",
-      "Zero fake AI confidence possible without backend (enforced, tested)",
-      "OpenAI and Anthropic backends available (implemented, needs API keys to test)",
-      "5 packages in a package system (primitive but real)",
-      "Profiler shows exactly where time is spent and how much native helps",
-      "643 tests at 100%, 970/1000 on public release protocol"
-    ],
-    "still_honest_gaps": [
-      "No external user validation (HG-10 \u2014 requires real humans)",
-      "No production case studies (research language, not yet deployed)",
-      "Performance claim: '27-80x faster' is real but context-dependent",
-      "Package ecosystem is minimal \u2014 5 packages is not Python's 400k"
-    ]
-  }
+  "known_gaps": [
+    "No known production deployments",
+    "No mechanized proof or formal soundness theorem",
+    "No legal compliance certification",
+    "PyPI 1.2.0 has not been uploaded yet"
+  ]
 }

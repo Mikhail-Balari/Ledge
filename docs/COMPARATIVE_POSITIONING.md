@@ -4,7 +4,7 @@
 
 This document does not claim Ledge is better than Python, JavaScript, or Go
 in general. It identifies the specific dimensions where Ledge is
-objectively superior today, and where it is not yet competitive.
+useful today, and where it is not yet competitive.
 
 ---
 
@@ -46,7 +46,7 @@ define result as classify(text) using ["positive", "negative"]
 # The typechecker ERRORS if you use result without confidence check
 
 show when(result, 0.8, "not confident enough to act")
-# This is the only way to get the value — you MUST specify a threshold
+# One safe extraction form: specify a threshold and fallback
 ```
 
 **Measurable difference:** In Python, you can write `label = result.choices[0].message.content`
@@ -175,7 +175,8 @@ Results in `experiments/ai_validation.py`. Larger study planned for v1.1.
 
 Ledge today:
 - **Stronger than Python** in: AI uncertainty handling, automatic audit trails,
-  safe error semantics, canonical syntax for AI generation
+  checked uncertainty handling, automatic audit trails,
+  explicit error semantics, canonical syntax for AI generation
 - **Weaker than Python** in: performance, ecosystem, tooling, community
 - **Different from Python** in: design philosophy (AI-first vs human-typing-first)
 
@@ -196,7 +197,8 @@ import "python:sklearn.linear_model" as lr
 import "python:openai" as openai
 
 # Use the entire Python ecosystem inside Ledge
-# while getting Ledge's AI safety guarantees
+# while using Ledge's checked AI-uncertainty patterns
 ```
 
-Python libraries become available in one line. The transition cost is zero.
+Python libraries are available through FFI, but integration still needs normal
+dependency, packaging, and security review.

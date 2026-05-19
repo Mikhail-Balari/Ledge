@@ -1,5 +1,5 @@
 """
-Legal contracts — Python version without Ledge guarantees.
+Legal contracts - Python version without Ledge's checked patterns.
 Demonstrates how low confidence can go unnoticed.
 """
 

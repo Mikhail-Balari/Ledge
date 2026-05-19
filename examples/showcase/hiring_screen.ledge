@@ -1,4 +1,4 @@
-# Hiring screening system -- Guarantee 2: typechecker blocks unsafe AI use.
+# Hiring screening system -- Property 2: typechecker blocks unsafe AI use.
 # The Ledge typechecker prevents using AI output without verifying confidence.
 # Using 'show r' directly on an Uncertain value is a compile-time error.
 
@@ -37,6 +37,6 @@ for each c in candidates:
     screen_candidate(c)
 
 show ""
-show "Guarantee 2 confirmed: every AI result is checked before use."
+show "Property 2 confirmed: every AI result is checked before use."
 show "The typechecker rejects 'show r' -- confidence was never verified."
 show "Decisions logged: {len(audit_query())} | Chain intact: {audit_verify()}"

@@ -23,7 +23,8 @@ safe-failure default.
 
 ### Toolchain
 
-    ledge run program.ledge                      # interpret a Ledge program
+    ledge run program.ledge                      # typecheck, then interpret
+    ledge run program.ledge --unsafe             # skip typecheck and interpret
     ledge check --types program.ledge            # run the static analyzer
     ledge demo medical_triage                    # run a bundled demo
     ledge audit --verify                         # verify the chain

@@ -38,16 +38,19 @@ Run Ledge inside a container with restricted filesystem/network:
 docker run --network=none --read-only ledge-runtime ledge run program.ledge
 
 # Or use Python's restricted exec (limited but available)
-ledge run --restrict-ffi program.ledge  # roadmap v2.0
+ledge run program.ledge --restrict-ffi  # roadmap v2.0
 ```
 
 ### Roadmap: v2.0 `--trusted-modules` allowlist
 
 ```bash
 # Future: restrict which modules can be imported
-ledge run --allow-import math,json program.ledge
+ledge run program.ledge --allow-import=math,json
 # Any other import "python:X" will fail with a clear error
 ```
+
+`ledge run` also performs the static Uncertain contract check before
+execution. Use `--unsafe` only for deliberate unchecked experiments.
 
 ---
 

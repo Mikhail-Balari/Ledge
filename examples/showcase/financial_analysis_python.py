@@ -1,10 +1,10 @@
 """
-Credit risk analysis — Python version without Ledge guarantees.
-Demonstrates the lack of guaranteed explainability and automatic audit.
+Credit risk analysis - Python version without Ledge's checked patterns.
+Demonstrates voluntary explainability and manual audit plumbing.
 """
 
 def evaluate_credit_python(applicant, ai_fn):
-    """Python version: explainability is voluntary, not guaranteed."""
+    """Python version: explainability is voluntary."""
     income = applicant["income"]
     debt   = applicant["debt"]
 
@@ -43,6 +43,6 @@ def evaluate_credit_python_with_bug(applicant, ai_fn):
 
 # Contrast:
 # - In Ledge, `ensures: has(result, "decision") and has(result, "explanation")`
-#   guarantees at runtime that an incomplete result is never returned.
+#   checks at runtime that an incomplete result is never returned.
 # - In Python, nothing forces the developer to include explainability.
 # - In Ledge, the audit trail is automatic; in Python it is opt-in and forgettable.

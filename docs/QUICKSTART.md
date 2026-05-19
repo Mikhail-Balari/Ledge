@@ -34,6 +34,10 @@ ledge run hello.ledge
 # 1 + 1 = 2
 ```
 
+`ledge run` typechecks the program before execution. Use
+`ledge run hello.ledge --unsafe` only when you deliberately want to bypass
+the Uncertain contract check.
+
 ---
 
 ## 3. The three rules of Ledge
@@ -224,6 +228,11 @@ def my_classifier(text, labels):
 run(source, ai_backend={"classify": my_classifier})
 ```
 
+The Python `run(...)` helper is a low-level execution API. Unlike
+`ledge run file.ledge`, it does not typecheck first. If you need the same
+static Uncertain contract gate from Python, call
+`ledge_lang.typechecker.check_types(source)` before executing.
+
 ---
 
 ## 10. Python interop
@@ -259,8 +268,10 @@ when evens has new item as n:
 ## 12. Tooling
 
 ```bash
-ledge run file.ledge          # Run a program
-ledge check file.ledge        # Check types and syntax
+ledge run file.ledge          # Typecheck, then run a program
+ledge run file.ledge --unsafe # Skip typecheck and run anyway
+ledge check file.ledge        # Check syntax
+ledge check --types file.ledge # Check syntax and static Uncertain rules
 ledge fmt file.ledge          # Format canonically (in place)
 ledge fmt --check file.ledge  # Check formatting without modifying
 ledge debug file.ledge        # Step-through debugger

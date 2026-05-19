@@ -1,5 +1,5 @@
 """
-Medical triage — Python version without Ledge guarantees.
+Medical triage - Python version without Ledge's checked patterns.
 
 Demonstrates the problems that Ledge solves:
 1. Confidence silently ignored
@@ -35,16 +35,16 @@ def classify_python_with_bug(patient, ai_fn):
 _audit_log = []
 
 def classify_python_with_audit(patient, ai_fn):
-    """Manual audit trail attempt — fragile."""
+    """Manual audit trail attempt - fragile."""
     result = ai_fn(patient["symptoms"])
-    # PROBLEM 4: the audit is voluntary, not guaranteed
+    # PROBLEM 4: the audit is voluntary
     # If the developer forgets this line, there is no trace
     _audit_log.append({"patient": patient["id"], "result": result})
     level = result.get("risk_level", "unknown")
     return level
 
 
-# Contrast: what Ledge guarantees that Python does NOT:
+# Contrast: what Ledge checks or records by default:
 # - confidence ALWAYS present in Uncertain[T] (cannot be forgotten)
 # - audit trail AUTOMATIC on every call to analyze/classify/generate
 # - requires/ensures verified at runtime

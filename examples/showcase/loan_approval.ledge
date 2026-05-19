@@ -1,6 +1,6 @@
-# Loan approval system -- Guarantee 4: safe failure by design.
+# Loan approval system -- Property 4: fail-safe default without a backend.
 # Without a real AI backend, confidence = 0 -- no loan is ever auto-approved.
-# Satisfies Basel III and EU AI Act Article 14 (human oversight for high-risk decisions).
+# Demonstrates a human-oversight pattern relevant to high-risk decisions.
 # The system fails safely, not silently.
 
 define MIN_CONFIDENCE as 0.85
@@ -30,21 +30,22 @@ define evaluate_loan(app: LoanApplication):
     # AI evaluates the narrative credit history for additional risk signals.
     define risk as classify(app.history) using ["low_risk", "medium_risk", "high_risk"]
 
-    # Guarantee 4: without backend, confidence = 0 -> escalate, never auto-approve.
-    if confidence_of(risk) < MIN_CONFIDENCE:
+    # Property 4: without backend, confidence = 0 -> escalate, never auto-approve.
+    if confidence_of(risk) >= MIN_CONFIDENCE:
+        # Only reached when a real AI backend provides high-confidence assessment.
+        define risk_label as value_of(risk)
+        if risk_label = "low_risk":
+            show "APPLICATION {app.id} ({app.applicant}): APPROVED"
+            show "  Amount=${app.amount} | Risk={risk_label} | Confidence={confidence_of(risk)}"
+            return "approved"
+
+        show "APPLICATION {app.id} ({app.applicant}): DECLINED -- {risk_label}"
+        return "declined_risk"
+    else:
         show "APPLICATION {app.id} ({app.applicant}): PENDING HUMAN REVIEW"
         show "  Amount=${app.amount} | DTI={dti} | AI confidence={confidence_of(risk)}"
-        show "  EU AI Act Art.14: high-stakes automated decision requires human oversight"
+        show "  Human oversight: high-stakes automated decision requires review"
         return "pending"
-
-    # Only reached when a real AI backend provides high-confidence assessment.
-    if value_of(risk) = "low_risk":
-        show "APPLICATION {app.id} ({app.applicant}): APPROVED"
-        show "  Amount=${app.amount} | Risk={value_of(risk)} | Confidence={confidence_of(risk)}"
-        return "approved"
-
-    show "APPLICATION {app.id} ({app.applicant}): DECLINED -- {value_of(risk)}"
-    return "declined_risk"
 
 define applications as list [
     LoanApplication(id="L001", applicant="Maria Santos", amount=25000, income=85000, debts=12000, history="Consistent payment history 8 years credit no defaults excellent standing"),
@@ -53,7 +54,7 @@ define applications as list [
 ]
 
 show "=== AUTOMATED LOAN APPROVAL SYSTEM ==="
-show "Regulatory framework: Basel III + EU AI Act Article 14"
+show "Governance pattern: deterministic DTI check + human oversight for AI uncertainty"
 show "Backend: none"
 show ""
 
@@ -64,5 +65,5 @@ show ""
 show "Total applications audited: {len(audit_query())}"
 show "Audit chain intact: {audit_verify()}"
 show ""
-show "Guarantee 4 confirmed: without backend, confidence = 0."
+show "Property 4 confirmed: without backend, confidence = 0."
 show "No loan auto-approved -- all AI-assessed applications sent to human review."

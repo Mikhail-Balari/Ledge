@@ -179,7 +179,7 @@ Status definitions are strict and verifiable:
 | VS Code extension | **[SHIPPED]** | Syntax highlighting, snippets |
 | Browser playground | **[ROADMAP]** | Planned for v1.3, not yet available |
 | `ledge test` command | **[SHIPPED]** | Runs test suite |
-| Formatter idempotency | **[SHIPPED]** | Verified on full corpus |
+| Formatter idempotency | **[SHIPPED]** | Checked on the project corpus |
 | Type checker (`ledge check --types`) | **[SHIPPED]** | AI-aware |
 | Profiler | **[ROADMAP]** | |
 | Package manager | **[ROADMAP]** | |

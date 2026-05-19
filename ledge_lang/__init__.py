@@ -11,7 +11,7 @@ New in v0.2:
     - Real parallel execution via threading
     - Type enforcement on 'set' (when declared)
     - Error messages with suggestions
-    - 0 crashes on adversarial input (fuzzer-verified)
+    - 0 crashes in the current adversarial-input fuzzer corpus
     - 284/284 conformance tests passing (100%)
 """
 
@@ -51,11 +51,16 @@ def compile_ledge(source: str):
 
 def run(source: str, output_fn=None, ai_backend=None, env=None, allowed_modules=None, reset_audit=True):
     """
-    Run Ledge source code.
+    Run Ledge source code through the low-level Python API.
+
+    This function compiles and executes directly. It does not run the static
+    Uncertain checker first. The CLI command `ledge run <file.ledge>` enforces
+    that checker by default; Python API callers who need the same gate should
+    call ledge_lang.typechecker.check_types(source) before run(...).
 
     Args:
         source:          Ledge source string
-        output_fn:       callable(str) for show output — defaults to silent
+        output_fn:       callable(str) for show output - defaults to silent
         ai_backend:      dict of AI instruction handlers:
                          {"analyze": fn(text, mode), "generate": fn(prompt, mode),
                           "ask": fn(question), "embed": fn(text),
@@ -115,8 +120,8 @@ class LedgeREPL:
 
     def run(self):
         """Start the interactive REPL."""
-        print(f"Ledge {__version__}  —  Type 'stop' to exit, 'help' for help")
-        print(f"Tip: import \"python:numpy\" as np  — full Python ecosystem available\n")
+        print(f"Ledge {__version__}  -  Type 'stop' to exit, 'help' for help")
+        print(f"Tip: import \"python:numpy\" as np  - full Python ecosystem available\n")
         buf = []
 
         while True:

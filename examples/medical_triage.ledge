@@ -98,5 +98,5 @@ for each result in results:
 show ""
 show "=== Audit Trail ==="
 show "Total AI decisions recorded: {len(audit_query())}"
-show "All decisions are stored in a hash-chained audit log (limited threat model — see GUARANTEES.md)."
+show "All decisions are stored in a hash-chained audit log (limited threat model -- see GUARANTEES.md)."
 show "AI confidence scores are attached to every recommendation."

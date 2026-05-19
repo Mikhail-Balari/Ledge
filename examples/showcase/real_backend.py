@@ -66,7 +66,7 @@ with open(SHOWCASE, encoding='utf-8') as f:
 # ── 4. Run WITHOUT backend (baseline) ─────────────────────────────────────────
 
 print("=" * 60)
-print("WITHOUT BACKEND (baseline — confidence=0 guaranteed)")
+print("WITHOUT BACKEND (baseline - confidence=0 expected)")
 print("=" * 60)
 
 lines_without, _ = run(src, output_fn=lambda x: None, reset_audit=True)
@@ -133,7 +133,7 @@ print(f"  With backend:     {escalated_with}/3 escalated | {urgent_with} urgent 
 print()
 print("  Key difference: with a real backend, the model analyzes")
 print("  symptoms and can classify patients with confidence > 0.")
-print("  Without backend, Ledge guarantees safe failure: nobody is classified.")
+print("  Without backend, Ledge takes the fail-safe path: nobody is classified.")
 
 # ── 8. Verify audit trail ─────────────────────────────────────────────────────
 
@@ -158,7 +158,7 @@ if entries > 0:
 
 print()
 if chain_ok:
-    print("  Guarantee verified: all AI decisions are recorded")
+    print("  Property checked: all AI decisions are recorded")
     print("  and the cryptographic chain is intact.")
 else:
     print("  WARNING: the chain was compromised.")

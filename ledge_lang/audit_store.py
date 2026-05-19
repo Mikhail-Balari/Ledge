@@ -30,8 +30,8 @@ class AuditStore:
     Threat model: detects post-hoc modification by an actor with read/write
     access to this database but not to the external anchor file
     (~/.ledge/anchors.jsonl). An attacker who controls both can compute a
-    fresh consistent chain and forge a clean history. Not tamper-proof
-    against a malicious local operator.
+    fresh consistent chain and forge a clean history. It is not protection
+    against a malicious local operator who controls both files.
     """
 
     _SCHEMA = """
@@ -277,7 +277,7 @@ class AuditStore:
         return [dict(r) for r in rows]
 
     def export_json_ld(self, program_id: Optional[str] = None) -> str:
-        """Export in EU AI Act Article 12/13 compliant JSON-LD format."""
+        """Export JSON-LD fields mapped to EU AI Act Article 12/13 evidence needs."""
         now_iso  = datetime.now(timezone.utc).isoformat()
         entries  = self.query(program_id=program_id, limit=1_000_000)
         valid, _ = self.verify(program_id=program_id)
@@ -375,7 +375,7 @@ class AuditStore:
     def validate_regulatory_json_ld(self, path: Optional[str] = None,
                                      data: Optional[dict] = None) -> Dict:
         """
-        Validate a JSON-LD file for EU AI Act Article 12/13 compliance.
+        Validate that the JSON-LD file has the expected EU AI Act evidence fields.
         Returns {'valid': bool, 'checks': [{'name', 'passed', 'detail'}]}.
         """
         if data is None:
@@ -429,7 +429,7 @@ class AnchorStore:
 
     Each anchor records the chain_hash at a known entry count with a timestamp.
     Because the file is separate from the SQLite database, a full DB rewrite
-    cannot silently remove evidence — an auditor can cross-check anchors against
+    cannot silently remove evidence without also updating anchors; an auditor can cross-check anchors against
     the current store state.
 
     Default location: ~/.ledge/anchors.jsonl (one JSON object per line, append-only).

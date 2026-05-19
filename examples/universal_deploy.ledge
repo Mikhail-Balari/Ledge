@@ -6,7 +6,7 @@
 # ledge run universal_deploy.ledge --target arm32  (embedded) [roadmap]
 #
 # AI POLICY: Without a backend, Ledge returns confidence=0.0.
-# It NEVER invents confident classifications. This is a core safety guarantee.
+# It never invents confident classifications without a backend.
 
 define classify_input(text: text):
     requires:
@@ -74,13 +74,13 @@ if batch["classified"] = 0:
     show "No AI backend connected."
     show "Connect a backend to get real classifications."
     show "Without a backend, Ledge never invents confident answers."
-    show "This is a core safety guarantee of the language."
+    show "This is a core safety property of the language."
 else:
     show "Results:"
     for each r in batch["results"]:
         if r["reliable"]:
             define pct as round(r["confidence"] * 100)
-            show "  {r[\"label\"]} ({pct}%) — {r[\"text\"]}"
+            show "  {r[\"label\"]} ({pct}%) -- {r[\"text\"]}"
 
 show ""
 define log as audit_query()
