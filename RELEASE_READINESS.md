@@ -43,6 +43,8 @@ legal compliance certification.
 - `python -m pytest tests/unit/`
 - `python -m pytest tests/unit/test_checked_run_api.py -q`
 - `python -m pytest tests/integration/test_cli_run_typecheck.py -q`
+- GitHub Actions CI on Python 3.11 for unit tests, integration tests,
+  conformance tests, and `scripts/pre_release_check.py`
 - `python tests/conformance.py`
 - `python -m ledge_lang.cli check --types <file>` for every official `.ledge`
   example under `ledge_lang/demos/`, `examples/`, and `examples/showcase/`
@@ -84,6 +86,8 @@ legal compliance certification.
 - PyPI status: 1.2.0 is NOT uploaded yet.
 - Packaging metadata: PASS, license metadata was updated to the modern
   `license = "MIT"` form and the legacy license classifier was removed.
+- Public CI: PASS, `.github/workflows/ci.yml` runs on push and pull request
+  without secrets.
 
 ## Files Removed From Public Release Surface
 

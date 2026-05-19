@@ -12,6 +12,8 @@ What exists now:
 - Safe Python entry points via `checked_run(...)` and `checked_run_file(...)`.
 - Low-level direct execution via `run(...)` for tests and embedding.
 - A hash-chained local audit log with a limited threat model.
+- Public GitHub Actions CI on Python 3.11 for unit tests, integration tests,
+  conformance tests, and the pre-release verification script.
 - Unit, conformance, official example, demo, package build, and clean wheel verification through `scripts/pre_release_check.py` plus release-readiness checks.
 
 What is not claimed:
@@ -83,7 +85,13 @@ Exit criteria:
 
 Planned work:
 
-- CI jobs for unit tests, conformance tests, official example typechecks, demo execution, package build, and wheel install smoke tests.
+- Keep public CI aligned with `scripts/pre_release_check.py` for unit tests,
+  integration tests, conformance tests, official example typechecks, bundled
+  demo execution, package build, and wheel content checks.
+- Add broader OS and Python-version coverage once the project is past the 1.2.0
+  alpha release gate.
+- Add clean installed-wheel smoke tests to CI if runtime or packaging behavior
+  starts changing frequently.
 - Published release checklist matching `scripts/pre_release_check.py`.
 - Negative-example inventory that is excluded from expected-to-pass example lists.
 
