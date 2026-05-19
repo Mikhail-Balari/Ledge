@@ -2,17 +2,20 @@
 Ledge is a programming language and governance runtime for auditable, uncertainty-aware AI decisions.
 
 Quick start:
+    # CLI safety gate:
+    #   ledge run file.ledge
+
+    # Python safety gate:
+    from ledge_lang import checked_run
+    checked_run('show "Hello, Ledge"', output_fn=print)
+
+    # Low-level direct execution for interpreter/testing use:
     from ledge_lang import run
     run('show "Hello, Ledge"', output_fn=print)
 
-New in v0.2:
-    - Lazy generators: infinite sequences work correctly
-    - Python FFI: import "python:numpy" as np
-    - Real parallel execution via threading
-    - Type enforcement on 'set' (when declared)
-    - Error messages with suggestions
-    - 0 crashes in the current adversarial-input fuzzer corpus
-    - 284/284 conformance tests passing (100%)
+`checked_run(...)` applies the same static Uncertain checker used by the CLI
+before execution. `run(...)` intentionally bypasses that checker for callers
+that need direct interpreter access.
 """
 
 from .lexer import Lexer, LexError
@@ -34,7 +37,8 @@ except Exception:
 
 __version__ = "1.2.0"
 __all__ = [
-    "run", "run_file", "compile_ledge", "LedgeREPL",
+    "run", "run_file", "checked_run", "checked_run_file",
+    "compile_ledge", "LedgeREPL",
     "LexError", "ParseError", "LedgeError",
     "NOTHING", "LedgeList", "LedgeMap", "LedgeLazyGenerator",
     "ledge_repr", "__version__",
@@ -49,6 +53,46 @@ def compile_ledge(source: str):
     return Parser(tokens).parse()
 
 
+def _format_typecheck_issues(issues):
+    return "\n".join(str(issue) for issue in issues)
+
+
+def checked_run(
+    source: str,
+    output_fn=None,
+    ai_backend=None,
+    env=None,
+    allowed_modules=None,
+    reset_audit=True,
+):
+    """
+    Typecheck, then run Ledge source code through the Python API.
+
+    This is the Python safety-gated execution helper. It runs the static
+    Uncertain checker before execution and raises LedgeError without executing
+    the program if any type issues are found. On success it delegates to
+    run(...), preserving the existing interpreter behavior.
+    """
+    from .typechecker import check_types
+
+    issues = check_types(source)
+    if issues:
+        rendered = _format_typecheck_issues(issues)
+        raise LedgeError(
+            "static typecheck failed; refusing to run.\n"
+            f"{rendered}"
+        )
+
+    return run(
+        source,
+        output_fn=output_fn,
+        ai_backend=ai_backend,
+        env=env,
+        allowed_modules=allowed_modules,
+        reset_audit=reset_audit,
+    )
+
+
 def run(source: str, output_fn=None, ai_backend=None, env=None, allowed_modules=None, reset_audit=True):
     """
     Run Ledge source code through the low-level Python API.
@@ -56,7 +100,7 @@ def run(source: str, output_fn=None, ai_backend=None, env=None, allowed_modules=
     This function compiles and executes directly. It does not run the static
     Uncertain checker first. The CLI command `ledge run <file.ledge>` enforces
     that checker by default; Python API callers who need the same gate should
-    call ledge_lang.typechecker.check_types(source) before run(...).
+    use checked_run(...).
 
     Args:
         source:          Ledge source string
@@ -99,6 +143,13 @@ def run_file(path: str, output_fn=None, ai_backend=None):
     with open(path, encoding="utf-8") as f:
         source = f.read()
     return run(source, output_fn=output_fn or print, ai_backend=ai_backend)
+
+
+def checked_run_file(path: str, output_fn=None, ai_backend=None):
+    """Typecheck, then run a .ledge file. output_fn defaults to print."""
+    with open(path, encoding="utf-8") as f:
+        source = f.read()
+    return checked_run(source, output_fn=output_fn or print, ai_backend=ai_backend)
 
 
 class LedgeREPL:

@@ -102,10 +102,11 @@ ledge run examples/showcase/financial_analysis.ledge
 deliberately experimenting with unchecked extraction, use
 `ledge run program.ledge --unsafe` to bypass the checker.
 
-Python API note: `from ledge_lang import run` is a low-level execution API.
-It does not enforce the static checker by itself. Library callers who need the
-same gate as the CLI should run `ledge_lang.typechecker.check_types(source)`
-before calling `run(...)`.
+Python API note: `from ledge_lang import checked_run` is the safety-gated
+programmatic execution helper. It runs the same static checker before execution
+and raises `LedgeError` without executing the program if type issues are found.
+`from ledge_lang import run` remains the low-level direct execution API for
+interpreter and test harness use; it bypasses the static checker by design.
 
 ---
 
@@ -360,7 +361,7 @@ experiment, not infrastructure.
 
 ## Limitations and non-goals
 
-Things Ledge does not claim, with the most likely Hacker News objections
+Things Ledge does not claim, with the most common technical objections
 addressed up front.
 
 **Does Ledge prove that the AI's answer is correct?** No. It only rejects

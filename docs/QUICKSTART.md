@@ -219,19 +219,22 @@ confidence in the absence of a connected backend.
 
 To connect a backend, pass it when running programmatically:
 ```python
-from ledge_lang import run
+from ledge_lang import checked_run, run
 
 def my_classifier(text, labels):
     # Your AI logic here
     return labels[0]
 
+# Safety-gated Python API: typecheck first, then execute.
+checked_run(source, ai_backend={"classify": my_classifier})
+
+# Low-level direct execution: bypasses the checker by design.
 run(source, ai_backend={"classify": my_classifier})
 ```
 
-The Python `run(...)` helper is a low-level execution API. Unlike
-`ledge run file.ledge`, it does not typecheck first. If you need the same
-static Uncertain contract gate from Python, call
-`ledge_lang.typechecker.check_types(source)` before executing.
+Use `checked_run(...)` when you want the same static Uncertain contract gate as
+`ledge run file.ledge`. The Python `run(...)` helper remains a low-level
+execution API and does not typecheck first.
 
 ---
 

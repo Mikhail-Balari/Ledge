@@ -107,12 +107,19 @@ This is always backwards compatible — annotated code can be de-annotated.
 The public Python API for embedding Ledge:
 
 ```python
-from ledge_lang import run, compile_ledge
+from ledge_lang import checked_run, run, compile_ledge
 from ledge_lang.interpreter import Interpreter
 from ledge_lang.lexer import Lexer
 from ledge_lang.parser import Parser
 
-# run() signature — stable
+# checked_run() signature - stable safety-gated API
+lines, value = checked_run(
+    source: str,
+    output_fn: callable = print,
+    ai_backend: dict = None
+)
+
+# run() signature - stable low-level API
 lines, value = run(
     source: str,
     output_fn: callable = print,
