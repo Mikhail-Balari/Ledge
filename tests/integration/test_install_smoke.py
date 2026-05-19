@@ -16,13 +16,24 @@ import sys, os, subprocess
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+
+def project_version():
+    import re
+
+    with open(os.path.join(ROOT, 'pyproject.toml'), encoding='utf-8') as f:
+        m = re.search(r'version = "([^"]+)"', f.read())
+    return m.group(1) if m else None
+
+
 class TestInstallSmoke:
     """Core functionality available immediately after install."""
 
     def test_import_works(self):
         """The main package imports cleanly."""
         from ledge_lang import run, compile_ledge, __version__
-        assert __version__ == "1.1.0"
+        assert __version__ == project_version()
 
     def test_hello_world(self):
         """Classic hello world runs correctly."""
@@ -130,13 +141,9 @@ show stream_collect(evens)
         assert lines[0] == "[2, 4, 6]"
 
     def test_version_consistent(self):
-        import re, json
         from ledge_lang import __version__
+        pkg_version = project_version()
         
-        with open(os.path.join(os.path.dirname(__file__), '..', '..', 'pyproject.toml')) as f:
-            m = re.search(r'version = "([^"]+)"', f.read())
-            pkg_version = m.group(1) if m else None
-        
-        assert __version__ == pkg_version == "1.1.0", (
+        assert __version__ == pkg_version, (
             f"Version mismatch: __init__={__version__}, pyproject={pkg_version}"
         )
