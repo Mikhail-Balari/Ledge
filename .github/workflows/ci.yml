@@ -42,6 +42,11 @@ jobs:
         PYTHONUTF8: "1"
       run: python tests/conformance.py
 
+    - name: Run supply-chain visibility check
+      env:
+        PYTHONUTF8: "1"
+      run: python scripts/supply_chain_check.py
+
   release-check:
     runs-on: ubuntu-latest
 
