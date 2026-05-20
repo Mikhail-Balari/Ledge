@@ -12,7 +12,7 @@ The checker currently recognizes these safe patterns:
 - `when(x, threshold, fallback)`, which extracts the value only above the threshold and otherwise returns the fallback.
 - `unsafe_value_of(x)`, an explicit escape hatch for demonstrations and code that deliberately accepts the risk.
 
-The checker rejects direct use of an uncertain value in output, arithmetic, boolean conditions, function calls, and unchecked `value_of(...)`.
+The checker rejects direct use of an uncertain value in output, arithmetic, boolean conditions, function calls, string interpolation, and unchecked `value_of(...)`. This includes nested forms such as `show "{value_of(r)}"` and `show "{r}"` unless the expression is inside a recognized confidence guard or uses an explicit safe extraction pattern.
 
 ## CLI behavior
 

@@ -65,6 +65,25 @@ def test_checked_run_rejects_direct_uncertain_use_before_execution():
     assert output == []
 
 
+def test_checked_run_rejects_unchecked_value_of_inside_interpolation():
+    output = []
+
+    with pytest.raises(LedgeError) as exc:
+        checked_run(
+            ledge_source("""
+            define r as classify("invoice") using ["release_payment", "hold_payment"]
+            show "AI payment classification: {value_of(r)}"
+            show "PAYMENT_RELEASED"
+            """),
+            output_fn=output.append,
+        )
+
+    message = str(exc.value)
+    assert "static typecheck failed" in message
+    assert "value_of" in message
+    assert output == []
+
+
 def test_run_remains_low_level_direct_execution():
     output = []
 

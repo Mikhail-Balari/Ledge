@@ -43,7 +43,7 @@ define make_agent(config: AgentConfig):
 
         # Step 2: Generate initial answer
         define raw_answer as generate(
-            "Answer this {value_of(q_type) or \"general\"} question: {question}"
+            "Answer this {when(q_type, config.min_conf, \"general\")} question: {question}"
         ) using text
 
         # Step 3: Verify answer confidence

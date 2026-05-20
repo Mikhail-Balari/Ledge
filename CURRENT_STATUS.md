@@ -63,7 +63,7 @@ show unsafe_value_of(r)                         # explicit unchecked
 ## Tests
 
 - Conformance: 284 / 284 passing
-- Unit suite: 349 / 349 passing
+- Unit suite: 354 / 354 passing
 - 0 known failures on Linux, macOS, Windows
 
 (See CI for the authoritative numbers.)

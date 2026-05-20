@@ -520,7 +520,7 @@ similar OS-level isolation. `--safe-mode` is not a substitute for that.
 
 ```bash
 python tests/conformance.py   # 284/284 passed
-python -m pytest tests/unit/  # 349 passed
+python -m pytest tests/unit/  # 354 passed
 ```
 
 The test count moves over time. The conformance harness and the unit suite

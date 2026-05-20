@@ -357,17 +357,41 @@ class TypeChecker:
 
     # ── Expression type inference ─────────────────────────────────────────────
 
-    def _infer_type(self, node, env: TypeEnv) -> Optional[str]:
+    def _infer_type(self, node, env: TypeEnv,
+                    allow_uncertain_literals: bool = False) -> Optional[str]:
         if node is None:
             return None
         t = type(node).__name__
 
         if t == "NumberLit":   return "number"
-        if t == "StringLit":   return "text"
+        if t == "StringLit":
+            self._check_string_interpolations(node, env)
+            return "text"
         if t == "BoolLit":     return "truth"
         if t == "NothingLit":  return "nothing"
-        if t == "ListLit":     return "list"
-        if t == "MapLit":      return "map"
+        if t == "ListLit":
+            for elem in node.elements:
+                elem_type = self._infer_type(
+                    elem, env,
+                    allow_uncertain_literals=allow_uncertain_literals
+                )
+                if not allow_uncertain_literals:
+                    self._error_if_uncertain(elem, elem_type, "list literal")
+            return "list"
+        if t == "MapLit":
+            for key, value in node.pairs:
+                key_type = self._infer_type(
+                    key, env,
+                    allow_uncertain_literals=allow_uncertain_literals
+                )
+                value_type = self._infer_type(
+                    value, env,
+                    allow_uncertain_literals=allow_uncertain_literals
+                )
+                if not allow_uncertain_literals:
+                    self._error_if_uncertain(key, key_type, "map key")
+                    self._error_if_uncertain(value, value_type, "map value")
+            return "map"
 
         if t == "Identifier":
             # Check if we know this is uncertain
@@ -375,20 +399,67 @@ class TypeChecker:
                 return "uncertain[any]"
             return env.get(node.name) or "any"
 
+        if t == "AnalyzeExpr":
+            text_type = self._infer_type(node.text, env)
+            self._error_if_uncertain(node.text, text_type, "AI analyze input")
+            return AI_RETURNING_NODES[t]
+        if t == "GenerateExpr":
+            prompt_type = self._infer_type(node.prompt, env)
+            self._error_if_uncertain(node.prompt, prompt_type, "AI generate prompt")
+            return AI_RETURNING_NODES[t]
+        if t == "AskExpr":
+            question_type = self._infer_type(node.question, env)
+            self._error_if_uncertain(node.question, question_type, "AI ask question")
+            return AI_RETURNING_NODES[t]
+        if t == "EmbedExpr":
+            text_type = self._infer_type(node.text, env)
+            self._error_if_uncertain(node.text, text_type, "AI embed input")
+            return AI_RETURNING_NODES[t]
+        if t == "ClassifyExpr":
+            text_type = self._infer_type(node.text, env)
+            self._error_if_uncertain(node.text, text_type, "AI classify input")
+            for label in node.labels:
+                label_type = self._infer_type(label, env)
+                self._error_if_uncertain(label, label_type, "AI classify label")
+            return AI_RETURNING_NODES[t]
         if t in AI_RETURNING_NODES:
             return AI_RETURNING_NODES[t]
 
         if t == "Call":
+            fn_name = getattr(getattr(node, 'callee', None), 'name', None)
+            literal_allowed_positions = {0} if fn_name == "uncertain_chain" else set()
+            arg_types = [
+                self._infer_type(
+                    arg, env,
+                    allow_uncertain_literals=idx in literal_allowed_positions
+                )
+                for idx, arg in enumerate(getattr(node, 'args', []))
+            ]
+            kw_types = {
+                key: self._infer_type(value, env)
+                for key, value in getattr(node, 'kwargs', {}).items()
+            }
             # Check: calling a safe unwrap on uncertain → returns inner type
-            if hasattr(node.callee, 'name'):
-                fn_name = node.callee.name
+            if fn_name:
                 if fn_name in ("when", "unsafe_value_of"):
+                    self._check_call_arg_uncertainty(
+                        node, fn_name, arg_types, kw_types,
+                        allowed_uncertain_positions={0}
+                    )
                     # These always return the inner value's type; the argument
                     # being Uncertain is the expected use, not an error.
                     return "any"
                 if fn_name in ("confidence_of",):
+                    self._check_call_arg_uncertainty(
+                        node, fn_name, arg_types, kw_types,
+                        allowed_uncertain_positions={0}
+                    )
                     return "number"
                 if fn_name in ("is_confident", "is_uncertain", "type", "str", "repr"):
+                    self._check_call_arg_uncertainty(
+                        node, fn_name, arg_types, kw_types,
+                        allowed_uncertain_positions={0}
+                    )
                     return "truth"
                 # LIMITACION A: map(list, given x: ai_expr) → list[uncertain[...]]
                 if fn_name == "map" and len(node.args) >= 2:
@@ -402,19 +473,8 @@ class TypeChecker:
                             return f"list[{body_type}]"
                     return "list"
                 # Check: using uncertain value in unsafe position
-                if node.args:
-                    first_arg_type = self._infer_type(node.args[0], env) if node.args else None
-                    if (first_arg_type and first_arg_type.startswith("uncertain")
-                            and fn_name not in UNCERTAIN_SAFE_BUILTINS):
-                        self._error(
-                            f"Unsafe use of Uncertain value as argument to '{fn_name}'. "
-                            f"AI results must be checked for confidence before use.",
-                            line=getattr(node, 'line', 0),
-                            suggestion=(
-                                f"Use: when(ai_result, 0.8, fallback) to extract safely\n"
-                                f"  Or: if is_confident(ai_result): ...  to guard first"
-                            )
-                        )
+                if fn_name not in UNCERTAIN_SAFE_BUILTINS:
+                    self._check_call_arg_uncertainty(node, fn_name, arg_types, kw_types)
             return "any"
 
         if t == "BinOp":
@@ -422,7 +482,7 @@ class TypeChecker:
             r = self._infer_type(node.right, env)
             # Rule [UNSAFE-USE]: Uncertain[T] must be extracted before arithmetic
             for side, side_node in [(l, node.left), (r, node.right)]:
-                if side.startswith("uncertain"):
+                if side and side.startswith("uncertain"):
                     var_name = getattr(side_node, "name", None)
                     if var_name and var_name in self._uncertain:
                         # Rule [UNSAFE-USE]: arithmetic on Uncertain is an ERROR
@@ -439,6 +499,13 @@ class TypeChecker:
             if node.op in ("-", "*", "/"):             return "number"
             if node.op in ("=", "!=", "<", ">", "<=", ">="): return "truth"
             return "any"
+
+        if t == "IsOp":
+            left_type = self._infer_type(node.left, env)
+            right_type = self._infer_type(node.right, env)
+            self._error_if_uncertain(node.left, left_type, "comparison")
+            self._error_if_uncertain(node.right, right_type, "comparison")
+            return "truth"
 
         if t == "LogicalOp":
             left_type  = self._infer_type(node.left, env)
@@ -472,15 +539,110 @@ class TypeChecker:
 
         if t == "Fallback":
             left = self._infer_type(node.expr, env)
+            default = self._infer_type(node.default, env)
             if left and left.startswith("uncertain"):
                 # or on uncertain — this is SAFE, it extracts with fallback
-                return self._infer_type(node.default, env)
-            return left or self._infer_type(node.default, env)
+                self._error_if_uncertain(node.default, default, "fallback expression")
+                return default
+            self._error_if_uncertain(node.default, default, "fallback expression")
+            return left or default
+
+        if t == "Index":
+            obj_type = self._infer_type(node.obj, env)
+            key_type = self._infer_type(node.key, env)
+            self._error_if_uncertain(node.obj, obj_type, "index target")
+            self._error_if_uncertain(node.key, key_type, "index key")
+            return "any"
+
+        if t == "Field":
+            obj_type = self._infer_type(node.obj, env)
+            self._error_if_uncertain(node.obj, obj_type, "field access")
+            return "any"
 
         if t == "Lambda":      return "function"
         if t == "FuncDef":     return "function"
 
         return "any"
+
+    def _check_string_interpolations(self, node, env: TypeEnv):
+        """Check `{...}` expressions embedded in a string literal."""
+        value = getattr(node, 'value', '')
+        if "{" not in value:
+            return
+
+        i = 0
+        while i < len(value):
+            if value[i] == "{" and (i == 0 or value[i - 1] != "\\"):
+                j = value.find("}", i + 1)
+                if j == -1:
+                    return
+                snippet = value[i + 1:j].strip()
+                if snippet:
+                    expr = self._parse_interpolation_expr(snippet)
+                    if expr is not None:
+                        expr_type = self._infer_type(expr, env)
+                        self._error_if_uncertain(
+                            expr,
+                            expr_type,
+                            "string interpolation",
+                            line=getattr(node, 'line', 0),
+                        )
+                i = j + 1
+            else:
+                i += 1
+
+    def _parse_interpolation_expr(self, snippet: str):
+        try:
+            from .lexer import Lexer
+            from .parser import Parser
+            toks = Lexer(snippet).tokenize()
+            return Parser(toks).parse_expr_entry()
+        except Exception:
+            # Runtime leaves malformed interpolation as literal text; keep the
+            # checker aligned rather than rejecting non-expressions here.
+            return None
+
+    def _check_call_arg_uncertainty(self, node, fn_name: str, arg_types,
+                                    kw_types, allowed_uncertain_positions=None):
+        allowed_uncertain_positions = allowed_uncertain_positions or set()
+        for idx, arg_type in enumerate(arg_types):
+            if (arg_type and arg_type.startswith("uncertain")
+                    and idx not in allowed_uncertain_positions):
+                self._error(
+                    f"Unsafe use of Uncertain value as argument to '{fn_name}'. "
+                    f"AI results must be checked for confidence before use.",
+                    line=getattr(node, 'line', 0),
+                    suggestion=(
+                        f"Use: when(ai_result, 0.8, fallback) to extract safely\n"
+                        f"  Or: if is_confident(ai_result): ...  to guard first"
+                    )
+                )
+        for kw_name, kw_type in kw_types.items():
+            if kw_type and kw_type.startswith("uncertain"):
+                self._error(
+                    f"Unsafe use of Uncertain value as keyword argument '{kw_name}' "
+                    f"to '{fn_name}'. AI results must be checked for confidence before use.",
+                    line=getattr(node, 'line', 0),
+                    suggestion=(
+                        f"Use: when(ai_result, 0.8, fallback) to extract safely\n"
+                        f"  Or: if is_confident(ai_result): ...  to guard first"
+                    )
+                )
+
+    def _error_if_uncertain(self, node, type_str: Optional[str], context: str,
+                            line: int = 0):
+        if not type_str or not type_str.startswith("uncertain"):
+            return
+        var_name = getattr(node, 'name', 'value')
+        self._error(
+            f"Unsafe use of Uncertain value '{var_name}' in {context} - "
+            f"confidence was never verified. AI results must be explicitly checked before use.",
+            line=line or getattr(node, 'line', 0),
+            suggestion=(
+                f"Use when({var_name}, 0.8, fallback) or guard with "
+                f"if confidence_of({var_name}) >= 0.85:"
+            )
+        )
 
     def _check_expr(self, node, env: TypeEnv):
         """Check an expression for issues (without returning type)."""

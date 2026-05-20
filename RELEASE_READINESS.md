@@ -60,12 +60,12 @@ legal compliance certification.
 
 ## Results
 
-- Unit tests: PASS, `349 passed`.
+- Unit tests: PASS, `354 passed`.
 - Conformance: PASS, `284/284 passed`.
 - Official example typecheck: PASS, all 18 official `.ledge` examples pass.
-- Targeted CLI tests: PASS, `5 passed` in
+- Targeted CLI tests: PASS, `8 passed` in
   `tests/integration/test_cli_run_typecheck.py`.
-- Targeted checked Python API tests: PASS, `5 passed` in
+- Targeted checked Python API tests: PASS, `6 passed` in
   `tests/unit/test_checked_run_api.py`.
 - Pre-release script: PASS, `scripts/pre_release_check.py` completed
   successfully.

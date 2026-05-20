@@ -62,6 +62,64 @@ def test_run_unsafe_bypasses_typecheck_and_executes(tmp_path):
     assert "static typecheck failed" not in result.stderr
 
 
+def test_run_rejects_unchecked_value_of_inside_interpolation_before_execution(tmp_path):
+    program = write_ledge(
+        tmp_path,
+        "unsafe_interpolation.ledge",
+        """
+        define r as classify("invoice") using ["release_payment", "hold_payment"]
+        show "AI payment classification: {value_of(r)}"
+        show "PAYMENT_RELEASED"
+        """,
+    )
+
+    result = run_cli("run", str(program))
+    combined = result.stdout + result.stderr
+
+    assert result.returncode != 0
+    assert "static typecheck failed" in result.stderr
+    assert "value_of" in combined
+    assert "PAYMENT_RELEASED" not in result.stdout
+
+
+def test_run_rejects_direct_uncertain_inside_interpolation_before_execution(tmp_path):
+    program = write_ledge(
+        tmp_path,
+        "direct_uncertain_interpolation.ledge",
+        """
+        define r as classify("invoice") using ["release_payment", "hold_payment"]
+        show "AI payment classification: {r}"
+        show "PAYMENT_RELEASED"
+        """,
+    )
+
+    result = run_cli("run", str(program))
+    combined = result.stdout + result.stderr
+
+    assert result.returncode != 0
+    assert "static typecheck failed" in result.stderr
+    assert "string interpolation" in combined
+    assert "PAYMENT_RELEASED" not in result.stdout
+
+
+def test_run_unsafe_bypasses_interpolation_typecheck_and_executes(tmp_path):
+    program = write_ledge(
+        tmp_path,
+        "unsafe_interpolation.ledge",
+        """
+        define r as classify("invoice") using ["release_payment", "hold_payment"]
+        show "AI payment classification: {value_of(r)}"
+        show "PAYMENT_RELEASED"
+        """,
+    )
+
+    result = run_cli("run", str(program), "--unsafe")
+
+    assert result.returncode == 0
+    assert "AI payment classification: nothing" in result.stdout
+    assert "PAYMENT_RELEASED" in result.stdout
+
+
 def test_check_types_behavior_is_unchanged(tmp_path):
     program = write_ledge(
         tmp_path,

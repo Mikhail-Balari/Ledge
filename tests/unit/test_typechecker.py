@@ -52,6 +52,37 @@ show upper(r)
         recognized guard, or use the explicit unsafe_value_of escape hatch."""
         assert has_error('define r as analyze("x") using y\nshow value_of(r)')
 
+    def test_value_of_inside_interpolation_without_guard_is_error(self):
+        issues = check_types('''
+define r as classify("invoice") using ["release_payment", "hold_payment"]
+show "AI payment classification: {value_of(r)}"
+''')
+        assert any(i.is_error and "value_of" in i.message for i in issues)
+
+    def test_direct_uncertain_inside_interpolation_is_error(self):
+        issues = check_types('''
+define r as classify("invoice") using ["release_payment", "hold_payment"]
+show "AI payment classification: {r}"
+''')
+        assert any(
+            i.is_error and "string interpolation" in i.message
+            for i in issues
+        )
+
+    def test_value_of_inside_guarded_interpolation_is_safe(self):
+        clean('''
+define r as classify("invoice") using ["release_payment", "hold_payment"]
+if confidence_of(r) >= 0.85:
+    show "AI payment classification: {value_of(r)}"
+''')
+
+    def test_uncertain_in_second_call_argument_is_error(self):
+        issues = check_types('''
+define r as classify("invoice") using ["release_payment", "hold_payment"]
+show append(list [], r)
+''')
+        assert any(i.is_error and "append" in i.message for i in issues)
+
     def test_value_of_inside_confidence_guard_is_safe(self):
         """Inside `if confidence_of(r) >= t:`, r is narrowed and value_of(r)
         is legal in that block."""
