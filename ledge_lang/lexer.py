@@ -238,6 +238,8 @@ class LexError(Exception):
 
 class Lexer:
     def __init__(self, source: str):
+        if source.startswith("\ufeff"):
+            source = source[1:]
         self.source = source
         self.pos = 0
         self.line = 1

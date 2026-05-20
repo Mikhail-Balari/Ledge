@@ -355,6 +355,41 @@ rather than a runtime exception or a silent acceptance. The price is that
 Ledge is a new language with no ecosystem, and adopting it means writing
 the AI-decision layer in Ledge while everything else stays in Python.
 
+### Related work and adjacent tools
+
+These projects are related and useful; Ledge does not replace them.
+
+- [Model Context Protocol](https://modelcontextprotocol.io/) standardizes how
+  AI applications expose and consume tools, resources, and context. Ledge is
+  focused on the program boundary after an AI result enters the decision flow.
+- [Guardrails AI](https://guardrailsai.com/docs) and
+  [NVIDIA NeMo Guardrails](https://docs.nvidia.com/nemo/guardrails/latest/)
+  provide guardrail frameworks for validating or constraining model behavior.
+  Ledge's narrower experiment is to make uncertain results explicit in code and
+  reject unchecked use before execution.
+- [LangChain](https://docs.langchain.com/) and
+  [LangGraph](https://docs.langchain.com/oss/python/langgraph) help structure
+  LLM applications and agent workflows. Ledge can sit at a decision boundary;
+  it is not an orchestration framework.
+- [mypy](https://mypy.readthedocs.io/) and
+  [Pyright](https://microsoft.github.io/pyright/#/) are Python type checkers;
+  [Ruff](https://docs.astral.sh/ruff/) and
+  [Pylint](https://pylint.pycqa.org/) are Python linting/static-analysis tools.
+  A mature Python plugin or linter could cover parts of this space. Ledge tests
+  a smaller DSL surface where `Uncertain[T]` and confidence guards are built
+  into the checked execution path.
+- Structured output and schema validation, such as
+  [OpenAI Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+  and [JSON Schema](https://json-schema.org/), help ensure outputs have the
+  expected shape. Ledge addresses a different question: whether a program is
+  allowed to use an AI-derived value without checking confidence and recording
+  the decision path.
+
+The specific 1.2.0 experiment is representing AI outputs as `Uncertain[T]`,
+rejecting unchecked use before execution, and tying decisions to audit and
+calibration evidence. There is no claim here of being first, unique, or
+revolutionary.
+
 **When you should NOT use Ledge.** If your team already has a working
 discipline around uncertainty handling; if your AI calls are isolated enough
 that a linter or a thin wrapper library is sufficient; if your stack
