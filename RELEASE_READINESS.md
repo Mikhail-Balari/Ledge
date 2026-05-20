@@ -60,7 +60,7 @@ legal compliance certification.
 
 ## Results
 
-- Unit tests: PASS, `348 passed`.
+- Unit tests: PASS, `349 passed`.
 - Conformance: PASS, `284/284 passed`.
 - Official example typecheck: PASS, all 18 official `.ledge` examples pass.
 - Targeted CLI tests: PASS, `4 passed` in

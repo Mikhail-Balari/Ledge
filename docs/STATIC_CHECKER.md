@@ -49,8 +49,23 @@ Useful local checks:
 ```bash
 python -m ledge_lang.cli check --types examples/medical_triage.ledge
 python -m ledge_lang.cli run examples/medical_triage.ledge
-python -m ledge_lang.cli run examples/showcase/unsafe_value_demo.ledge --unsafe
 python scripts/pre_release_check.py
 ```
+
+For intentionally unsafe experiments, keep the example local and use the
+explicit bypass:
+
+```ledge
+define r as analyze("untrusted text") as "sentiment"
+show unsafe_value_of(r)
+```
+
+```bash
+python -m ledge_lang.cli run <that-file> --unsafe
+```
+
+`unsafe_value_of(...)` is an escape hatch. It is not part of the safe contract,
+and intentionally unsafe snippets are not included in the official
+expected-to-pass example set.
 
 The pre-release script typechecks all official examples expected to pass, runs the unit and conformance suites, runs the bundled medical triage demo, builds the package, and verifies that the built wheel contains the bundled demo file.
