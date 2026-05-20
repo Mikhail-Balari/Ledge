@@ -25,6 +25,7 @@ installation instructions. Never silently fails.
 from __future__ import annotations
 import os, subprocess, tempfile, shutil
 from typing import Optional
+from ledge_lang._version import __version__
 from .codegen import compile_to_ir
 
 
@@ -362,7 +363,7 @@ exports.handler = async (event, context) => {
     
     pkg_json = {
         "name": "ledge-serverless",
-        "version": "1.0.0",
+        "version": __version__,
         "main": "index.js",
         "description": "Ledge serverless function"
     }

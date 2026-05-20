@@ -29,6 +29,19 @@ def test_version_in_init():
     )
 
 
+def test_regulatory_export_creator_version_matches_package():
+    from ledge_lang import __version__
+    from ledge_lang.audit_store import AuditStore
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        store = AuditStore(db_path=os.path.join(tmp, "audit.db"))
+        data = json.loads(store.export_json_ld())
+
+    assert data["dcterms:creator"] == f"Ledge v{__version__}"
+
+
 def test_version_in_pyproject():
     # Sanity check: pyproject.toml has a parseable version string.
     assert EXPECTED_VERSION, "pyproject.toml has no parseable version"

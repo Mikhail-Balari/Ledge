@@ -1,5 +1,5 @@
 # Ledge Grammar — EBNF Reference
-## Version 1.0.0 — Synchronized with parser.py
+## Version 1.2.0 - synchronized with parser.py
 
 This grammar is a description of the language as accepted by the reference
 parser, not a normative formal specification with a mechanized

@@ -8,7 +8,7 @@ versions, and what may change while the project remains alpha software.
 
 ## Stability policy
 
-### What will NOT break between patch versions (1.0.x → 1.0.y)
+### What will NOT break between patch versions (for example, 1.2.x to 1.2.y)
 
 - All programs that currently produce correct output will continue to
   produce identical output
@@ -19,7 +19,7 @@ versions, and what may change while the project remains alpha software.
 - The `FEATURE_MATRIX.md` "shipped" items will not be removed
 - Test suite will not decrease in coverage
 
-### What will NOT break between minor versions (1.0.x → 1.1.x)
+### What will NOT break between minor versions (for example, 1.2.x to 1.3.x)
 
 All of the above, plus:
 - The bytecode format will remain compatible within a major version
@@ -27,7 +27,7 @@ All of the above, plus:
 - The Python FFI (`import "python:module"`) will continue to work
 - The `ledge_lang.run()` Python API will remain compatible
 
-### What MAY change in minor versions (1.0.x → 1.1.x)
+### What MAY change in minor versions (for example, 1.2.x to 1.3.x)
 
 - New builtins may be added (not breaking — programs don't use them)
 - New syntax may be added (not breaking — existing programs unaffected)
@@ -60,7 +60,7 @@ Before a breaking change:
 Features marked [EXPERIMENTAL] in `docs/FEATURE_MATRIX.md` have **no**
 stability guarantee. They may change, break, or be removed without notice.
 
-Current experimental features (v1.0.0):
+Current experimental features (1.2.0):
 - `stream from "url"` — parses but URL sources not connected
 - `agent ... :` blocks — syntax only, no MCP connectivity
 - `subscribe to / emit to` — basic syntax, no runtime support
@@ -87,10 +87,10 @@ Ledge follows [Semantic Versioning](https://semver.org):
 ```
 MAJOR.MINOR.PATCH
 
-1.0.0  — first stable release
-1.0.1  — bug fix (no behavior change)
-1.1.0  — new features, backwards compatible
-2.0.0  — breaking changes (90-day review, migration guide)
+1.2.0  - current alpha release
+1.2.1  - bug fix (no behavior change)
+1.3.0  - new features, backwards compatible where practical
+2.0.0  - breaking changes (90-day review, migration guide)
 ```
 
 ---

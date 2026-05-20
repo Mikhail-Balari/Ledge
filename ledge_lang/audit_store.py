@@ -15,9 +15,9 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from ._version import __version__
 
 _GENESIS = "0" * 64
-_LEDGE_VERSION = "1.1.0"
 
 
 class AuditStore:
@@ -351,7 +351,7 @@ class AuditStore:
                 },
                 "@type":                         "AuditTrail",
                 "dcterms:created":               now_iso,
-                "dcterms:creator":               f"Ledge v{_LEDGE_VERSION}",
+                "dcterms:creator":               f"Ledge v{__version__}",
                 "eu_ai_act:article12_compliant": True,
                 "chain_valid":                   valid,
                 "chain_verified_at":             now_iso,

@@ -28,6 +28,7 @@ from .interpreter import (
 )
 from .calibration import calibrate, CalibrationReport
 from .comparison import compare_models, ModelComparisonReport
+from ._version import __version__
 
 try:
     from .audit_store import activate_global_store as _activate_store
@@ -35,7 +36,6 @@ try:
 except Exception:
     pass
 
-__version__ = "1.2.0"
 __all__ = [
     "run", "run_file", "checked_run", "checked_run_file",
     "compile_ledge", "LedgeREPL",

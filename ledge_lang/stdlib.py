@@ -568,7 +568,7 @@ def load_module(name: str):
 
 
 # ── Memory and execution quotas ────────────────────────────────────────────────
-# These are advisory in v1.1 (documented, not hard-enforced)
+# These are advisory in 1.2.0 (documented, not hard-enforced)
 
 _EXECUTION_LIMITS = {
     "max_iterations": None,    # None = unlimited

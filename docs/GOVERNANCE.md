@@ -1,5 +1,5 @@
 # Ledge Governance
-## Version 1.0.0
+## Version 1.2.0
 
 ---
 
@@ -82,8 +82,10 @@ MINOR: New shipped features, backwards-compatible
 PATCH: Bug fixes, documentation, no behavior changes
 ```
 
-**Compatibility guarantee (from 1.0.0 onwards):**
-A program that runs on Ledge X.Y must run identically on Ledge X.Z for all Z > Y.
+**Compatibility intent during alpha:**
+The project aims to preserve behavior within a major version where practical,
+but compatibility commitments are subordinate to the limitations documented in
+`docs/COMPATIBILITY.md` and release notes.
 
 Pre-1.0 versions (0.x.y) had no compatibility guarantee.
 
@@ -98,7 +100,7 @@ Pre-1.0 versions (0.x.y) had no compatibility guarantee.
 5. CHANGELOG.md has an entry with every user-visible change
 6. Version is consistent in: `pyproject.toml`, `ledge_lang/__init__.py`,
    `vscode-ledge/package.json`, `README.md`, `CHANGELOG.md`
-7. Git tag: `git tag v1.0.0`
+7. Git tag: `git tag vX.Y.Z` after the distribution is published and verified
 
 ---
 
@@ -136,7 +138,7 @@ To report a security issue: open a GitHub issue marked `[SECURITY]`.
 
 Current bus factor: 1
 
-Target bus factor: 3+ by v1.2.0
+Target bus factor: 3+ before production-critical use
 
 Steps:
 1. All design decisions documented with rationale (this document, SEMANTICS.md, SPEC.md)
