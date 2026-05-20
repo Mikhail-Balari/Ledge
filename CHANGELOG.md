@@ -31,8 +31,8 @@ Breaking changes only occur on MAJOR version bumps.
   `if is_confident(r):` and `if confidence_of(r) >= 0.8:` blocks
 - **VM: FOR loop** — `for each x in list:` now compiles to bytecode VM
   (was tree-walker only). VM now handles 20/20 language constructs.
-- **Comparison demos** (`comparisons/ledge_vs_python.py`) — 4 runnable
-  side-by-side comparisons showing objective Ledge advantages
+- **Comparative positioning material** - side-by-side examples explaining
+  tradeoffs between Ledge and ordinary Python patterns
 - **Formatter** — `WhenStmt` and `AgentDef` now format idempotently
 
 ### Bug fixes
@@ -61,10 +61,9 @@ Breaking changes only occur on MAJOR version bumps.
 
 ## [1.0.0] — 2025
 
-First stable release. The language semantics are intended to remain
-stable within major version 1; the project aims to preserve backward
-compatibility but no formal compatibility guarantee is offered while
-Ledge is pre-1.x-stable.
+Initial AI-native release. The project aims to preserve backward compatibility
+within major version 1 where practical, but no formal compatibility guarantee is
+offered while Ledge remains alpha software.
 
 ### AI-Native Features (new in 1.0)
 

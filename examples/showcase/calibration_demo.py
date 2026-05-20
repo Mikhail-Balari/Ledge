@@ -111,7 +111,7 @@ def main():
         show_metrics(sim_cal, model, domain)
         print()
 
-    # --- Part 3: Explicit independence proof for gpt-4 ---
+    # --- Part 3: Explicit independence check for gpt-4 ---
     print(SEP)
     print("\n3. Domain independence: gpt-4/medical vs gpt-4/legal\n")
     print("   Same model — different domains — DIFFERENT calibrations.\n")

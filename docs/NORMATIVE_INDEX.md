@@ -1,5 +1,5 @@
 # Ledge Normative Rule Index
-## Version 1.1.0
+## Version 1.2.0
 
 Every normative rule in Ledge with its conformance test.
 A rule without a conformance test is not part of the checked conformance surface.
@@ -63,5 +63,7 @@ A rule without a conformance test is not part of the checked conformance surface
 
 ## Format
 
-Rules are versioned with Ledge. A rule can only change in a MAJOR version bump.
-Breaking a rule is a conformance failure.
+Rules are versioned with Ledge and should change only with matching updates to
+the conformance tests, documentation, and release notes. While Ledge remains an
+alpha project, this index records the checked conformance surface rather than a
+long-term compatibility guarantee.

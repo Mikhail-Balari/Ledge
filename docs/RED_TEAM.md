@@ -1,211 +1,115 @@
-# Ledge Red Team Analysis
-## Living document — updated after every major release
+# Ledge Red Team Notes
 
-This document maintains the strongest criticisms against Ledge and tracks
-whether each has been resolved. A criticism is "closed" only when
-a neutral reviewer would agree the evidence is sufficient.
+This document records the strongest criticisms of Ledge as an early technical
+project. A criticism should be treated as resolved only when the repository has
+tests, documentation, and runnable evidence that a neutral reviewer could check.
 
-**Rule:** No criticism is marked CLOSED without verifiable evidence.
-
----
-
-## Active criticisms (must resolve)
+## Active Criticisms
 
 ### C-01: "This is Python with different keywords"
 
-**Strength:** High  
-**Status:** Partially mitigated  
+**Status:** Partially mitigated.
 
-**The attack:** `define x as 10` → `x = 10`, `for each item in items` → `for item in items`,
-`check/recover/always` → `try/except/finally`. A simple transpiler maps Ledge to Python.
+Ledge is implemented in Python and borrows familiar syntax. The distinction is
+not that Ledge is a fundamentally new execution substrate. The distinction is
+the checked uncertainty contract: AI primitives return `Uncertain[T]`, and the
+checked execution paths reject direct use of those values before execution.
 
-**Evidence for the attack:** The interpreter is Python. The runtime is Python GC.
-The types are Python types.
+Remaining risk: a Python library, mypy/Pyright plugin, or custom linter could
+approximate parts of this contract inside Python. Ledge needs continued evidence
+that the language boundary is worth the migration cost.
 
-**Rebuttal evidence:**
-1. `true ≠ 1`, `false ≠ 0`, `nothing ≠ null` — strict type semantics Python doesn't have
-2. `Uncertain[T]` is a first-class type — Python has no equivalent
-3. `requires:/ensures:` contracts are built-in — Python needs third-party libraries
-4. AI operations always return `Uncertain` with `confidence=0.0` without backend — Python would crash or lie
-5. A transpiler to Python cannot preserve these semantics without substantial instrumentation
+### C-02: "The AI positioning is not yet externally validated"
 
-**Test that decides:** Write the transpiler. Measure lines of instrumentation needed.
-If it requires >100 lines of glue code per Ledge feature, the criticism is invalid.
+**Status:** Acknowledged.
 
-**What still needs doing:** Benchmark showing Ledge AI programs have lower first-run error rate
+The repository contains implementation tests and examples, not an independent
+user study. Claims about fewer real-world bugs, better LLM-generated programs,
+or production outcomes require third-party evaluation.
 
----
+Current support:
 
-### C-02: "The AI claim lacks substance"
+- the static checker rejects representative unsafe `Uncertain` uses;
+- `ledge run` and `checked_run(...)` enforce that checker before execution;
+- examples demonstrate confidence guards and `when(...)` fallbacks.
 
-**Strength:** Very high  
-**Status:** Partially mitigated  
+Remaining risk: external validation is still needed before broad production
+claims are appropriate.
 
-**The attack:** `analyze(text) using sentiment` compiles to a function call.
-The "AI as primitive" is syntactic sugar.
+### C-03: "The checker is limited"
 
-**Rebuttal evidence:**
-1. `Uncertain[T]` forces error handling at the type level — not enforced by ordinary Python runtime semantics without additional tooling (a mypy plugin, a Pyright plugin, or a custom linter could approximate this; ordinary Python does not)
-2. Zero confidence without backend = language-level safety, not convention
-3. Audit trail is automatic for every AI call — no Python library does this by default
-4. Typechecker errors on unsafe `Uncertain` use — structural AI safety
+**Status:** Acknowledged, mitigated for the documented surface.
 
-**Test that decides:** Run 50 tasks asking GPT-4 to implement them in Ledge and Python.
-Measure first-run correctness. If Ledge wins significantly (>10%), claim is validated.
+The typechecker is an intraprocedural AST walker. It is not a mechanized type
+system and has no formal soundness proof. It recognizes the safe patterns
+documented in `docs/STATIC_CHECKER.md`; other patterns may require refactoring
+or future checker work.
 
-**Current state:** Experiment in `experiments/ai_validation.py` — 8 tasks, not statistically significant.
+Current support:
 
----
+- unsafe direct use is an error;
+- recognized confidence guards permit `value_of(...)` inside the guarded block;
+- `when(...)` provides thresholded extraction with a fallback;
+- `unsafe_value_of(...)` is explicit and intentionally visible.
 
-### C-03: "Generators are lazy but still limited"
+Remaining risk: stronger interprocedural tracking and broader flow analysis are
+roadmap work.
 
-**Strength:** Medium  
-**Status:** Resolved  
+### C-04: "The audit trail is not a security boundary"
 
-**The attack:** Infinite generators hang because Ledge uses eager evaluation.
+**Status:** Acknowledged.
 
-**Evidence of resolution:**
-- `naturals(1)[999]` returns `1000` without hanging
-- Thread+queue architecture for truly lazy evaluation
-- Test: `tests/unit/test_ai_native.py::TestStreams::test_infinite_generator` ✓
+The audit trail is useful for local evidence and tamper detection within its
+documented threat model. It is not tamper-proof. An attacker who controls both
+the SQLite store and the external anchor file can forge a consistent history.
 
----
+Remaining risk: production-critical deployments need external anchoring,
+access controls, immutable logging infrastructure, and security review.
 
-### C-04: "Without interoperability, Ledge is an island"
+### C-05: "Python FFI can bypass the model"
 
-**Strength:** Was critical — now mitigated  
-**Status:** Mitigated  
+**Status:** Acknowledged.
 
-**The attack:** Can't use numpy, pandas, requests, or any existing library.
+Python FFI is powerful and intentionally available. It is not a sandbox. The
+CLI supports import allowlisting flags, and the low-level Python API exposes
+`allowed_modules`, but process isolation and dependency policy belong to the
+host environment.
 
-**Evidence of resolution:**
-- `import "python:numpy" as np` works
-- Full Python ecosystem available in one line
-- Test: `tests/unit/test_ai_native.py::TestPythonFFI` ✓
+Remaining risk: deployments that run untrusted code need OS/container isolation
+and should treat FFI as a governed capability.
 
-**What remains:** No native Ledge packages yet. Package manager is roadmap.
+### C-06: "Performance and tooling are immature"
 
----
+**Status:** Acknowledged.
 
-### C-05: "Performance is unacceptable"
+Ledge 1.2.0 is an alpha core. It has a tree-walking interpreter, bytecode VM
+subset, formatter, debugger, LSP, examples, and tests, but it is not tuned for
+compute-heavy workloads or mature production workflows.
 
-**Strength:** High for compute-heavy code  
-**Status:** Acknowledged, not resolved  
+Remaining risk: stronger profiling, CI matrices, package ecosystem, and
+production pilots are needed before critical use.
 
-**The attack:** 28x slower than CPython on loops. 1000x on recursive code.
+### C-07: "Governance and bus factor are weak"
 
-**Honest response:** This is accurate. Ledge v1.0 is a reference interpreter.
-The roadmap (LLVM backend) will close this gap, but that's 6-12 months of work.
+**Status:** Acknowledged.
 
-**Why it doesn't block adoption:** Python itself is 50-100x slower than C.
-AI workloads are I/O bound (model inference), not compute bound.
-For AI pipelines, Ledge's overhead is acceptable today.
+The project is early and has a small contributor base. The MIT license,
+documented roadmap, CI, conformance tests, and public issue tracker make it
+forkable and reviewable, but they do not replace a broader maintainer group.
 
-**Test that decides:** Benchmark AI pipeline (classify 1000 texts) total time including
-model inference. If Ledge overhead is <5% of total time, it's not a blocker.
+## Closed Or Mitigated Items
 
----
-
-### C-06: "The docs don't match the runtime"
-
-**Strength:** Was critical — now resolved  
-**Status:** Resolved  
-
-**Evidence of resolution:**
-- FEATURE_MATRIX.md explicitly marks shipped vs experimental vs roadmap
-- `--target wasm/arm32` moved to roadmap in matrix
-- `stream from "url"` marked experimental
-- `agent/MCP` marked experimental
-- CI job compares docs with feature matrix
-- All examples in docs execute correctly
-
----
-
-### C-07: "The typechecker is advisory and useless"
-
-**Strength:** Was high — now mitigated  
-**Status:** Mitigated  
-
-**The attack:** The typechecker only warns, never blocks unsafe code.
-
-**Evidence of resolution:**
-- Using `Uncertain` without extraction is now an **ERROR** (not warning)
-- Using `analyze()` result as direct value (e.g., `show upper(ai_result)`) is ERROR
-- Test: `tests/unit/test_ai_native.py` — typechecker enforcement verified
-
-**What remains:** No static flow typing (after `if is_confident(r):`, type is not narrowed).
-This requires union types — roadmap item.
-
----
-
-### C-08: "The VM is decorative"
-
-**Strength:** Medium  
-**Status:** Partially mitigated  
-
-**The attack:** The VM handles only trivial cases. Real programs use the tree-walker.
-
-**Evidence of mitigation:**
-- VM official subset documented in `tests/differential/test_vm_vs_treewalker.py`
-- 40 differential tests, 0 divergences
-- VM is 2.5x faster on recursive code
-
-**What remains:** VM doesn't handle closures, generators, AI operations, or FFI.
-These are documented in FEATURE_MATRIX.md under "Bytecode VM — Core subset only".
-
----
-
-### C-09: "AI confidence is fake without a backend"
-
-**Strength:** Was CRITICAL — now resolved  
-**Status:** RESOLVED  
-
-**The attack:** `analyze("text") using sentiment` returns confidence=1.0 even without AI.
-
-**Evidence of resolution:**
-- `confidence=0.0` always when no backend is connected
-- `value=nothing` always for classify without backend (never picks first label)
-- Tests: `TestAIWithoutBackend` class — 9 tests all passing
-- CI enforces this with `test_analyze_zero_confidence` and `test_classify_not_first_label`
-
----
-
-### C-10: "No governance — bus factor = 1"
-
-**Strength:** High  
-**Status:** Partially mitigated  
-
-**The attack:** One person abandons the project, it dies.
-
-**Evidence of mitigation:**
-- GOVERNANCE.md defines processes
-- All design decisions documented
-- MIT license allows forking
-- Test suite comprehensive enough for new maintainers
-
-**What remains:** Still one primary author. Target is 3+ by v1.2.0.
-
----
-
-## Closed criticisms
-
-| ID | Criticism | Closed in |
+| ID | Criticism | Current evidence |
 |---|---|---|
-| C-03 | Generators hang on infinite sequences | v0.2 |
-| C-04 | No interoperability | v0.2 |
-| C-06 | Docs don't match runtime | v1.0 |
-| C-07 | Typechecker is advisory | v1.0 |
-| C-09 | Fake AI confidence | v1.0 |
+| C-03 | Direct `Uncertain` use can slip through checked CLI execution | `ledge run` typechecks by default; integration tests cover blocking and `--unsafe` bypass |
+| C-04 | No installable demo path | Wheel includes `ledge_lang/demos/medical_triage.ledge`; clean wheel verification passes |
+| C-05 | Python API had no checked execution helper | `checked_run(...)` and `checked_run_file(...)` exported and tested |
+| C-06 | Public CI missing | GitHub Actions runs unit, integration, conformance, and pre-release checks |
 
----
+## Next Validation Work
 
-## Score: open critical criticisms
-
-| Severity | Count | Items |
-|---|---|---|
-| Critical (blocks credibility) | 0 | All resolved |
-| High (limits adoption) | 2 | C-02 (AI claim unproven), C-05 (performance) |
-| Medium (slows growth) | 2 | C-01 (Python resemblance), C-08 (VM subset), C-10 (bus factor) |
-
-**Next action:** Design and run the AI generation quality experiment (C-02).
-This is the single most important remaining validation.
+- Independent review of the checker rules and false-negative surface.
+- Third-party reproduction of release checks from a clean environment.
+- Security review of FFI, audit storage, and external anchoring.
+- Production pilot criteria with explicit non-goals and rollback paths.
+- Evidence bundles for real model-backed workflows, with outcomes recorded.

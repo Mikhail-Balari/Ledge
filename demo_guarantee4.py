@@ -20,4 +20,4 @@ print()
 print(f"Patients escalated to human:   {len(escalated)}")
 print(f"Patients classified automatic: {len(automatic)}")
 assert len(automatic) == 0, "FAILED: classified patients without a backend"
-print("\nGuarantee verified: without backend, zero automatic decisions.")
+print("\nProperty checked: without backend, zero automatic decisions.")

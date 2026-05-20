@@ -33,4 +33,4 @@ fake = LedgeMap({
 })
 GLOBAL_AUDIT._entries.insert(1, fake)
 print(f"\nAfter inserting fake entry:    {GLOBAL_AUDIT.verify()}")
-print("\nGuarantee verified: any modification to the log breaks the chain.")
+print("\nProperty checked: this modification to the log breaks the chain.")

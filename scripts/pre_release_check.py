@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pre-release verification for Ledge.
 
-This script is intentionally release-oriented rather than launch-channel
+This script is intentionally release-oriented rather than publication-channel
 specific. It runs the checks that should be green before building and
 publishing a distribution artifact.
 """

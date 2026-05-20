@@ -1,8 +1,9 @@
 # Ledge AI Uncertainty Evidence
 ## Current Evidence For AI-First Tasks
 
-This document records current internal evidence for Ledge's AI-uncertainty
-workflow. It is not a user study, a proof, or a formal soundness result.
+This document records current implementation evidence for Ledge's
+AI-uncertainty workflow. It is not a user study, a proof, or a formal soundness
+result.
 
 ## Hypotheses
 
@@ -12,13 +13,12 @@ confidence than equivalent ordinary Python programs.
 **H2:** When a program uses an AI result without confidence handling, Ledge's
 static checker can reject that pattern before execution.
 
-## Evidence 1: Reference Implementations
+## Evidence 1: Reference Examples
 
-File: `experiments/ai_validation.py`
-
-The project includes internal reference implementations for AI-first tasks.
-These are useful regression tests for the language patterns, but they are not a
-substitute for a blinded LLM study with independent scoring.
+The project includes runnable examples under `ledge_lang/demos/`, `examples/`,
+and `examples/showcase/`. These are useful regression checks for the language
+patterns, but they are not a substitute for a blinded LLM study with independent
+scoring.
 
 ## Evidence 2: Checked Uncertainty Handling
 

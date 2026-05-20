@@ -297,7 +297,7 @@ The static analyzer runs before any code executes. Direct use of an `Uncertain` 
 **G3 — Hash-chained audit log with a documented threat model.**
 Every AI decision is recorded with a SHA-256 hash chain. Each entry includes: operation type, input hash, confidence score, model identifier, and timestamp. The chain hash links each entry to the previous. Modifying any field breaks the chain and is detected by `verify()`. An external anchor file (`~/.ledge/anchors.jsonl`) detects deletion-and-rebuild. The threat model is limited: an attacker who controls both the SQLite store and the anchor file can forge a clean history. Verifiable: `python demo_guarantee3.py`
 
-**G4 — Safe failure by design.**
+**G4 — Safe failure when no backend is configured.**
 Without a backend, the system does not act. This is a consequence of G1 for programs following the escalation pattern, not a property of the runtime itself. A program that hard-codes `value_of(r) or "approve"` will still approve. Verifiable: `python demo_guarantee4.py`
 
 ---
@@ -339,11 +339,13 @@ We tested the typechecker against five code patterns — four unsafe, one safe �
 |---------|-------------|-----------------|----------|
 | 1 | `show r` without confidence check | 1 | ✓ |
 | 2 | `r + 1` arithmetic on Uncertain | 1 | ✓ |
-| 3 | `if r:` boolean use of Uncertain | **0** | **✗ Gap** |
+| 3 | `if r:` boolean use of Uncertain | 1 | ✓ |
 | 4 | Passing Uncertain to function | 1 | ✓ |
 | 5 | Safe pattern with confidence guard | 0 | ✓ |
 
-**Gap identified:** Pattern 3 — using an `Uncertain` value directly in a boolean condition (`if r:`) — is not detected by the current typechecker. This is a known limitation of the prototype. The other three unsafe patterns are correctly detected.
+The current checker rejects all four representative unsafe patterns in this
+table. The result is still a bounded implementation check, not a proof of
+complete static coverage.
 
 ### 6.4 Calibration Example
 
@@ -365,9 +367,11 @@ The calibration report identifies that the model is overconfident in the 0.9–1
 | Suite | Result | Time |
 |-------|--------|------|
 | Conformance (284 tests) | 284/284 passed | 0.62 s |
-| Unit tests (339 tests) | 338 passed, 1 failed | 1.57 s |
+| Unit tests (348 tests) | 348 passed | 2.15 s |
 
-The single failure (`test_formatter_idempotent_on_tour`) is a pre-existing Windows console encoding issue (cp1252 vs UTF-8) unrelated to language semantics.
+The release gate also runs integration tests, official example typechecks, the
+bundled demo, package build, and wheel-content verification through
+`scripts/pre_release_check.py`.
 
 ---
 
@@ -387,13 +391,13 @@ The single failure (`test_formatter_idempotent_on_tour`) is a pre-existing Windo
 
 ## 8. Implementation
 
-Ledge is implemented in Python 3.9+ as a tree-walking interpreter with a pre-execution typechecking phase. The interpreter does not use Python's `eval()` or `exec()` — it evaluates Ledge's own AST. Python FFI is available but restricted by default (`--safe-mode` blocks all imports).
+Ledge is implemented in Python 3.9+ as a tree-walking interpreter with a pre-execution typechecking phase. The interpreter does not use Python's `eval()` or `exec()` — it evaluates Ledge's own AST. Python FFI is available and can be restricted with CLI import allowlisting flags or the Python API `allowed_modules` parameter. It is not a sandbox.
 
 The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA-256 via Python's `hashlib`. The calibration layer has no external statistical dependencies.
 
-**Installation:** `pip install ledge-lang`  
+**Installation after publication:** `pip install ledge-lang`
 **Repository:** https://github.com/Mikhail-Balari/Ledge  
-**Python versions tested:** 3.10, 3.11, 3.12 (CI verified)
+**Release CI:** Python 3.11; package metadata supports Python 3.9+.
 
 ---
 
@@ -420,7 +424,8 @@ The audit trail uses SQLite with WAL mode for thread safety. Hash chains use SHA
 **Future directions:**
 
 - Python static analyzer applying Ledge's enforcement rules to existing Python codebases without language migration
-- A more formal type-rules document with judgment-style notation, plus either a paper-and-pencil soundness argument or a mechanized proof
+- A more precise type-rules document with judgment-style notation and an
+  explicit analysis of known unsound or unsupported patterns
 - Distributed audit trail with cross-node hash chaining
 - Automated calibration pipelines for structured-outcome domains
 

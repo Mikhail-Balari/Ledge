@@ -1,2 +1,0 @@
-show "Hello from Ledge"
-show confidence_of(classify("this text") using ["positive","negative"])

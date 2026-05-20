@@ -61,7 +61,7 @@ list of cases it does NOT yet recognize.
 
 | Component | Status |
 |---|---|
-| Static analyzer (intraprocedural Uncertain tracking) | works, 35 tests |
+| Static analyzer (intraprocedural Uncertain tracking) | works, covered by unit and integration tests |
 | Runtime `Uncertain[T]` / `AIDerived` / `UncertainChain` | works |
 | Tree-walker interpreter + bytecode VM | works, 1500-program differential |
 | SHA-256 chained audit log with external anchor file | works, threat model documented |
@@ -72,7 +72,7 @@ list of cases it does NOT yet recognize.
 | Anthropic backend (structured self-assessment) | works (self-reported, not derived from weights) |
 | LSP server, formatter, debugger | works |
 | Native C99 compiler (experimental, requires gcc) | partial |
-| 284 conformance tests + 348 unit tests | passing on Linux/macOS/Windows |
+| 284 conformance tests + 348 unit tests | passing in release checks |
 
 ---
 

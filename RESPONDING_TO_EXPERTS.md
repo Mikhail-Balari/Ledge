@@ -1,115 +1,87 @@
-# Ledge — Responding to Expert Questions
+# Ledge - Responding To Expert Questions
 
-These are the questions a technical reviewer would ask.
-Each has a verifiable answer.
+These are questions a technical reviewer is likely to ask before taking Ledge
+seriously. Each answer is intentionally scoped to the current 1.2.0 alpha.
 
-## Where does confidence come from?
+## Where Does Confidence Come From?
 
-Ledge gets confidence scores from the AI backend you connect.
-Without a backend, confidence is always 0.0 (Guarantee 1).
-With a real backend:
+Ledge gets confidence scores from the AI backend you connect. Without a backend,
+AI operations return `confidence=0.0` and `value=nothing`.
 
-    from ledge_lang.backends import openai_backend
-    backend = openai_backend(api_key="sk-...", model="gpt-4o-mini")
-    ledge run program.ledge --backend openai
+Programmatic backend example:
 
-The confidence value is what the model reports.
+```python
+from ledge_lang import checked_run
+from ledge_lang.backends import openai_backend
 
-## Is confidence calibrated by domain?
+backend = openai_backend(api_key="sk-...", model="gpt-4o-mini")
+checked_run(source, ai_backend=backend)
+```
 
-Yes. Ledge learns real accuracy vs declared confidence from your outcomes:
+Backend confidence is a signal from the provider or wrapper. It is not assumed
+to be calibrated for your domain.
 
-    ledge audit --calibration gpt-4 medical
+## Is Confidence Calibrated By Domain?
 
-If GPT-4 says 0.9 confidence but is only right 65% of the time
-in medical contexts, Ledge reports that gap and suggests a
-higher threshold.
+Only if you record outcomes. Ledge includes calibration utilities that compare
+declared confidence with observed correctness:
 
-Run this to see it:
+```bash
+ledge audit --calibration MODEL DOMAIN
+```
 
-    python -c "
-    from ledge_lang.audit_store import AuditStore
-    from ledge_lang.calibration import DomainCalibrator
-    store = AuditStore()
-    c = DomainCalibrator(store)
-    print(c.get_calibrated_threshold('gpt-4', 'medical'))
-    "
+The calibrated threshold is derived from your outcome data. It is not a global
+truth about a model.
 
-## Is confidence audited against ground truth?
+## Is The Audit Trail Legally Sufficient?
 
-Yes. Record what actually happened after each decision:
+No. The regulatory export is structured evidence:
 
-    ledge audit --record-outcome DECISION_ID --correct true
+```bash
+ledge audit --export-regulatory report.json
+ledge audit --validate-regulatory report.json
+```
 
-Then query real accuracy:
+That can support review, but it is not a compliance certification. Whether a
+system satisfies HIPAA, GDPR, the EU AI Act, or any other regime depends on the
+surrounding organization, deployment, data handling, and legal context.
 
-    ledge audit --stats
+## Does It Integrate With Real Model Providers?
 
-## What if the model is overconfident?
+Yes. OpenAI and Anthropic backend helpers are included:
 
-DomainCalibrator detects this automatically.
-If a model declares 0.9 confidence but achieves 0.6 accuracy,
-the calibration report shows a 0.3 calibration error
-and suggests a higher threshold for that domain.
+```python
+from ledge_lang.backends import openai_backend, anthropic_backend
 
-    ledge audit --calibration MODEL DOMAIN
+openai = openai_backend(api_key="sk-...", model="gpt-4o-mini")
+anthropic = anthropic_backend(api_key="sk-ant-...", model="claude-3-haiku")
+```
 
-## Is the 0.85 threshold statistically justified?
+See `examples/showcase/real_backend.py` for a small backend example.
 
-No — 0.85 is a default. Replace it with a calibrated threshold:
+## Is This Ready For Critical Deployment?
 
-    from ledge_lang.calibration import DomainCalibrator
-    threshold = calibrator.get_calibrated_threshold(
-        'gpt-4', 'medical', desired_accuracy=0.95
-    )
+No. Ledge 1.2.0 is an alpha core. It has real tests, examples, CI, checked CLI
+execution, a checked Python API helper, conformance tests, and clean wheel
+verification, but it has no known production deployments or third-party audit.
 
-The calibrated threshold is derived from your actual outcome data.
+Working today:
 
-## Is the audit trail legally acceptable?
+- static checking for documented unsafe `Uncertain` patterns;
+- `ledge run` typechecking by default, with explicit `--unsafe` bypass;
+- `checked_run(...)` for Python callers that want the same safety gate;
+- runtime properties documented in `GUARANTEES.md`;
+- local audit chain and calibration utilities;
+- bundled `medical_triage` demo that runs after wheel installation.
 
-The audit trail exports in a JSON-LD format structured against the
-EU AI Act Article 12/13 evidence schema:
+Not ready yet:
 
-    ledge audit --export-regulatory report.json
-    ledge audit --validate-regulatory report.json
+- no mature package ecosystem;
+- no distributed audit trail;
+- no formal security audit;
+- limited static analysis compared with a mature typed language;
+- no third-party validation or production pilot evidence.
 
-Output: "VALIDATION PASSED — Article 12/13 evidence export is structurally valid"
-
-This is supporting evidence, not a compliance certification.
-Generating a structurally valid JSON-LD is a necessary but not
-sufficient condition for any specific regulatory regime. Whether
-the export satisfies legal compliance in your jurisdiction is a
-question for counsel.
-
-## Does it integrate with real stacks?
-
-Yes. Real OpenAI and Anthropic backends are included:
-
-    from ledge_lang.backends import openai_backend, anthropic_backend
-    
-    backend = openai_backend(api_key="sk-...", model="gpt-4o-mini")
-    backend = anthropic_backend(api_key="sk-ant-...", model="claude-3-haiku")
-
-See examples/showcase/con_backend_real.py for a full demo
-that compares behavior with and without a real backend.
-
-## Is this a demo language or ready for critical deployment?
-
-Honest answer: Ledge is early-stage and experimental.
-What is working today (see CI/test suite for authoritative counts):
-- The four runtime properties (covered by the unit suite and the
-  conformance harness; see GUARANTEES.md)
-- The SHA-256 chained audit log with external anchor (limited threat
-  model — see GUARANTEES.md Property 3)
-- The Article 12/13 evidence export (structural only — not a
-  compliance certification)
-- The OpenAI and Anthropic backends
-
-What is not ready for critical deployment:
-- No package ecosystem beyond 15 included packages
-- No distributed audit trail
-- No formal security audit
-- Adoption: zero known production deployments
-
-The design patterns Ledge enforces are relevant to production systems.
-The implementation is a working prototype.
+The design patterns are relevant to production systems. The implementation
+should still be treated as experimental until it has external review and pilot
+deployment evidence.

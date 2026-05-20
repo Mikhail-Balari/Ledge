@@ -49,9 +49,8 @@ chain.add(Uncertain("meningitis_possible", 0.9), "diagnosis")
 chain.add(Uncertain("meningitis", 0.8), "classification")
 chain.add(Uncertain("protocol_A", 0.7), "protocol")
 
-expected = 0.9 * 0.8 * 0.7
 cc = chain.chain_confidence()
-print(f"  chain_confidence: {cc:.4f}  (expected: {expected:.4f})")
+print(f"  chain_confidence: {cc:.4f}  (position-weighted chain estimate)")
 print(f"  chain_is_safe(0.8): {chain.chain_is_safe(0.8)}  (expected: False — 0.7 < 0.8)")
 print(f"  chain_is_safe(0.7): {chain.chain_is_safe(0.7)}  (expected: True)")
 print(f"  weakest_step: {chain.weakest_step()}  (expected: protocol)")
@@ -89,4 +88,4 @@ for entry in entries:
     print(f"  {name:15s}  confidence={conf:.2f}")
 
 print()
-print("Guarantee verified: without backend, chain_confidence=0 always.")
+print("Property checked: without backend, chain_confidence=0 for this chain.")

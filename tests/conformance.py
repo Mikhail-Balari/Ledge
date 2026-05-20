@@ -639,7 +639,7 @@ else:
 print(f"\nResults by section:")
 for sec, (p, f) in sorted(SECTIONS.items()):
     total_sec = p + f
-    status = "✓" if f == 0 else "✗"
+    status = "OK" if f == 0 else "FAIL"
     print(f"  {status} {sec:<20} {p}/{total_sec}")
 print('='*60)
 sys.exit(0 if FAIL == 0 else 1)

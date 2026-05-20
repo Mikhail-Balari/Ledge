@@ -14,4 +14,4 @@ for name, code in cases:
     print(f"{name:10s} without backend -> confidence = {conf}")
     assert conf == '0', f"FAILED: expected 0, got {conf}"
 
-print("\nGuarantee verified: without backend, confidence = 0 in all cases.")
+print("\nProperty checked: without backend, confidence = 0 in all cases.")

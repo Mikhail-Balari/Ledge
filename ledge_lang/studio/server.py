@@ -162,7 +162,7 @@ def start_studio(host="127.0.0.1", port=5000, working_dir=None, open_browser=Tru
             webbrowser.open(f"http://{host}:{port}")
         threading.Thread(target=_open_browser, daemon=True).start()
 
-    print(f"Ledge Studio v1.1.0")
+    print(f"Ledge Studio v1.2.0")
     print(f"Working directory : {WORKING_DIR}")
     print(f"URL               : http://{host}:{port}")
     print(f"Press Ctrl+C to stop.\n")

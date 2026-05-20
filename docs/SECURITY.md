@@ -1,5 +1,5 @@
 # Ledge Security Model
-## Version 1.1.0
+## Version 1.2.0
 
 ---
 
@@ -27,7 +27,7 @@ Ledge is designed for AI workloads where the code author is trusted.
 | Developer running own code | None | Full FFI intentional |
 | AI-generated code (trusted) | Low | Review before running |
 | Untrusted code | HIGH | Use Docker/subprocess isolation |
-| Multi-tenant execution | HIGH | NOT supported in v1.1 |
+| Multi-tenant execution | HIGH | NOT supported in v1.2 |
 
 ### For restricted deployments
 
@@ -37,14 +37,13 @@ Run Ledge inside a container with restricted filesystem/network:
 # Docker with no network + read-only filesystem
 docker run --network=none --read-only ledge-runtime ledge run program.ledge
 
-# Or use Python's restricted exec (limited but available)
-ledge run program.ledge --restrict-ffi  # roadmap v2.0
+# Or restrict Python imports at the Ledge process level
+ledge run program.ledge --restrict-ffi
 ```
 
-### Roadmap: v2.0 `--trusted-modules` allowlist
+### Import allowlist
 
 ```bash
-# Future: restrict which modules can be imported
 ledge run program.ledge --allow-import=math,json
 # Any other import "python:X" will fail with a clear error
 ```
@@ -84,9 +83,11 @@ PII leakage in log files.
 
 1. **Zero fake AI confidence** — without backend, `confidence=0.0`
 2. **No execution injection** — AI inputs don't affect control flow
-3. **Audit trail integrity** — every AI call is logged; log is append-only
-4. **Type safety** — Uncertain[T] cannot be used as certain without extraction
-5. **Safe operations** — divide/index/lookup return `nothing`, never crash
+3. **Audit trail integrity check** - every AI call is logged in a hash chain
+   under the documented local threat model.
+4. **Checked uncertainty handling** - checked execution paths reject direct
+   `Uncertain[T]` use without recognized extraction.
+5. **Safe operations** - divide/index/lookup return `nothing`, never crash.
 
 ---
 

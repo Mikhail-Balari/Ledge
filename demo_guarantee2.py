@@ -26,4 +26,4 @@ issues2 = check_types(safe)
 errors2 = [i for i in issues2 if i.is_error]
 print(f"\nSafe code (explicit confidence guard):")
 print(f"  Errors detected: {len(errors2)}")
-print("\nGuarantee verified: typechecker blocks unsafe use at analysis time.")
+print("\nProperty checked: typechecker blocks unsafe use at analysis time.")

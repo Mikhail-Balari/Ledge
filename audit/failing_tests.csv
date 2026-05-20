@@ -1,9 +1,0 @@
-test_id,severity,cause,status,remediation
-"C5","critical","No formal FP/FN rate benchmark — only manual classification","PARTIAL","Add 100-program classification benchmark"
-"F3","critical","Bytecode class not exported from vm.py for invalid bytecode test","PARTIAL","Export Bytecode + add invalid bytecode test"
-"H5","critical","No sandbox/quota enforcement","PARTIAL","Documented in FEATURE_MATRIX.md as v2.0 roadmap"
-"I1","blocker","FFI is intentionally open (Python modules accessible)","PARTIAL","Document security boundary; restrict in enterprise config"
-"I3","critical","No explicit permission model","PARTIAL","Document: FFI grants file/network/env by default"
-"L3","critical","No formal onboarding user study","PARTIAL","Add to roadmap; QUICKSTART.md covers the case"
-"M3","critical","VM slower than TW on micro-benchmarks due to compilation overhead","PARTIAL","Add caching; full resolution needs LLVM backend"
-"N6","critical","Release checklist exists but no automated gate enforcement","PARTIAL","GOVERNANCE.md documents criteria; CI enforces tests"

@@ -7,7 +7,7 @@ Status definitions are intended to be checked against code, tests, and examples:
 | Status | Meaning |
 |---|---|
 | **[SHIPPED]** (shipped) | Implemented and covered by the relevant syntax, runtime, typechecker, tests, or examples |
-| **[EXPERIMENTAL]** | Implemented in runtime but not all 7 checks pass — may change |
+| **[EXPERIMENTAL]** | Implemented in runtime but not fully hardened; may change |
 | **[ROADMAP]** | Planned (roadmap), not implemented. Not available in any current release |
 | **removed** | Was experimental, removed for design reasons |
 
@@ -81,7 +81,7 @@ is documented elsewhere in the repository.
 | `embed(text)` | **[SHIPPED]** | Returns `Uncertain[list]` |
 | `Uncertain[T]` type | **[SHIPPED]** | First-class AI result type |
 | `confidence_of(uncertain)` | **[SHIPPED]** | Returns float in [0.0, 1.0] |
-| `value_of(uncertain)` | **[SHIPPED]** | Extracts value |
+| `value_of(uncertain)` | **[SHIPPED]** | Extracts value inside recognized confidence guards; otherwise rejected on checked execution paths |
 | `is_confident(uncertain)` | **[SHIPPED]** | confidence >= 0.8 |
 | `is_uncertain(uncertain)` | **[SHIPPED]** | |
 | `when(uncertain, threshold, fallback)` | **[SHIPPED]** | Safe extraction |
@@ -93,7 +93,8 @@ is documented elsewhere in the repository.
 | AI backend injection | **[SHIPPED]** | `run(src, ai_backend={...})` |
 | Custom AI providers | **[SHIPPED]** | Via `ai_backend` dict |
 | Uncertain typechecker errors | **[SHIPPED]** | Unsafe use = ERROR |
-| `Uncertain` flow typing (static) | **[ROADMAP]** | Union types needed |
+| `Uncertain` guard narrowing | **[SHIPPED]** | Recognizes documented confidence-guard patterns |
+| Interprocedural `Uncertain` flow typing | **[ROADMAP]** | Stronger cross-function analysis |
 | Model versioning in audit | **[ROADMAP]** | |
 | Distributed audit storage | **[ROADMAP]** | |
 
@@ -169,7 +170,8 @@ is documented elsewhere in the repository.
 
 | Feature | Status | Notes |
 |---|---|---|
-| `ledge run file.ledge` | **[SHIPPED]** | |
+| `ledge run file.ledge` | **[SHIPPED]** | Typechecks before execution by default |
+| `ledge run file.ledge --unsafe` | **[SHIPPED]** | Explicit bypass for direct execution |
 | `ledge check file.ledge` | **[SHIPPED]** | Syntax check |
 | `ledge fmt file.ledge` | **[SHIPPED]** | Canonical formatter |
 | `ledge fmt --check` | **[SHIPPED]** | Check without modifying |
@@ -229,9 +231,11 @@ These are deliberate absences, not missing features:
 |---|---|
 | 0.1.0 | Core language, basic tooling |
 | 0.2.0 | Lazy generators, Python FFI, real parallel |
-| 1.0.0 | AI-native types, Uncertain[T], Stream, Contracts, AuditTrail, 7×1 compliance |
+| 1.0.0 | AI-native types, Uncertain[T], Stream, Contracts, AuditTrail |
+| 1.2.0 | Checked CLI execution, checked Python API, release verification script, CI |
 
 ---
 
-*This document is normative. If code diverges from this matrix, the code is wrong.*
-*If this matrix diverges from intent, update the matrix and the code together.*
+*This document is a reference for the public feature surface. If code, tests,
+and this matrix diverge, update the incorrect artifact and keep release notes
+explicit about any behavior change.*

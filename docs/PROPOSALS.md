@@ -124,23 +124,24 @@ This is documented in SEMANTICS.md §4.5.
 not raw values. Without a backend, `confidence = 0.0` always.
 
 **Rationale:** AI output is uncertain by nature. Making uncertainty explicit at
-the type level prevents the most common AI integration bug: using AI output
-as if it were certain. This is the primary innovation of Ledge.
+the type level lets checked execution paths reject a common AI integration bug:
+using AI output as if it were certain.
 
 ### LEP-004: Automatic audit trail for all AI operations
 
 **Decision:** Every AI instruction automatically records an entry in the
 session audit trail. No opt-in required.
 
-**Rationale:** Regulatory compliance (GDPR, HIPAA, financial) requires
-auditability of AI decisions. Making it automatic eliminates the discipline
-failure mode where developers forget to log.
+**Rationale:** Regulated or high-impact AI systems often need auditable decision
+records. Making logging automatic reduces the discipline failure mode where
+developers forget to log. This is supporting evidence infrastructure, not a
+compliance certification.
 
 ### LEP-005: Contracts in the syntax (`requires:` / `ensures:`)
 
 **Decision:** Function preconditions and postconditions are first-class
 syntax, not library decorators.
 
-**Rationale:** Runtime-verified invariants catch entire classes of bugs
-at the boundary between function caller and function body. Built-in
-syntax makes them visible in the code, not buried in decorators.
+**Rationale:** Runtime-checked preconditions and postconditions make boundary
+assumptions visible at the function boundary. Built-in syntax makes those
+assumptions visible in the code, not buried in decorators.

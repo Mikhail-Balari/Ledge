@@ -1,4 +1,4 @@
-# Ledge Quick Reference — v1.1.0
+# Ledge Quick Reference — v1.2.0
 **One page. Every construct. No fluff.**
 
 ---
@@ -92,10 +92,10 @@ define r as embed(text)                      # → Uncertain[list]
 **Always handle uncertainty explicitly:**
 
 ```ledge
-when(r, 0.8, "fallback")      # extract if confidence ≥ 0.8, else fallback
-value_of(r)                    # extract value (may be nothing)
+when(r, 0.8, "fallback")      # extract if confidence >= 0.8, else fallback
+value_of(r)                    # checked path requires a confidence guard
 confidence_of(r)               # get confidence [0.0, 1.0]
-is_confident(r)                # confidence ≥ 0.8
+is_confident(r)                # confidence >= 0.8
 
 if is_confident(r):            # type-narrowed inside block
     show value_of(r)           # r is now safe to use
@@ -142,16 +142,16 @@ show audit_export()         # export as JSON
 
 ---
 
-## Compile to native (faster than Python)
+## Native compilation
 
-```bash
-ledge compile program.ledge --target native -o program  # needs gcc
-./program                                                # ~10-80x faster than CPython
-```
+Native compilation is experimental and not part of the stable CLI quickstart.
+Use `ledge run file.ledge` for checked execution.
 
 ## Install
 
 ```bash
-pip install ledge-lang
-ledge --version
+python -m pip install dist/ledge_lang-1.2.0-py3-none-any.whl
+ledge version
 ```
+
+After Ledge 1.2.0 is published to PyPI, use `python -m pip install ledge-lang`.

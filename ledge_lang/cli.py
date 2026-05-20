@@ -15,7 +15,7 @@ Usage:
   ledge fmt --check <file>     Check formatting without modifying
   ledge debug <file.ledge>     Interactive step-through debugger
   ledge test [dir]             Run .ledge test files
-  ledge studio                 Launch Ledge Studio (web IDE) at http://localhost:5000
+  ledge studio                 Start Ledge Studio (web IDE) at http://localhost:5000
   ledge audit --show                        Show last 20 decisions from the persistent store
   ledge audit --verify                      Verify cryptographic chain integrity
   ledge audit --verify-anchors              Cross-check external anchor file against the store
