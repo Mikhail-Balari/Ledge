@@ -1,5 +1,10 @@
 # Ledge
 
+[![PyPI version](https://img.shields.io/pypi/v/ledge-lang.svg)](https://pypi.org/project/ledge-lang/)
+[![CI](https://github.com/Mikhail-Balari/Ledge/actions/workflows/ci.yml/badge.svg)](https://github.com/Mikhail-Balari/Ledge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Status: alpha / experimental](https://img.shields.io/badge/status-alpha%20%2F%20experimental-orange)
+
 **Ledge is a small experimental DSL for making AI uncertainty explicit in program flow.**
 
 It surrounds AI calls with a static analysis pass that rejects direct use of
@@ -52,18 +57,18 @@ the model; it just makes "I forgot to check" turn into a static error.
 
 ## Install and run in 2 minutes
 
-For a local checkout before the 1.2.0 wheel is published:
+The published 1.2.0 alpha package is available on PyPI:
+
+```bash
+pip install ledge-lang
+ledge demo medical_triage
+```
+
+For a source checkout, you can also build and install the local wheel:
 
 ```bash
 python -m build
 pip install dist/ledge_lang-1.2.0-py3-none-any.whl
-ledge demo medical_triage
-```
-
-After the same version is published to PyPI, the install step becomes:
-
-```bash
-pip install ledge-lang
 ledge demo medical_triage
 ```
 

@@ -5,12 +5,12 @@
 ## Quickstart
 
 ```bash
+pip install ledge-lang
 ledge demo medical_triage
 ```
 
-Before Ledge 1.2.0 is published to PyPI, install the locally built wheel from
-`dist/`. After 1.2.0 is published, `pip install ledge-lang` should provide the
-same command.
+Ledge 1.2.0 is published on PyPI. For a source checkout, you can also build and
+install the local wheel from `dist/`.
 
 No clone, no API key, no setup. The bundled demo escalates every patient to
 human review because there is no AI backend connected — that is the
@@ -64,6 +64,7 @@ show unsafe_value_of(r)                         # explicit unchecked
 
 - Conformance: 284 / 284 passing
 - Unit suite: 354 / 354 passing
+- Integration suite: 21 / 21 passing
 - 0 known failures on Linux, macOS, Windows
 
 (See CI for the authoritative numbers.)

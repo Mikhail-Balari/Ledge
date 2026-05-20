@@ -43,8 +43,8 @@ legal compliance certification.
 - `python -m pytest tests/unit/`
 - `python -m pytest tests/unit/test_checked_run_api.py -q`
 - `python -m pytest tests/integration/test_cli_run_typecheck.py -q`
-- GitHub Actions CI on Python 3.11 for unit tests, integration tests,
-  conformance tests, and `scripts/pre_release_check.py`
+- GitHub Actions CI for unit tests, integration tests, conformance tests, and
+  `scripts/pre_release_check.py`
 - `python tests/conformance.py`
 - `python -m ledge_lang.cli check --types <file>` for every official `.ledge`
   example under `ledge_lang/demos/`, `examples/`, and `examples/showcase/`
@@ -57,6 +57,8 @@ legal compliance certification.
   `ledge --help`, `ledge version`, `ledge demo`, `ledge demo medical_triage`,
   `python -m ledge_lang.cli --help`, and
   `python -m ledge_lang.cli demo medical_triage`
+- PyPI install verification of `ledge-lang==1.2.0` from a clean temporary
+  environment after upload.
 
 ## Results
 
@@ -78,12 +80,15 @@ legal compliance certification.
 - Installed command verification: PASS, `ledge --help`, `ledge version`,
   `ledge demo`, and `ledge demo medical_triage` all work from the clean
   environment.
-- README quickstart status: PASS, the README distinguishes the local 1.2.0
-  wheel workflow from the future PyPI install workflow.
+- README quickstart status: PASS, the README uses the published PyPI package as
+  the primary install path and keeps local wheel installation as a source
+  checkout option.
 - Version consistency: PASS, `pyproject.toml`, `ledge_lang.__version__`,
   `ledge version`, the wheel filename, and installed package metadata all report
   `1.2.0`.
-- PyPI status: 1.2.0 is NOT uploaded yet.
+- PyPI status: PASS, `ledge-lang==1.2.0` is uploaded and verified.
+- Git tag: PASS, `v1.2.0` exists.
+- GitHub Release: PASS, `Ledge 1.2.0` exists.
 - Packaging metadata: PASS, license metadata was updated to the modern
   `license = "MIT"` form and the legacy license classifier was removed.
 - Public CI: PASS, `.github/workflows/ci.yml` runs on push and pull request
@@ -107,8 +112,8 @@ the public repository. Future scratch verification logs are ignored by
   anchor file.
 - Regulatory exports are structured evidence artifacts, not proof of legal
   compliance.
-- The package has not been uploaded to PyPI as version 1.2.0.
+- Ledge 1.2.0 is published, tagged, and released, but remains alpha software.
 
 ## Final Launch Verdict
 
-Ready to post publicly after PyPI 1.2.0 is uploaded.
+Ready now.
