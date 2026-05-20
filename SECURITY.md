@@ -40,3 +40,5 @@ For deployment assumptions and non-goals, see
 [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 For package dependency and supply-chain visibility, see
 [`docs/SUPPLY_CHAIN.md`](docs/SUPPLY_CHAIN.md).
+For the release signing and provenance plan, see
+[`docs/RELEASE_PROVENANCE.md`](docs/RELEASE_PROVENANCE.md).

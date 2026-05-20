@@ -13,7 +13,8 @@ and the Studio web interface.
 
 The project publishes a normal Python wheel and source distribution through
 PyPI. Releases are tagged on GitHub, but signed artifacts, trusted publishing,
-SBOM publication, and build provenance are future work.
+SBOM publication, and build provenance are future work. The release provenance
+plan is documented in [`RELEASE_PROVENANCE.md`](RELEASE_PROVENANCE.md).
 
 ## Local Check
 
