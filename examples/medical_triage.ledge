@@ -1,4 +1,7 @@
 # Ledge Medical AI Pipeline
+# Mixed deterministic + AI demo: deterministic baseline/age rules still run
+# when AI confidence is 0; AI-derived severity is used only after the
+# confidence guard below.
 # Demonstrates: Uncertain types, contracts, audit trail
 # Every AI decision is recorded in the hash-chained audit log — useful as
 # supporting evidence for review; not by itself a HIPAA compliance claim.
@@ -43,11 +46,15 @@ define assess_risk(patient: PatientRecord):
 
     # Only call value_of inside a recognized confidence guard.
     define base_risk as 0.5
+    define decision_source as "deterministic baseline plus age factor"
+    define ai_status as "AI symptom analysis inconclusive; not used for severity"
     if confidence_of(symptom_analysis) >= 0.85:
         define analysis_val as value_of(symptom_analysis)
         define inner_risk as analysis_val["severity_score"]
         if inner_risk != nothing:
             set base_risk to inner_risk
+            set decision_source to "AI symptom analysis plus age factor"
+            set ai_status to "AI severity used after confidence guard"
     define adjusted_risk as clamp(base_risk * age_factor, 0, 1)
 
     define recommendation as "routine"
@@ -60,6 +67,8 @@ define assess_risk(patient: PatientRecord):
         "patient_id":        patient.id,
         "risk_score":        adjusted_risk,
         "recommendation":    recommendation,
+        "source":            decision_source,
+        "ai_status":         ai_status,
         "ai_confidence":     confidence_of(symptom_analysis),
         "age_factor_applied": age_factor > 1.0
     }
@@ -93,10 +102,14 @@ show ""
 define results as map(patients, given p: assess_risk(p))
 
 for each result in results:
-    show "Patient {result[\"patient_id\"]}: {upper(result[\"recommendation\"])} (risk={round(result[\"risk_score\"], 2)})"
+    show "Patient {result[\"patient_id\"]}: RULE_{upper(result[\"recommendation\"])} (risk={round(result[\"risk_score\"], 2)})"
+    show "  Decision source: {result[\"source\"]}"
+    show "  AI confidence: {result[\"ai_confidence\"]}"
+    show "  AI status: {result[\"ai_status\"]}"
 
 show ""
 show "=== Audit Trail ==="
 show "Total AI decisions recorded: {len(audit_query())}"
 show "All decisions are stored in a hash-chained audit log (limited threat model -- see GUARANTEES.md)."
 show "AI confidence scores are attached to every recommendation."
+show "With no backend, recommendations above are deterministic baseline outputs, not AI-derived approvals."

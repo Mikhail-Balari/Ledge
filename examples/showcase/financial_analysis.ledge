@@ -1,12 +1,15 @@
-# Credit risk analysis — Ledge AI-first
-# Every risk decision has full explainability.
-# Immutable: once recorded in the audit trail, it cannot be altered.
+# Credit risk analysis -- mixed deterministic + AI demo.
+# Debt-ratio rules can produce a deterministic preliminary decision even when
+# the AI history analysis has confidence 0. AI-derived approvals require the
+# confidence guard below and are labeled separately in the output.
 
 type Applicant has:
     id:      text
     income:  number
     debt:    number
     history: text
+
+define MIN_CONFIDENCE as 0.75
 
 define evaluate_credit(app: Applicant):
     requires:
@@ -30,30 +33,41 @@ define evaluate_credit(app: Applicant):
 
     define conf as confidence_of(analysis)
 
-    define decision as "approve"
-    if conf >= 0.75:
+    define decision as "rule_preliminary_approve"
+    define decision_source as "deterministic debt-ratio rules"
+    define ai_status as "AI history inconclusive; not used for approval"
+
+    if conf >= MIN_CONFIDENCE:
         define ai_result as value_of(analysis) or map {}
         define history_risk as "moderate"
         if has(ai_result, "risk"):
             set history_risk to ai_result["risk"]
         set factors to append(factors, "history_analyzed")
+        set decision_source to "AI history analysis plus deterministic rules"
+        set ai_status to "AI history used after confidence guard"
         if debt_ratio > 0.5 or history_risk = "high":
-            set decision to "reject"
+            set decision to "ai_supported_reject"
         else if debt_ratio > 0.35 or history_risk = "moderate":
-            set decision to "review"
+            set decision to "ai_supported_review"
+        else:
+            set decision to "ai_supported_approve"
     else:
         set factors to append(factors, "history_inconclusive")
         if debt_ratio > 0.5:
-            set decision to "reject"
+            set decision to "rule_reject"
         else if debt_ratio > 0.35:
-            set decision to "review"
+            set decision to "rule_review"
 
     if debt_ratio > 0.5:
-        set decision to "reject"
+        set decision to "rule_reject"
+        set decision_source to "deterministic debt-ratio rules"
+        set ai_status to "DTI rule requires rejection; AI history not needed"
 
     return map {
         "applicant_id": app.id,
         "decision":     decision,
+        "source":       decision_source,
+        "ai_status":    ai_status,
         "confidence":   conf,
         "factors":      factors,
         "debt_ratio":   debt_ratio,
@@ -72,7 +86,9 @@ show ""
 for each app in applicants:
     define r as evaluate_credit(app)
     show "Applicant {r[\"applicant_id\"]}: {upper(r[\"decision\"])}"
-    show "  AI Confidence: {r[\"confidence\"]}"
+    show "  Decision source: {r[\"source\"]}"
+    show "  AI history confidence: {r[\"confidence\"]}"
+    show "  AI status: {r[\"ai_status\"]}"
     show "  Factors: {r[\"factors\"]}"
     show "  {r[\"explanation\"]}"
     show ""

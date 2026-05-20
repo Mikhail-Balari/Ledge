@@ -89,14 +89,19 @@ To see what the bundled demo looks like in source form:
 python -c "from ledge_lang import demos; print(open(demos.demo_path('medical_triage')).read())"
 ```
 
-To run the full set of showcase examples (financial analysis, legal contracts,
-hiring screen, etc.) you currently need to clone the repository:
+To run the clearest safety-oriented showcase examples you currently need to
+clone the repository:
 
 ```bash
 git clone https://github.com/Mikhail-Balari/Ledge
 cd Ledge
-ledge run examples/showcase/financial_analysis.ledge
+ledge run examples/showcase/loan_approval.ledge
+ledge run examples/showcase/medical_triage.ledge
 ```
+
+`examples/showcase/financial_analysis.ledge` is a mixed deterministic-plus-AI
+example: debt-ratio rules may produce preliminary rule-based decisions even
+when AI history confidence is 0, and the output labels that distinction.
 
 `ledge run` runs the static Uncertain checker before execution. If you are
 deliberately experimenting with unchecked extraction, use
