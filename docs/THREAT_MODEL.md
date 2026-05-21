@@ -25,7 +25,7 @@ Ledge 1.2.0 does not provide:
 - Protection against arbitrary Python code that bypasses Ledge's checked entry points.
 - Whole-program static analysis across modules, callbacks, or host-language integrations.
 
-The hash chain can detect accidental or unsophisticated modification when the database and anchor file are not both rewritten consistently. It is not a substitute for append-only infrastructure, external anchoring, access control, or operational monitoring.
+The hash chain can detect accidental or unsophisticated modification when the database and anchor file are not both rewritten consistently. It is not a substitute for append-only infrastructure, external anchoring, access control, or operational monitoring. The future anchoring roadmap is documented in [`AUDIT_ANCHORING.md`](AUDIT_ANCHORING.md).
 
 ## Recommended Use Today
 

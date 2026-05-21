@@ -77,6 +77,8 @@ Exit criteria:
 
 ## 4. Audit Anchoring
 
+Design track: [`AUDIT_ANCHORING.md`](AUDIT_ANCHORING.md).
+
 Planned work:
 
 - External append-only anchoring options for audit-chain roots.

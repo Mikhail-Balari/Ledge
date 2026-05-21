@@ -122,6 +122,8 @@ For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CH
 For current and future uncertainty semantics, see
 [`docs/UNCERTAINTY_MODEL.md`](docs/UNCERTAINTY_MODEL.md).
 For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
+For the future audit anchoring design, see
+[`docs/AUDIT_ANCHORING.md`](docs/AUDIT_ANCHORING.md).
 For the path from alpha software toward production-critical readiness, see
 [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
