@@ -119,6 +119,8 @@ and raises `LedgeError` without executing the program if type issues are found.
 interpreter and test harness use; it bypasses the static checker by design.
 
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
+For current and future uncertainty semantics, see
+[`docs/UNCERTAINTY_MODEL.md`](docs/UNCERTAINTY_MODEL.md).
 For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 For the path from alpha software toward production-critical readiness, see
 [`docs/ROADMAP.md`](docs/ROADMAP.md).

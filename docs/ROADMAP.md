@@ -24,6 +24,14 @@ What is not claimed:
 - No production-critical validation.
 - No guarantee that model confidence is calibrated.
 
+## Future Design Track: Stronger Uncertainty Model
+
+`docs/UNCERTAINTY_MODEL.md` records the design direction for richer uncertainty
+semantics beyond the current `Uncertain[T]` plus confidence-score model. Future
+work should distinguish states such as unknown, unverifiable, conflicting,
+observed, inferred, predicted, and estimated values without claiming model
+truth or calibrated correctness by default.
+
 ## 1. Stronger Static Checker
 
 Planned work:
