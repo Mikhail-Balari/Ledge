@@ -72,7 +72,7 @@ list of cases it does NOT yet recognize.
 | Anthropic backend (structured self-assessment) | works (self-reported, not derived from weights) |
 | LSP server, formatter, debugger | works |
 | Native C99 compiler (experimental, requires gcc) | partial |
-| 284 conformance tests + 354 unit tests | passing in release checks |
+| 284 conformance tests + 363 unit tests | passing in release checks |
 
 ---
 

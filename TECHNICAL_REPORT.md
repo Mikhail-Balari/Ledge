@@ -367,7 +367,7 @@ The calibration report identifies that the model is overconfident in the 0.9–1
 | Suite | Result | Time |
 |-------|--------|------|
 | Conformance (284 tests) | 284/284 passed | 0.62 s |
-| Unit tests (354 tests) | 354 passed | 1.71 s |
+| Unit tests (363 tests) | 363 passed | 1.45 s |
 
 The release gate also runs integration tests, official example typechecks, the
 bundled demo, package build, and wheel-content verification through

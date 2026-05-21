@@ -52,6 +52,12 @@ python -m ledge_lang.cli run examples/medical_triage.ledge
 python scripts/pre_release_check.py
 ```
 
+The unit suite also includes deterministic adversarial surface tests for the
+lexer, parser-facing checker path, string interpolation, nested unsafe-use
+patterns, malformed confidence-handling expressions, Unicode/BOM input, and
+long text. These tests are a lightweight regression corpus, not coverage-guided
+fuzzing or formal coverage.
+
 For intentionally unsafe experiments, keep the example local and use the
 explicit bypass:
 
