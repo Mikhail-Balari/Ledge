@@ -126,6 +126,7 @@ For the future audit anchoring design, see
 [`docs/AUDIT_ANCHORING.md`](docs/AUDIT_ANCHORING.md).
 For the path from alpha software toward production-critical readiness, see
 [`docs/ROADMAP.md`](docs/ROADMAP.md).
+For a short technical review path, see [`EXPERT_REVIEW.md`](EXPERT_REVIEW.md).
 
 ---
 
