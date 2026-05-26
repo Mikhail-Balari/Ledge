@@ -1,0 +1,13 @@
+{
+  "pilot_name": "",
+  "domain": "",
+  "ai_output": "",
+  "possible_actions": [],
+  "confidence_signal": "",
+  "thresholds": {},
+  "fallback": "",
+  "human_review": true,
+  "audit_required": true,
+  "outcome_available": false,
+  "success_metric": ""
+}

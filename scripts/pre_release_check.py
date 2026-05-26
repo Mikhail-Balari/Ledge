@@ -18,7 +18,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEMO_IN_WHEEL = "ledge_lang/demos/medical_triage.ledge"
+DEMOS_IN_WHEEL = [
+    "ledge_lang/demos/medical_triage.ledge",
+    "ledge_lang/demos/loan_approval.ledge",
+]
+BUNDLED_DEMOS = ["medical_triage", "loan_approval"]
 
 
 def log(message: str) -> None:
@@ -107,9 +111,10 @@ def verify_wheel(wheel: Path, version: str) -> None:
 
     with zipfile.ZipFile(wheel) as zf:
         names = set(zf.namelist())
-    if DEMO_IN_WHEEL not in names:
-        raise SystemExit(f"FAIL: wheel missing {DEMO_IN_WHEEL}")
-    log(f"PASS: wheel contains {DEMO_IN_WHEEL}")
+    for demo in DEMOS_IN_WHEEL:
+        if demo not in names:
+            raise SystemExit(f"FAIL: wheel missing {demo}")
+        log(f"PASS: wheel contains {demo}")
 
 
 def main() -> int:
@@ -128,7 +133,8 @@ def main() -> int:
     run_step("unit tests", [sys.executable, "-m", "pytest", "tests/unit/"])
     run_step("conformance tests", [sys.executable, "tests/conformance.py"])
     typecheck_examples()
-    run_step("bundled demo", [sys.executable, "-m", "ledge_lang.cli", "demo", "medical_triage"])
+    for demo in BUNDLED_DEMOS:
+        run_step("bundled demo " + demo, [sys.executable, "-m", "ledge_lang.cli", "demo", demo])
 
     ensure_build_available()
     run_step("package build", [sys.executable, "-m", "build"])

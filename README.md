@@ -5,21 +5,24 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Status: alpha / experimental](https://img.shields.io/badge/status-alpha%20%2F%20experimental-orange)
 
-**Ledge is a small experimental DSL for making AI uncertainty explicit in program flow.**
+**Ledge is an experimental runtime and DSL for auditable AI decision boundaries.**
 
-It surrounds AI calls with a static analysis pass that rejects direct use of
-results whose confidence has not been checked, records every AI decision in a
+It does not prove that a model is correct. It helps make unchecked AI
+uncertainty visible, enforceable, and auditable before it becomes action. Ledge
+surrounds AI calls with a static analysis pass that rejects direct use of
+results whose confidence has not been checked, records AI decisions in a
 hash-chained audit log, and compares declared confidence against real outcomes
-over time so you can recalibrate the threshold.
+over time so thresholds can be recalibrated.
 
-It is not a formal type system, not a calibrated uncertainty framework, not a
-compliance product, and not a replacement for evaluation, monitoring, or human
-review. It is a tool that forces specific patterns at the language level.
-See [Limitations and non-goals](#limitations-and-non-goals).
+Ledge is alpha software. It is not an AI model, not a formal proof system, not
+a compliance product, and not a replacement for evaluation, monitoring, or
+human review. Use normal Python and your normal stack for everything else; use
+Ledge around the boundary where AI output may become a decision or action. See
+[Limitations and non-goals](#limitations-and-non-goals).
 
 ---
 
-## The one-paragraph guarantee
+## The one-paragraph contract
 
 Ledge does not prove that AI outputs are correct. Confidence is not correctness.
 What Ledge does is statically reject direct use of a value typed as `Uncertain[T]`
@@ -44,9 +47,9 @@ the model; it just makes "I forgot to check" turn into a static error.
   (OpenAI logprobs, Anthropic structured self-assessment) are signals, not
   calibrated probabilities of correctness. Calibration must be measured.
 - **Not a replacement for evals, monitoring, or human review.**
-- **Not a legal compliance product.** The regulatory export is structurally
-  valid evidence; whether it satisfies any specific regime is between you
-  and your lawyer.
+- **Not a legal compliance product.** The regulatory export is intended to
+  support structured evidence review, but it does not establish compliance.
+  Whether it is useful for any specific regime is between you and your lawyer.
 - **Not a security boundary against a malicious local operator.** The audit
   trail detects post-hoc modification by an attacker with DB access but
   no anchor-file access; an attacker with both can forge a clean history.
@@ -57,19 +60,21 @@ the model; it just makes "I forgot to check" turn into a static error.
 
 ## Install and run in 2 minutes
 
-The published 1.2.0 alpha package is available on PyPI:
+From the published PyPI 1.2.0 package:
 
 ```bash
 pip install ledge-lang
+ledge demo
 ledge demo medical_triage
 ```
 
-For a source checkout, you can also build and install the local wheel:
+From a source checkout containing the latest demo work:
 
 ```bash
 python -m build
 pip install dist/ledge_lang-1.2.0-py3-none-any.whl
-ledge demo medical_triage
+ledge demo
+ledge demo loan_approval
 ```
 
 Expected output (no API key, no clone, no setup):
@@ -84,7 +89,7 @@ Decisions logged in audit trail: 3
 Cryptographic chain intact: true
 ```
 
-Without a real AI backend connected, every patient escalates to human review —
+Without a real AI backend connected, every patient escalates to human review --
 that is the safe-failure default. Connect a real backend and it will classify
 using backend-provided confidence estimates.
 
@@ -108,6 +113,11 @@ ledge run examples/showcase/medical_triage.ledge
 example: debt-ratio rules may produce preliminary rule-based decisions even
 when AI history confidence is 0, and the output labels that distinction.
 
+The bundled `loan_approval` demo is synthetic and is part of the current source
+checkout. It is not a credit model and not a lending decision system. It
+demonstrates deterministic rule checks, confidence-gated AI use, human review
+fallback, and audit-chain verification.
+
 `ledge run` runs the static Uncertain checker before execution. If you are
 deliberately experimenting with unchecked extraction, use
 `ledge run program.ledge --unsafe` to bypass the checker.
@@ -127,6 +137,23 @@ For the future audit anchoring design, see
 For the path from alpha software toward production-critical readiness, see
 [`docs/ROADMAP.md`](docs/ROADMAP.md).
 For a short technical review path, see [`EXPERT_REVIEW.md`](EXPERT_REVIEW.md).
+For demo and pilot planning materials, see [`DEMO.md`](DEMO.md),
+[`COMMERCIAL.md`](COMMERCIAL.md), and [`PILOT_PACK.md`](PILOT_PACK.md).
+
+---
+
+## Where Ledge fits
+
+Ledge belongs at the boundary where AI or model output can become a business
+action: approve, reject, escalate, bill, refund, route, write, publish, or
+trigger a tool/API. It is suitable today for demos, proofs of concept, and
+shadow-mode pilots where the goal is to make uncertainty handling explicit and
+reviewable.
+
+Production-critical or regulated use requires additional integration, security
+review, monitoring, calibration, operational testing, legal/compliance review,
+and human oversight appropriate to the domain. Ledge is one control around one
+decision boundary, not a complete governance system.
 
 ---
 
@@ -138,7 +165,7 @@ A value of type `Uncertain[T]` (returned by `analyze`, `classify`, `generate`,
 ```ledge
 define r as classify(symptoms) using ["urgent", "routine"]
 
-# (1) Confidence guard — recognized narrowing patterns:
+# (1) Confidence guard -- recognized narrowing patterns:
 if confidence_of(r) >= 0.85:
     show value_of(r)                         # OK inside this block
 
@@ -153,7 +180,7 @@ if c >= 0.85:
 # (3) Runtime-checked extraction with fallback:
 show when(r, 0.85, "fallback for low-confidence")
 
-# (4) Explicit escape hatch — deliberately ugly name:
+# (4) Explicit escape hatch -- deliberately ugly name:
 show unsafe_value_of(r)                      # OK anywhere; reader is warned
 ```
 
@@ -167,8 +194,8 @@ show upper(r)                                # ERROR: Uncertain in function call
 define x: text as r                          # ERROR: Uncertain to typed var
 ```
 
-This is the central enforcement. Everything else — audit trail, calibration,
-regulatory export — is supporting infrastructure.
+This is the central enforcement. Everything else -- audit trail, calibration,
+regulatory export -- is supporting infrastructure.
 
 ---
 
@@ -178,7 +205,7 @@ Run these yourself. No API key. No setup. Under 5 minutes. Each demo is a
 small Python script that exercises one runtime behavior; the script prints
 its own pass/fail.
 
-### G1 — Zero confidence without a backend
+### G1 -- Zero confidence without a backend
 
 ```bash
 python demo_guarantee1.py
@@ -188,7 +215,7 @@ Without a real model connected, every AI primitive returns
 `confidence = 0.0`. The system cannot invent certainty. This is a runtime
 property, not a static one.
 
-### G2 — Unsafe use is rejected before execution
+### G2 -- Unsafe use is rejected before execution
 
 ```bash
 python demo_guarantee2.py
@@ -199,7 +226,7 @@ above) before any code runs. If the checker itself crashes, it raises
 `TypecheckerInternalError` with a stack trace rather than returning an
 empty result list.
 
-### G3 — Hash-chained audit trail with external anchor
+### G3 -- Hash-chained audit trail with external anchor
 
 ```bash
 python demo_guarantee3.py
@@ -220,7 +247,7 @@ full threat model.
 ledge audit --verify-anchors   # cross-check anchor file against the store
 ```
 
-### G4 — Safe failure when no backend is configured
+### G4 -- Safe failure when no backend is configured
 
 ```bash
 python demo_guarantee4.py
@@ -250,7 +277,7 @@ Per-backend confidence sources:
 # These are signals. They are NOT calibrated correctness probabilities.
 backend = openai_backend(api_key="sk-...", model="gpt-4o-mini")
 
-# Anthropic: structured self-assessment — the model returns a confidence
+# Anthropic: structured self-assessment -- the model returns a confidence
 # score alongside its answer. This is self-reported, not derived from
 # model weights or token probabilities.
 backend = anthropic_backend(api_key="sk-ant-...", model="claude-3-haiku-20240307")
@@ -274,7 +301,7 @@ Calibration Report: gpt-4 / medical (n=30)
   ECE                 : 0.0756   (lower is better; <0.10 is a rough heuristic)
   False accept rate   : 0.1429   (accepted when wrong)
   False reject rate   : 0.7826   (rejected when right)
-  Calibrated threshold: 0.921    (provisional — only 10 samples > 0.9)
+  Calibrated threshold: 0.921    (provisional -- only 10 samples > 0.9)
   Well calibrated     : False    (overconfident in 0.9-1.0 range)
 ```
 
@@ -286,9 +313,9 @@ requirements (default 30), self-reported-outcome caveats, and drift handling.
 ## How the pieces fit together
 
 ```
-Uncertain output → static check → logged decision
-     → recorded outcome → calibrated threshold
-          → safer future decision
+Uncertain output -> static check -> logged decision
+     -> recorded outcome -> calibrated threshold
+          -> safer future decision
 ```
 
 **Multi-step chains.** Confidence degrades across reasoning steps. If each
@@ -297,21 +324,21 @@ step is 0.85 confident, five steps yield `0.85^5 = 0.44`. The
 weak steps; the result is one propagated confidence value for the chain,
 subject to the same handling rules as any other Uncertain value.
 
-**Layer 1 — Pre-execution static check.**
+**Layer 1 -- Pre-execution static check.**
 Direct use of `Uncertain[T]` is rejected. (See *The checker's contract* above.)
 
-**Layer 2 — Runtime confidence provenance.**
+**Layer 2 -- Runtime confidence provenance.**
 Confidence comes from the backend you connect; without one it is exactly 0.0.
 The `AIDerived` wrapper preserves AI origin through extraction so callers can
 still detect it.
 
-**Layer 3 — Domain calibration.**
+**Layer 3 -- Domain calibration.**
 Real accuracy is measured per model and domain. The calibrated threshold is
 computed from observed outcomes, not from the backend's own confidence claim.
 Falls back to the default 0.85 with a warning if sample size is below
 `min_samples` (default 30).
 
-**Layer 4 — Adaptive threshold API.**
+**Layer 4 -- Adaptive threshold API.**
 
 ```python
 from ledge_lang.calibration import DomainCalibrator
@@ -321,12 +348,11 @@ threshold = calibrator.get_calibrated_threshold(
 )
 ```
 
-**Layer 5 — Compliance-supporting evidence export.**
-JSON-LD output structured for EU AI Act Article 12 (logging and monitoring)
-and Article 13 (transparency). Generating a structurally valid export is a
-necessary but not sufficient condition for any regulatory regime. Whether the
-output satisfies legal compliance in your jurisdiction is a question for
-counsel.
+**Layer 5 -- Structured evidence export.**
+JSON-LD output is intended to support structured evidence review for AI
+logging, monitoring, and transparency work. Generating an export does not
+establish legal compliance in any jurisdiction; that requires appropriate
+review by qualified counsel.
 
 ```bash
 ledge audit --export-regulatory report.json
@@ -443,10 +469,11 @@ No. Calibration is helpful but is not a substitute for evals, behavioral
 testing, or a human in the loop where the cost of a wrong answer is high.
 
 **Does it guarantee EU AI Act, GDPR, HIPAA, or any other compliance?** No.
-The regulatory export is a structurally valid evidence schema. Compliance
-in any specific jurisdiction requires legal counsel.
+The regulatory export is intended to support structured evidence review, but it
+does not establish compliance. Compliance in any specific jurisdiction requires
+legal counsel.
 
-**Why not just use Python + mypy/Pyright?** See *Why a DSL* above — that is
+**Why not just use Python + mypy/Pyright?** See *Why a DSL* above -- that is
 a legitimate choice for many teams. Ledge buys a narrower surface area and a
 unified workflow at the cost of being a separate language.
 
@@ -480,23 +507,23 @@ If you hit a case the checker should recognize but doesn't, open an issue.
 
 ## How Ledge relates to existing work
 
-**Turn** — Kizito, 2024 ([arxiv:2603.08755](https://arxiv.org/abs/2603.08755))
+**Turn** -- Kizito, 2024 ([arxiv:2603.08755](https://arxiv.org/abs/2603.08755))
 Typed LLM inference as a language primitive with a confidence operator,
 designed for agentic systems where LLMs write code. Ledge targets developers
 building systems that *use* LLMs and adds domain calibration, outcome
 tracking, and a chained audit trail.
 
-**QUASAR** — 2025 ([arxiv:2506.12202](https://arxiv.org/abs/2506.12202) | [OpenReview](https://openreview.net/forum?id=TvpaeQVTGQ))
+**QUASAR** -- 2025 ([arxiv:2506.12202](https://arxiv.org/abs/2506.12202) | [OpenReview](https://openreview.net/forum?id=TvpaeQVTGQ))
 A language for LLM code actions with uncertainty quantification via conformal
 prediction, transpiling from Python written by LLMs. Ledge is written by
 developers and enforces handling at static-analysis time. QUASAR's uncertainty
 is grounded in conformal-prediction theory; Ledge's calibration is empirical.
 
-**IMMACULATE** — Guo et al., 2026 ([arxiv:2602.22700](https://arxiv.org/abs/2602.22700))
+**IMMACULATE** -- Guo et al., 2026 ([arxiv:2602.22700](https://arxiv.org/abs/2602.22700))
 Audits whether LLM API providers execute the model they claim. Ledge audits
 whether the *code using* those models handles their output safely. Complementary.
 
-**SAUP** — Zhao et al., 2024 ([arxiv:2412.01033](https://arxiv.org/abs/2412.01033))
+**SAUP** -- Zhao et al., 2024 ([arxiv:2412.01033](https://arxiv.org/abs/2412.01033))
 Uncertainty propagation through multi-step LLM agent reasoning at runtime
 using situational weights. Ledge implements transitive uncertainty propagation
 as `chain_confidence()` at the language level (position-weighted decay,
@@ -554,8 +581,9 @@ No. The calibration layer measures how accurate it is over time and on your
 data. See [CALIBRATION_GUIDE.md](CALIBRATION_GUIDE.md).
 
 **Is the audit trail legally acceptable?**
-The export is structurally valid evidence. Whether it satisfies legal
-compliance is for your counsel.
+The export can support structured evidence review, but it does not establish
+legal compliance. Whether it is useful for a specific process is for your
+counsel.
 
 **Can I use this for production-critical decisions?**
 Not yet. It is a working prototype with checkable runtime properties.
@@ -566,7 +594,7 @@ What works today:
 - OpenAI backend using token log-probabilities for confidence
 - Domain calibration with Brier score, ECE, and false accept/reject rates
 - Position-weighted chain confidence with weak-step penalization
-- Compliance-supporting regulatory export
+- Structured regulatory export for evidence review
 
 What doesn't:
 - Distributed audit storage
@@ -575,7 +603,7 @@ What doesn't:
 - IDE tooling beyond the bundled LSP server
 - Mechanized proofs of the type rules
 
-**Zero production deployments — why should I trust this?**
+**Zero production deployments -- why should I trust this?**
 You shouldn't. You should verify it. Every property in this document is
 checkable in under 5 minutes with no API key. The properties either hold
 when you run them or they don't.
@@ -591,5 +619,5 @@ MIT
 ## Questions and feedback
 
 If something breaks, a claim doesn't hold up, or you know existing work that
-does this better — open an issue. If you use Ledge in a real system, even
+does this better -- open an issue. If you use Ledge in a real system, even
 experimentally, we want to hear about it.

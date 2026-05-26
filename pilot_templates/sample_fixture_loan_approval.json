@@ -1,0 +1,76 @@
+{
+  "fixture_name": "synthetic_loan_approval_boundary",
+  "disclaimer": "Synthetic demo data only. Not a credit model. Not a lending decision system.",
+  "cases": [
+    {
+      "application_id": "high_confidence_approve",
+      "scenario": "Applicant passes deterministic checks and model reports low risk with high confidence.",
+      "synthetic_inputs": {
+        "amount": 25000,
+        "income": 90000,
+        "debts": 9000,
+        "missing_evidence": false
+      },
+      "model_label": "low_risk",
+      "model_confidence": 0.91,
+      "expected_action": "approve_in_shadow_mode",
+      "notes": "Approval is a simulated shadow-mode action, not a real lending decision."
+    },
+    {
+      "application_id": "low_confidence_review",
+      "scenario": "Applicant passes deterministic checks but model confidence is below threshold.",
+      "synthetic_inputs": {
+        "amount": 18000,
+        "income": 72000,
+        "debts": 10000,
+        "missing_evidence": false
+      },
+      "model_label": "low_risk",
+      "model_confidence": 0.61,
+      "expected_action": "human_review",
+      "notes": "Low confidence should not permit an AI-derived approval."
+    },
+    {
+      "application_id": "high_confidence_reject",
+      "scenario": "Applicant passes deterministic checks but model reports high risk with high confidence.",
+      "synthetic_inputs": {
+        "amount": 42000,
+        "income": 88000,
+        "debts": 22000,
+        "missing_evidence": false
+      },
+      "model_label": "high_risk",
+      "model_confidence": 0.89,
+      "expected_action": "reject_in_shadow_mode",
+      "notes": "Rejection is a simulated shadow-mode action requiring policy review before any real use."
+    },
+    {
+      "application_id": "ambiguous_case",
+      "scenario": "Conflicting indicators make review preferable even with a medium-risk label.",
+      "synthetic_inputs": {
+        "amount": 30000,
+        "income": 76000,
+        "debts": 21000,
+        "missing_evidence": false
+      },
+      "model_label": "medium_risk",
+      "model_confidence": 0.74,
+      "expected_action": "human_review",
+      "notes": "Ambiguous cases should expose the fallback path."
+    },
+    {
+      "application_id": "missing_evidence_case",
+      "scenario": "Required supporting evidence is missing.",
+      "synthetic_inputs": {
+        "amount": 22000,
+        "income": 81000,
+        "debts": 12000,
+        "missing_evidence": true
+      },
+      "model_label": "low_risk",
+      "model_confidence": 0.92,
+      "expected_action": "human_review",
+      "notes": "Missing evidence overrides the model label."
+    }
+  ]
+}

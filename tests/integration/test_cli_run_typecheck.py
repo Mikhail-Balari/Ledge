@@ -157,3 +157,36 @@ def test_demo_medical_triage_still_runs():
     assert result.returncode == 0
     assert "=== MEDICAL TRIAGE DEMO ===" in result.stdout
     assert "ESCALATE TO HUMAN" in result.stdout
+
+
+def test_demo_lists_bundled_demos():
+    result = run_cli("demo")
+
+    assert result.returncode == 0
+    assert "medical_triage" in result.stdout
+    assert "loan_approval" in result.stdout
+
+
+def test_demo_loan_approval_runs():
+    result = run_cli("demo", "loan_approval")
+
+    assert result.returncode == 0
+    assert "SYNTHETIC LOAN APPROVAL DECISION BOUNDARY DEMO" in result.stdout
+    assert "Synthetic demo only" in result.stdout
+    assert "Not a lending decision system" in result.stdout
+    assert "HUMAN REVIEW" in result.stdout
+    assert "RULE-BASED DECLINE" in result.stdout
+    assert "Audit chain intact: true" in result.stdout
+
+
+def test_bundled_demos_pass_typecheck():
+    medical = os.path.join(ROOT, "ledge_lang", "demos", "medical_triage.ledge")
+    loan = os.path.join(ROOT, "ledge_lang", "demos", "loan_approval.ledge")
+
+    medical_result = run_cli("check", "--types", medical)
+    loan_result = run_cli("check", "--types", loan)
+
+    assert medical_result.returncode == 0
+    assert "no type issues" in medical_result.stdout
+    assert loan_result.returncode == 0
+    assert "no type issues" in loan_result.stdout

@@ -1,0 +1,40 @@
+{
+  "policy_name": "synthetic_loan_approval_shadow_policy",
+  "disclaimer": "Synthetic policy for shadow-mode evaluation only. Not a credit policy and not a lending decision system.",
+  "thresholds": {
+    "approve_min_confidence": 0.85,
+    "review_min_confidence": 0.65,
+    "deterministic_max_dti": 0.43
+  },
+  "rules": [
+    {
+      "name": "approve_low_risk",
+      "description": "Approve in shadow mode only when confidence is at least 0.85, the model label is low_risk, deterministic checks pass, and required evidence is present.",
+      "action": "approve_in_shadow_mode"
+    },
+    {
+      "name": "review_mid_confidence",
+      "description": "Send to human review when confidence is between 0.65 and 0.85.",
+      "action": "human_review"
+    },
+    {
+      "name": "reject_high_risk",
+      "description": "Reject in shadow mode when the model label is high_risk and confidence is at least 0.85, subject to policy review.",
+      "action": "reject_in_shadow_mode"
+    },
+    {
+      "name": "review_low_confidence_or_missing_evidence",
+      "description": "Send to human review when confidence is below 0.65 or required evidence is missing.",
+      "action": "human_review"
+    }
+  ],
+  "human_review": {
+    "required_for_low_confidence": true,
+    "required_for_missing_evidence": true,
+    "required_before_production_use": true
+  },
+  "audit": {
+    "required": true,
+    "chain_verification_required": true
+  }
+}
