@@ -89,6 +89,16 @@ point:
 - final report;
 - limitations and next steps.
 
+The source checkout also includes a synthetic loan approval dry-run folder:
+
+```bash
+python scripts/run_pilot_dry_run.py pilot_templates/loan_approval
+```
+
+This command loads `fixture.json` and `policy.json`, evaluates the synthetic
+cases, and prints a shadow-mode summary. It does not call a real model, use
+real data, touch production systems, or establish compliance readiness.
+
 ## What Success Looks Like
 
 A successful pilot does not mean Ledge is production-ready. It means:

@@ -1,0 +1,131 @@
+{
+  "fixture_name": "synthetic_loan_approval_pilot_dry_run",
+  "disclaimer": "Synthetic demo data only. Not a credit model. Not a lending decision system.",
+  "cases": [
+    {
+      "application_id": "high_confidence_approve",
+      "scenario": "Applicant passes deterministic checks and the AI signal reports low risk with high confidence.",
+      "synthetic_inputs": {
+        "amount": 25000,
+        "income": 90000,
+        "debts": 9000,
+        "country": "synthetic_us",
+        "contract_match": true,
+        "duplicate_risk": "low",
+        "missing_evidence": false
+      },
+      "deterministic_flags": {
+        "missing_evidence": false,
+        "hard_review_flag": false,
+        "contract_mismatch": false,
+        "duplicate_invoice_risk": false,
+        "sanctions_or_country_review": false
+      },
+      "ai_signal": "synthetic_model_output",
+      "model_label": "low_risk",
+      "model_confidence": 0.91,
+      "expected_action": "APPROVE_ALLOWED",
+      "notes": "Approval is a simulated shadow-mode result, not a real lending decision."
+    },
+    {
+      "application_id": "low_confidence_review",
+      "scenario": "Applicant passes deterministic checks but the AI confidence is below the review threshold.",
+      "synthetic_inputs": {
+        "amount": 18000,
+        "income": 72000,
+        "debts": 10000,
+        "country": "synthetic_us",
+        "contract_match": true,
+        "duplicate_risk": "low",
+        "missing_evidence": false
+      },
+      "deterministic_flags": {
+        "missing_evidence": false,
+        "hard_review_flag": false,
+        "contract_mismatch": false,
+        "duplicate_invoice_risk": false,
+        "sanctions_or_country_review": false
+      },
+      "ai_signal": "synthetic_model_output",
+      "model_label": "low_risk",
+      "model_confidence": 0.61,
+      "expected_action": "ROUTE_TO_HUMAN_REVIEW",
+      "notes": "Low confidence should fail closed to human review."
+    },
+    {
+      "application_id": "high_confidence_reject",
+      "scenario": "Applicant passes deterministic checks but the AI signal reports high risk with high confidence.",
+      "synthetic_inputs": {
+        "amount": 42000,
+        "income": 88000,
+        "debts": 22000,
+        "country": "synthetic_us",
+        "contract_match": true,
+        "duplicate_risk": "low",
+        "missing_evidence": false
+      },
+      "deterministic_flags": {
+        "missing_evidence": false,
+        "hard_review_flag": false,
+        "contract_mismatch": false,
+        "duplicate_invoice_risk": false,
+        "sanctions_or_country_review": false
+      },
+      "ai_signal": "synthetic_model_output",
+      "model_label": "high_risk",
+      "model_confidence": 0.89,
+      "expected_action": "REJECT_ALLOWED",
+      "notes": "Rejection is simulated and would require separate policy review before any real use."
+    },
+    {
+      "application_id": "ambiguous_case",
+      "scenario": "The case has medium confidence and a contract mismatch, so review is required.",
+      "synthetic_inputs": {
+        "amount": 30000,
+        "income": 76000,
+        "debts": 21000,
+        "country": "synthetic_us",
+        "contract_match": false,
+        "duplicate_risk": "medium",
+        "missing_evidence": false
+      },
+      "deterministic_flags": {
+        "missing_evidence": false,
+        "hard_review_flag": true,
+        "contract_mismatch": true,
+        "duplicate_invoice_risk": false,
+        "sanctions_or_country_review": false
+      },
+      "ai_signal": "synthetic_model_output",
+      "model_label": "medium_risk",
+      "model_confidence": 0.74,
+      "expected_action": "ROUTE_TO_HUMAN_REVIEW",
+      "notes": "The deterministic contract mismatch makes this a review case."
+    },
+    {
+      "application_id": "missing_evidence_case",
+      "scenario": "Required supporting evidence is missing even though the AI signal reports low risk.",
+      "synthetic_inputs": {
+        "amount": 22000,
+        "income": 81000,
+        "debts": 12000,
+        "country": "synthetic_us",
+        "contract_match": true,
+        "duplicate_risk": "low",
+        "missing_evidence": true
+      },
+      "deterministic_flags": {
+        "missing_evidence": true,
+        "hard_review_flag": false,
+        "contract_mismatch": false,
+        "duplicate_invoice_risk": false,
+        "sanctions_or_country_review": false
+      },
+      "ai_signal": "synthetic_model_output",
+      "model_label": "low_risk",
+      "model_confidence": 0.92,
+      "expected_action": "ROUTE_TO_HUMAN_REVIEW",
+      "notes": "Missing evidence overrides the AI signal."
+    }
+  ]
+}

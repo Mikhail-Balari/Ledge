@@ -105,6 +105,18 @@ Interpretation:
   review.
 - The audit count and chain verification are printed at the end.
 
+## Synthetic Pilot Dry Run
+
+From a source checkout containing the latest pilot materials, run:
+
+```bash
+python scripts/run_pilot_dry_run.py pilot_templates/loan_approval
+```
+
+This loads a synthetic fixture and policy, evaluates each case, and prints a
+shadow-mode pilot summary. It is not a credit model, not a lending decision
+system, and not production or compliance software.
+
 ## Five-Minute Technical Walkthrough
 
 1. Install and list bundled demos:

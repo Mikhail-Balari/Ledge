@@ -139,6 +139,11 @@ For the path from alpha software toward production-critical readiness, see
 For a short technical review path, see [`EXPERT_REVIEW.md`](EXPERT_REVIEW.md).
 For demo and pilot planning materials, see [`DEMO.md`](DEMO.md),
 [`COMMERCIAL.md`](COMMERCIAL.md), and [`PILOT_PACK.md`](PILOT_PACK.md).
+For the synthetic pilot dry run in this source checkout:
+
+```bash
+python scripts/run_pilot_dry_run.py pilot_templates/loan_approval
+```
 
 ---
 
