@@ -117,6 +117,18 @@ This loads a synthetic fixture and policy, evaluates each case, and prints a
 shadow-mode pilot summary. It is not a credit model, not a lending decision
 system, and not production or compliance software.
 
+## Python Integration Example
+
+From a source checkout, run:
+
+```bash
+python examples/python_integration/app.py
+```
+
+This shows a normal Python app loading a synthetic fixture and delegating only
+the AI decision boundary to Ledge through `checked_run(...)`. It is not a full
+SDK, gateway, sidecar, hosted service, or production integration pattern.
+
 ## Five-Minute Technical Walkthrough
 
 1. Install and list bundled demos:
@@ -139,7 +151,13 @@ system, and not production or compliance software.
    ledge demo loan_approval
    ```
 
-4. Confirm checked execution blocks unsafe use by creating a temporary file:
+4. Run the source-checkout Python integration example:
+
+   ```bash
+   python examples/python_integration/app.py
+   ```
+
+5. Confirm checked execution blocks unsafe use by creating a temporary file:
 
    ```ledge
    define r as classify("invoice") using ["release_payment", "hold_payment"]

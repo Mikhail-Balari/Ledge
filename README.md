@@ -127,8 +127,15 @@ programmatic execution helper. It runs the same static checker before execution
 and raises `LedgeError` without executing the program if type issues are found.
 `from ledge_lang import run` remains the low-level direct execution API for
 interpreter and test harness use; it bypasses the static checker by design.
+For a minimal source-checkout Python integration example:
+
+```bash
+python examples/python_integration/app.py
+python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
+```
 
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
+For Python integration guidance, see [`docs/PYTHON_INTEGRATION.md`](docs/PYTHON_INTEGRATION.md).
 For current and future uncertainty semantics, see
 [`docs/UNCERTAINTY_MODEL.md`](docs/UNCERTAINTY_MODEL.md).
 For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).

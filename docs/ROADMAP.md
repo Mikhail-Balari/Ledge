@@ -50,6 +50,14 @@ Exit criteria:
 
 ## 2. Python Integration and Adapters
 
+Current alpha artifact:
+
+- [`PYTHON_INTEGRATION.md`](PYTHON_INTEGRATION.md) and
+  [`../examples/python_integration/`](../examples/python_integration/) show a
+  minimal checked-execution boundary from a normal Python app.
+- [`../scripts/ledge_check_ci.py`](../scripts/ledge_check_ci.py) provides a
+  small CI helper for recursively typechecking `.ledge` files.
+
 Planned work:
 
 - Thin adapters for common Python AI clients that return `Uncertain[T]` values.

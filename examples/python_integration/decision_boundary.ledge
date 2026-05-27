@@ -1,0 +1,50 @@
+# Synthetic Python integration boundary.
+# Used by examples/python_integration/app.py through ledge_lang.checked_run(...).
+# Not a credit model. Not a lending decision system.
+
+define THRESHOLD_APPROVE as 0.85
+define THRESHOLD_REVIEW as 0.65
+
+define evaluate_boundary(application_id: text, case_text: text, missing_evidence: truth, hard_risk_flag: truth):
+    show "Boundary case: {application_id}"
+
+    if missing_evidence:
+        show "Decision: ROUTE_TO_HUMAN_REVIEW"
+        show "Decision source: deterministic missing-evidence rule"
+        show "AI confidence: not evaluated"
+        return "ROUTE_TO_HUMAN_REVIEW"
+
+    if hard_risk_flag:
+        show "Decision: ROUTE_TO_HUMAN_REVIEW"
+        show "Decision source: deterministic hard-risk flag"
+        show "AI confidence: not evaluated"
+        return "ROUTE_TO_HUMAN_REVIEW"
+
+    define risk as classify(case_text) using ["low_risk", "review", "high_risk"]
+    show "AI confidence: {confidence_of(risk)}"
+
+    if confidence_of(risk) >= THRESHOLD_APPROVE:
+        define risk_label as value_of(risk)
+
+        if risk_label = "low_risk":
+            show "Decision: APPROVE_ALLOWED"
+            show "Decision source: confidence-gated AI label"
+            return "APPROVE_ALLOWED"
+
+        if risk_label = "high_risk":
+            show "Decision: REJECT_ALLOWED"
+            show "Decision source: confidence-gated AI label"
+            return "REJECT_ALLOWED"
+
+        show "Decision: ROUTE_TO_HUMAN_REVIEW"
+        show "Decision source: high-confidence AI label requires review"
+        return "ROUTE_TO_HUMAN_REVIEW"
+
+    if confidence_of(risk) >= THRESHOLD_REVIEW:
+        show "Decision: ROUTE_TO_HUMAN_REVIEW"
+        show "Decision source: mid-confidence AI label"
+        return "ROUTE_TO_HUMAN_REVIEW"
+
+    show "Decision: ROUTE_TO_HUMAN_REVIEW"
+    show "Decision source: AI confidence below review threshold"
+    return "ROUTE_TO_HUMAN_REVIEW"

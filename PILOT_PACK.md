@@ -99,6 +99,17 @@ This command loads `fixture.json` and `policy.json`, evaluates the synthetic
 cases, and prints a shadow-mode summary. It does not call a real model, use
 real data, touch production systems, or establish compliance readiness.
 
+For a minimal Python application integration example around the same kind of
+boundary:
+
+```bash
+python examples/python_integration/app.py
+python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
+```
+
+The Python example uses `checked_run(...)` for the Ledge boundary. It is not a
+full SDK, gateway, sidecar, hosted service, or production integration pattern.
+
 ## What Success Looks Like
 
 A successful pilot does not mean Ledge is production-ready. It means:
