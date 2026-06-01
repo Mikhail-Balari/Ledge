@@ -1,0 +1,29 @@
+{
+  "policy_name": "synthetic_loan_approval_shadow_policy",
+  "disclaimer": "Synthetic policy for dry-run evaluation only. Not a credit policy and not a lending decision system.",
+  "threshold_approve": 0.85,
+  "threshold_review_min": 0.65,
+  "possible_actions": [
+    "APPROVE_ALLOWED",
+    "ROUTE_TO_HUMAN_REVIEW",
+    "REJECT_ALLOWED"
+  ],
+  "labels": {
+    "approve_labels": ["approve", "low_risk"],
+    "reject_labels": ["reject", "high_risk"],
+    "ambiguous_labels": ["medium_risk", "ambiguous", "unknown"]
+  },
+  "deterministic_rules": {
+    "missing_evidence": "ROUTE_TO_HUMAN_REVIEW",
+    "hard_review_flag": "ROUTE_TO_HUMAN_REVIEW",
+    "contract_mismatch": "ROUTE_TO_HUMAN_REVIEW",
+    "duplicate_invoice_risk": "ROUTE_TO_HUMAN_REVIEW",
+    "sanctions_or_country_review": "ROUTE_TO_HUMAN_REVIEW"
+  },
+  "behavior": {
+    "approve_only_if": "label is approve/low_risk, confidence >= threshold_approve, and no deterministic review flags are present",
+    "review_if": "confidence is below threshold_approve, label is ambiguous, evidence is missing, or deterministic review flags are present",
+    "reject_if": "label is reject/high_risk and confidence >= threshold_approve",
+    "low_confidence_fallback": "ROUTE_TO_HUMAN_REVIEW"
+  }
+}

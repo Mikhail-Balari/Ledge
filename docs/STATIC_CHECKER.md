@@ -1,6 +1,6 @@
 # Static Checker
 
-This document describes the static `Uncertain[T]` checker in Ledge 1.2.0. It is an implementation reference for users and reviewers, not a formal type-system specification.
+This document describes the static `Uncertain[T]` checker in the current Ledge alpha line. It is an implementation reference for users and reviewers, not a formal type-system specification.
 
 ## Contract
 
@@ -47,8 +47,8 @@ These limits are release blockers for production-critical use unless the deploym
 Useful local checks:
 
 ```bash
-python -m ledge_lang.cli check --types examples/medical_triage.ledge
-python -m ledge_lang.cli run examples/medical_triage.ledge
+python -m ledge_lang.cli check --types ledge_lang/demos/medical_triage.ledge
+python -m ledge_lang.cli check --types ledge_lang/demos/loan_approval.ledge
 python scripts/pre_release_check.py
 ```
 

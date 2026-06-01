@@ -1,4 +1,4 @@
-# Ledge Quick Reference — v1.2.0
+# Ledge Quick Reference
 **One page. Every construct. No fluff.**
 
 ---
@@ -149,9 +149,25 @@ Use `ledge run file.ledge` for checked execution.
 
 ## Install
 
+From the currently published PyPI package:
+
 ```bash
-python -m pip install dist/ledge_lang-1.2.0-py3-none-any.whl
+python -m pip install ledge-lang
 ledge version
 ```
 
-After Ledge 1.2.0 is published to PyPI, use `python -m pip install ledge-lang`.
+From a source checkout prepared for the 1.3.0 alpha candidate:
+
+```bash
+python -m pip install dist/ledge_lang-1.3.0-py3-none-any.whl
+ledge version
+```
+
+The locally built candidate wheel also exposes:
+
+```bash
+ledge demo loan_approval
+ledge pilot-dry-run loan_approval
+ledge python-integration-demo
+ledge ci-check <paths...>
+```

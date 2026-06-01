@@ -89,7 +89,14 @@ point:
 - final report;
 - limitations and next steps.
 
-The source checkout also includes a synthetic loan approval dry-run folder:
+After installing a locally built 1.3.0 alpha candidate wheel, run the packaged
+synthetic loan approval dry run:
+
+```bash
+ledge pilot-dry-run loan_approval
+```
+
+From a source checkout, the wrapper command remains available:
 
 ```bash
 python scripts/run_pilot_dry_run.py pilot_templates/loan_approval
@@ -103,8 +110,17 @@ For a minimal Python application integration example around the same kind of
 boundary:
 
 ```bash
+ledge python-integration-demo
+ledge ci-check path/to/your/ledge/files
+```
+
+From a source checkout, the wrappers and repository-path CI check remain
+available:
+
+```bash
 python examples/python_integration/app.py
 python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
+ledge ci-check ledge_lang/demos examples/python_integration
 ```
 
 The Python example uses `checked_run(...)` for the Ledge boundary. It is not a

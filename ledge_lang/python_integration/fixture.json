@@ -1,0 +1,61 @@
+{
+  "disclaimer": "Synthetic Python integration fixture only. Not real data. Not a credit model. Not a lending decision system.",
+  "cases": [
+    {
+      "application_id": "PY-APPROVE-001",
+      "scenario": "Clean synthetic applicant with complete evidence",
+      "case_text": "complete evidence stable income low debt long repayment history",
+      "deterministic_inputs": {
+        "missing_evidence": false,
+        "hard_risk_flag": false
+      },
+      "ai_signal": {
+        "label": "low_risk",
+        "confidence": 0.91
+      },
+      "expected_action": "APPROVE_ALLOWED"
+    },
+    {
+      "application_id": "PY-REVIEW-001",
+      "scenario": "Synthetic applicant with medium confidence signal",
+      "case_text": "some missing context mixed history manual review recommended",
+      "deterministic_inputs": {
+        "missing_evidence": false,
+        "hard_risk_flag": false
+      },
+      "ai_signal": {
+        "label": "review",
+        "confidence": 0.72
+      },
+      "expected_action": "ROUTE_TO_HUMAN_REVIEW"
+    },
+    {
+      "application_id": "PY-REJECT-001",
+      "scenario": "Synthetic applicant with high-confidence risk label",
+      "case_text": "severe delinquency high risk signal synthetic example",
+      "deterministic_inputs": {
+        "missing_evidence": false,
+        "hard_risk_flag": false
+      },
+      "ai_signal": {
+        "label": "high_risk",
+        "confidence": 0.9
+      },
+      "expected_action": "REJECT_ALLOWED"
+    },
+    {
+      "application_id": "PY-MISSING-001",
+      "scenario": "Synthetic applicant with missing required evidence",
+      "case_text": "incomplete file should not rely on AI",
+      "deterministic_inputs": {
+        "missing_evidence": true,
+        "hard_risk_flag": false
+      },
+      "ai_signal": {
+        "label": "low_risk",
+        "confidence": 0.95
+      },
+      "expected_action": "ROUTE_TO_HUMAN_REVIEW"
+    }
+  ]
+}

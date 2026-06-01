@@ -21,6 +21,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEMOS_IN_WHEEL = [
     "ledge_lang/demos/medical_triage.ledge",
     "ledge_lang/demos/loan_approval.ledge",
+    "ledge_lang/pilot_templates/loan_approval/fixture.json",
+    "ledge_lang/pilot_templates/loan_approval/policy.json",
+    "ledge_lang/pilot_templates/loan_approval/expected_results.md",
+    "ledge_lang/pilot_templates/loan_approval/sample_final_report.md",
+    "ledge_lang/python_integration/decision_boundary.ledge",
+    "ledge_lang/python_integration/fixture.json",
+    "ledge_lang/studio/templates/studio.html",
 ]
 BUNDLED_DEMOS = ["medical_triage", "loan_approval"]
 
@@ -111,10 +118,10 @@ def verify_wheel(wheel: Path, version: str) -> None:
 
     with zipfile.ZipFile(wheel) as zf:
         names = set(zf.namelist())
-    for demo in DEMOS_IN_WHEEL:
-        if demo not in names:
-            raise SystemExit(f"FAIL: wheel missing {demo}")
-        log(f"PASS: wheel contains {demo}")
+    for package_file in DEMOS_IN_WHEEL:
+        if package_file not in names:
+            raise SystemExit(f"FAIL: wheel missing {package_file}")
+        log(f"PASS: wheel contains {package_file}")
 
 
 def main() -> int:
@@ -135,6 +142,25 @@ def main() -> int:
     typecheck_examples()
     for demo in BUNDLED_DEMOS:
         run_step("bundled demo " + demo, [sys.executable, "-m", "ledge_lang.cli", "demo", demo])
+    run_step(
+        "installed pilot dry-run CLI path",
+        [sys.executable, "-m", "ledge_lang.cli", "pilot-dry-run", "loan_approval"],
+    )
+    run_step(
+        "installed Python integration demo CLI path",
+        [sys.executable, "-m", "ledge_lang.cli", "python-integration-demo"],
+    )
+    run_step(
+        "installed ci-check CLI path",
+        [
+            sys.executable,
+            "-m",
+            "ledge_lang.cli",
+            "ci-check",
+            "ledge_lang/demos",
+            "examples/python_integration",
+        ],
+    )
 
     ensure_build_available()
     run_step("package build", [sys.executable, "-m", "build"])

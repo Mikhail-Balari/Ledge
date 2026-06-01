@@ -146,6 +146,9 @@ def main() -> int:
             raise SystemExit(f"FAIL: ledge version did not report {version}")
 
         run("ledge demo medical_triage", [str(ledge), "demo", "medical_triage"], cwd=work_dir)
+        run("ledge demo loan_approval", [str(ledge), "demo", "loan_approval"], cwd=work_dir)
+        run("ledge pilot-dry-run loan_approval", [str(ledge), "pilot-dry-run", "loan_approval"], cwd=work_dir)
+        run("ledge python-integration-demo", [str(ledge), "python-integration-demo"], cwd=work_dir)
 
         checked_code = (
             "from ledge_lang import checked_run; "
@@ -159,8 +162,21 @@ def main() -> int:
         if "['ok']" not in checked.stdout:
             raise SystemExit("FAIL: checked_run did not return ['ok']")
 
+        valid = work_dir / "valid.ledge"
+        valid.write_text('show "ok"\n', encoding="utf-8")
+        run("ledge ci-check valid file", [str(ledge), "ci-check", str(valid)], cwd=work_dir)
+
         unsafe = work_dir / "unsafe_interpolation.ledge"
         write_unsafe_program(unsafe)
+        ci_blocked = run(
+            "ledge ci-check rejects unsafe interpolation",
+            [str(ledge), "ci-check", str(unsafe)],
+            cwd=work_dir,
+            expect=1,
+        )
+        if "FAIL:" not in (ci_blocked.stdout + ci_blocked.stderr):
+            raise SystemExit("FAIL: ci-check did not report failure for unsafe interpolation")
+
         blocked = run(
             "unsafe interpolation rejected",
             [str(ledge), "run", str(unsafe)],

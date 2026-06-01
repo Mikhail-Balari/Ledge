@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0-alpha-candidate",
   "release_readiness": "See RELEASE_READINESS.md",
   "implemented": {
     "interpreter": "Tree-walker interpreter",
@@ -7,12 +7,12 @@
     "python_ffi": "Python import bridge with documented security caveats",
     "uncertain_checker": "Unchecked Uncertain[T] use is rejected by ledge check --types and default ledge run",
     "audit_store": "Hash-chained audit store with limited threat model",
-    "packaging": "Local 1.2.0 wheel builds and includes bundled demos"
+    "packaging": "Candidate 1.3.0 wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, and CI-check commands"
   },
   "known_gaps": [
     "No known production deployments",
     "No mechanized proof or formal soundness theorem",
     "No legal compliance certification",
-    "PyPI 1.2.0 has not been uploaded yet"
+    "PyPI 1.2.0 has been published; PyPI 1.3.0 has not been uploaded yet"
   ]
 }

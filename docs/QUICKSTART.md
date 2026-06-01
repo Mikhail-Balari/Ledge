@@ -5,20 +5,40 @@
 
 ## 1. Install
 
+From the currently published PyPI package:
+
+```bash
+python -m pip install ledge-lang
+ledge version
+```
+
+From a source checkout prepared for the 1.3.0 alpha candidate:
+
 ```bash
 python -m pip install --user build
 python -m build
-python -m pip install dist/ledge_lang-1.2.0-py3-none-any.whl
+python -m pip install dist/ledge_lang-1.3.0-py3-none-any.whl
 ```
 
 Verify:
 ```bash
 ledge version
-# Ledge 1.2.0
+# Ledge 1.3.0
 ```
 
-After Ledge 1.2.0 is published to PyPI, the install command becomes
-`pip install ledge-lang`.
+Candidate wheel commands:
+
+```bash
+ledge demo loan_approval
+ledge pilot-dry-run loan_approval
+ledge python-integration-demo
+ledge ci-check path/to/your/ledge/files
+```
+
+The same pilot and Python integration examples also have source-checkout
+wrappers under `scripts/` and `examples/python_integration/`. In a source
+checkout, `ledge ci-check ledge_lang/demos examples/python_integration` checks
+the repository demo files.
 
 ---
 

@@ -1,18 +1,45 @@
-# Release Readiness - Ledge 1.2.0
+# Release Readiness - Ledge 1.3.0 Alpha Candidate
 
-This document records the final technical readiness state for Ledge 1.2.0 as a
-durable release checklist for the public repository.
+This document records release-readiness status for a possible Ledge 1.3.0
+alpha release. It is preparation only.
 
-## Final Guarantee Statement
+## Release Status
 
-Ledge's current static guarantee is deliberately narrow: `ledge check --types`,
-the default `ledge run` command, and Python `checked_run(...)` reject programs
-that use a value typed `Uncertain[T]` without one of the recognized handling
-constructs. The recognized safe patterns are a positive confidence guard such as
-`if confidence_of(x) >= threshold:`, `when(x, threshold, fallback)`, or the
-explicit escape hatch `unsafe_value_of(x)`. This is a flow-sensitive static
-analysis pass, not a mechanized proof, not a formal soundness theorem, and not a
-legal compliance certification.
+- Candidate version: `1.3.0`
+- PyPI 1.3.0 uploaded: no
+- Git tag `v1.3.0` created: no
+- GitHub Release `Ledge 1.3.0` created: no
+- Current status: unreleased alpha candidate
+
+Ledge 1.2.0 remains the latest published PyPI release until a 1.3.0 upload is
+performed and verified.
+
+## What Changed Since 1.2.0
+
+Installed package / CLI candidate:
+
+- Bundled synthetic `loan_approval` demo for `ledge demo loan_approval`.
+- Existing bundled `medical_triage` demo remains available through
+  `ledge demo medical_triage`.
+- Packaged synthetic pilot dry-run command:
+  `ledge pilot-dry-run loan_approval`.
+- Packaged Python integration demo command:
+  `ledge python-integration-demo`.
+- Packaged CI/static checker command:
+  `ledge ci-check <paths...>`.
+- Package version metadata prepared for `1.3.0`.
+
+Source-checkout materials preserved:
+
+- Public demo and pilot planning docs: `DEMO.md`, `COMMERCIAL.md`,
+  `PILOT_PACK.md`.
+- Pilot templates under `pilot_templates/`.
+- Synthetic pilot dry-run harness:
+  `python scripts/run_pilot_dry_run.py pilot_templates/loan_approval`.
+- Minimal Python integration example:
+  `python examples/python_integration/app.py`.
+- CI/static checker helper:
+  `python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration`.
 
 ## Command Behavior
 
@@ -21,99 +48,129 @@ legal compliance certification.
 - `ledge run <file.ledge> --unsafe` skips the static typecheck and executes the
   program anyway. This is the explicit bypass for experiments and unsafe
   examples.
-- `ledge check --types <file.ledge>` only runs the static checker and does not
-  execute the program.
+- `ledge check --types <file.ledge>` runs the static checker without executing
+  the program.
 - `ledge_lang.checked_run(source)` is the safety-gated Python API. It runs the
-  static checker first, raises `LedgeError` with the type issues if checking
-  fails, and does not execute the program on failure.
-- `ledge_lang.checked_run_file(path)` reads a file and delegates to
-  `checked_run(...)`.
-- The low-level Python API `ledge_lang.run(source)` executes source directly and
-  bypasses the checker by design for interpreter and test harness use.
+  static checker first and raises `LedgeError` without executing on failure.
+- `ledge_lang.run(source)` remains the low-level direct execution API and
+  bypasses the checker by design.
+- `ledge pilot-dry-run loan_approval` runs the packaged synthetic pilot dry
+  run without source-checkout files.
+- `ledge python-integration-demo` runs the packaged Python integration demo
+  through `ledge_lang.checked_run(...)`.
+- `ledge ci-check <paths...>` recursively typechecks `.ledge` files for CI use.
 
-## Durable Review Documents
+## Packaging Checklist
 
-- `docs/STATIC_CHECKER.md` documents the checked CLI and Python execution paths.
-- `docs/THREAT_MODEL.md` documents the current boundary and non-goals.
-- `docs/ROADMAP.md` documents the path from alpha software toward
-  production-critical readiness.
+- `pyproject.toml` version: prepared as `1.3.0`.
+- `ledge_lang._version.__version__`: prepared as `1.3.0`.
+- Bundled package data includes `ledge_lang/demos/*.ledge`.
+- Studio package data includes `ledge_lang/studio/templates/*.html` for the
+  optional `ledge-lang[studio]` extra.
+- Candidate wheel verified to contain:
+  - `ledge_lang/demos/medical_triage.ledge`
+  - `ledge_lang/demos/loan_approval.ledge`
+  - `ledge_lang/pilot_templates/loan_approval/fixture.json`
+  - `ledge_lang/pilot_templates/loan_approval/policy.json`
+  - `ledge_lang/pilot_templates/loan_approval/expected_results.md`
+  - `ledge_lang/pilot_templates/loan_approval/sample_final_report.md`
+  - `ledge_lang/python_integration/decision_boundary.ledge`
+  - `ledge_lang/python_integration/fixture.json`
+  - `ledge_lang/studio/templates/studio.html`
+- Candidate wheel exposes the packaged command surface for pilot dry-run,
+  Python integration demo, and CI/static checking.
+- Root-level `scripts/`, `examples/`, and `pilot_templates/` remain
+  source-checkout materials; the wheel does not install them as standalone
+  filesystem trees.
 
-## Verification Commands Run
+## Wheel And Source-Checkout Availability
 
-- `python -m pytest tests/unit/`
-- `python -m pytest tests/unit/test_checked_run_api.py -q`
-- `python -m pytest tests/integration/test_cli_run_typecheck.py -q`
-- GitHub Actions CI for unit tests, integration tests, conformance tests, and
-  `scripts/pre_release_check.py`
-- `python tests/conformance.py`
-- `python -m ledge_lang.cli check --types <file>` for every official `.ledge`
-  example under `ledge_lang/demos/`, `examples/`, and `examples/showcase/`
-- `python -m ledge_lang.cli demo medical_triage`
-- `python scripts/pre_release_check.py`
-- `python -m build`
-- Clean virtual environment install of
-  `dist/ledge_lang-1.2.0-py3-none-any.whl`
-- Installed wheel checks from outside the repository:
-  `ledge --help`, `ledge version`, `ledge demo`, `ledge demo medical_triage`,
-  `python -m ledge_lang.cli --help`, and
-  `python -m ledge_lang.cli demo medical_triage`
-- PyPI install verification of `ledge-lang==1.2.0` from a clean temporary
-  environment after upload.
+Expected after installing the local 1.3.0 candidate wheel:
 
-## Results
+- `ledge version`
+- `ledge demo`
+- `ledge demo medical_triage`
+- `ledge demo loan_approval`
+- `ledge pilot-dry-run loan_approval`
+- `ledge python-integration-demo`
+- `ledge ci-check <paths...>`
+- Python API imports such as `from ledge_lang import __version__, checked_run`
 
-- Unit tests: PASS, `373 passed`.
-- Conformance: PASS, `284/284 passed`.
-- Official example typecheck: PASS, all 18 official `.ledge` examples pass.
-- Targeted CLI tests: PASS, `8 passed` in
-  `tests/integration/test_cli_run_typecheck.py`.
-- Targeted checked Python API tests: PASS, `6 passed` in
-  `tests/unit/test_checked_run_api.py`.
-- Pre-release script: PASS, `scripts/pre_release_check.py` completed
-  successfully.
-- Bundled demo: PASS, `medical_triage` runs through the checked CLI path.
-- Package build: PASS, source distribution and wheel were built.
-- Wheel content verification: PASS, the wheel contains
-  `ledge_lang/demos/medical_triage.ledge`.
-- Clean wheel install: PASS, the built wheel installed into a clean temporary
-  virtual environment without relying on editable-install behavior.
-- Installed command verification: PASS, `ledge --help`, `ledge version`,
-  `ledge demo`, and `ledge demo medical_triage` all work from the clean
-  environment.
-- README quickstart status: PASS, the README uses the published PyPI package as
-  the primary install path and keeps local wheel installation as a source
-  checkout option.
-- Version consistency: PASS, `pyproject.toml`, `ledge_lang.__version__`,
-  `ledge version`, the wheel filename, and installed package metadata all report
-  `1.2.0`.
-- PyPI status: PASS, `ledge-lang==1.2.0` is uploaded and verified.
-- Git tag: PASS, `v1.2.0` exists.
-- GitHub Release: PASS, `Ledge 1.2.0` exists.
-- Packaging metadata: PASS, license metadata was updated to the modern
-  `license = "MIT"` form and the legacy license classifier was removed.
-- Public CI: PASS, `.github/workflows/ci.yml` runs on push and pull request
-  without secrets.
+Expected source-checkout wrappers/materials:
 
-## Files Removed From Public Release Surface
+- `python scripts/run_pilot_dry_run.py pilot_templates/loan_approval`
+- `python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration`
+- `python examples/python_integration/app.py`
+- `pilot_templates/loan_approval/`
+- `examples/python_integration/`
 
-Temporary process logs and channel-specific readiness notes were removed from
-the public repository. Future scratch verification logs are ignored by
-`.gitignore`.
+The wrapper commands are useful for review and adaptation from a clone. The
+installed wheel uses packaged resources and CLI entry points instead.
+
+## Verification Checklist
+
+Local verification completed for this candidate:
+
+- `python -m ledge_lang.cli version`: passed, reports `Ledge 1.3.0`.
+- `python -m ledge_lang.cli demo`: passed, lists `loan_approval` and
+  `medical_triage`.
+- `python -m ledge_lang.cli demo medical_triage`: passed.
+- `python -m ledge_lang.cli demo loan_approval`: passed.
+- `python -m ledge_lang.cli pilot-dry-run loan_approval`: passed.
+- `python -m ledge_lang.cli python-integration-demo`: passed.
+- `python -m ledge_lang.cli ci-check ledge_lang/demos examples/python_integration`:
+  passed.
+- `python scripts/run_pilot_dry_run.py pilot_templates/loan_approval`: passed.
+- `python examples/python_integration/app.py`: passed.
+- `python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration`:
+  passed.
+- `python scripts/ledge_check_ci.py examples/showcase`: passed.
+- `python -m pytest tests/unit/ -q`: passed, 373 tests.
+- `python -m pytest tests/integration/ -q`: passed, 37 tests.
+- `python tests/conformance.py`: passed, 284/284.
+- `python scripts/pre_release_check.py`: passed after allowing isolated build
+  dependency resolution.
+- `python -m build`: passed.
+- `python -m twine check dist/*`: passed.
+- Clean wheel install verification from outside the repository: passed for
+  `ledge version`, bundled demos, Python API import/`checked_run(...)`,
+  `ledge pilot-dry-run loan_approval`, `ledge python-integration-demo`, valid
+  `ledge ci-check`, and invalid `ledge ci-check` failure behavior.
+
+## Claims Audit Summary
+
+The 1.3.0 alpha candidate must not claim:
+
+- production readiness;
+- enterprise readiness;
+- compliance certification;
+- model correctness;
+- calibrated confidence by default;
+- a real credit model or lending decision system;
+- tamper-proof or audit-proof behavior.
+
+Allowed framing:
+
+- alpha software;
+- synthetic demos;
+- packaged pilot dry-run;
+- packaged Python integration example;
+- checked execution path for `.ledge` boundaries;
+- packaged CI/static checker helper.
 
 ## Remaining Risks
 
-- Ledge is still alpha software. The checker is intentionally scoped and does
-  not claim whole-program or interprocedural soundness.
-- The static Uncertain contract is enforced by the CLI, checker, and
-  `checked_run(...)`, while `run(...)` remains a low-level execution primitive
-  for callers that need manual control.
-- The audit log is hash-chained and useful as supporting evidence, but it does
-  not protect against an attacker who controls both the SQLite store and the
-  anchor file.
-- Regulatory exports are structured evidence artifacts, not proof of legal
-  compliance.
-- Ledge 1.2.0 is published, tagged, and released, but remains alpha software.
+- Ledge remains alpha software.
+- The static checker is intentionally scoped and does not claim whole-program
+  soundness.
+- The pilot dry-run and Python integration example are synthetic.
+- Root-level source examples, pilot templates, and scripts remain
+  source-checkout materials even though packaged commands are available.
+- Audit records are useful as supporting evidence but do not establish legal or
+  regulatory compliance.
 
-## Final Launch Verdict
+## Current Recommendation
 
-Ready now.
+Ready for human review as a 1.3.0 alpha release candidate. Do not upload PyPI
+1.3.0, create tag `v1.3.0`, or create a GitHub Release until the candidate is
+approved for publication.

@@ -10,6 +10,11 @@ Usage:
   ledge demo [name]            List or run a bundled demo (works after `pip install`,
                                no clone needed). `ledge demo` lists available demos;
                                `ledge demo medical_triage` runs that demo.
+  ledge pilot-dry-run loan_approval
+                               Run a packaged synthetic pilot dry run
+  ledge python-integration-demo
+                               Run packaged Python + checked_run(...) demo
+  ledge ci-check <paths...>    Recursively typecheck .ledge files for CI
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -35,6 +40,7 @@ Examples:
   ledge fmt program.ledge
   ledge debug --break 10 program.ledge
   ledge check *.ledge
+  ledge ci-check ledge_lang/demos
   ledge studio
 """
 
@@ -70,6 +76,18 @@ def main():
     if args[0] == "demo":
         _demo(args[1:])
         return
+
+    if args[0] == "pilot-dry-run":
+        from ledge_lang.pilot_dry_run import main as pilot_main
+        raise SystemExit(pilot_main(args[1:]))
+
+    if args[0] == "python-integration-demo":
+        from ledge_lang.python_integration_demo import main as integration_main
+        raise SystemExit(integration_main(args[1:]))
+
+    if args[0] == "ci-check":
+        from ledge_lang.ci_check import main as ci_main
+        raise SystemExit(ci_main(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:

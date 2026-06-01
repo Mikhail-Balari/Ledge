@@ -64,9 +64,22 @@ tests and embedding code that intentionally wants direct execution. It bypasses
 the static checker by design. Production-like callers that want the safety gate
 should use `checked_run(...)` or run `ledge check --types` before execution.
 
-## Example
+## Installed Demo Command
 
-See [`examples/python_integration/`](../examples/python_integration/).
+After installing a locally built 1.3.0 alpha candidate wheel, run:
+
+```bash
+ledge python-integration-demo
+```
+
+The installed command loads packaged synthetic resources and runs the boundary
+through `ledge_lang.checked_run(...)`. It requires no source checkout, no API
+key, and no real data.
+
+## Source-Checkout Example
+
+See [`examples/python_integration/`](../examples/python_integration/) in a
+source checkout.
 
 Run:
 
@@ -74,9 +87,9 @@ Run:
 python examples/python_integration/app.py
 ```
 
-The example loads a synthetic JSON fixture in Python, passes each decision
-boundary through `checked_run(...)`, and uses a synthetic backend response so
-the example requires no API key and no real data.
+The wrapper loads the same synthetic example through the package module, passes
+each decision boundary through `checked_run(...)`, and uses a synthetic backend
+response so the example requires no API key and no real data.
 
 The output is intentionally labeled:
 
@@ -96,13 +109,22 @@ is explicit, reviewed, and documented.
 
 ## CI Checking
 
-Use `scripts/ledge_check_ci.py` to check `.ledge` files in a repository:
+After installing the 1.3.0 alpha candidate wheel, use `ledge ci-check` to check
+`.ledge` files in a repository:
 
 ```bash
+ledge ci-check path/to/your/ledge/files
+```
+
+From a source checkout, the repository example paths and wrapper remain
+available:
+
+```bash
+ledge ci-check ledge_lang/demos examples/python_integration
 python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
 ```
 
-The script recursively finds `.ledge` files, runs:
+Both forms recursively find `.ledge` files, run:
 
 ```bash
 python -m ledge_lang.cli check --types <file>

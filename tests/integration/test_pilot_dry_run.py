@@ -19,6 +19,16 @@ def run_dry_run(*args):
     )
 
 
+def run_cli_dry_run(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "ledge_lang.cli", "pilot-dry-run", *map(str, args)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+
+
 def test_loan_approval_pilot_dry_run_runs_successfully():
     result = run_dry_run(PILOT_DIR)
 
@@ -36,6 +46,20 @@ def test_loan_approval_pilot_dry_run_runs_successfully():
     assert "ROUTE_TO_HUMAN_REVIEW" in result.stdout
     assert "REJECT_ALLOWED" in result.stdout
     assert "Human review/fallback: yes" in result.stdout
+    assert "Total cases: 5" in result.stdout
+
+
+def test_packaged_loan_approval_pilot_dry_run_runs_successfully():
+    result = run_cli_dry_run("loan_approval")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "SYNTHETIC DEMO ONLY" in result.stdout
+    assert "NOT A CREDIT MODEL" in result.stdout
+    assert "NOT A LENDING DECISION SYSTEM" in result.stdout
+    assert "NOT PRODUCTION OR COMPLIANCE SOFTWARE" in result.stdout
+    assert "packaged: loan_approval" in result.stdout
+    assert "high_confidence_approve" in result.stdout
+    assert "ROUTE_TO_HUMAN_REVIEW" in result.stdout
     assert "Total cases: 5" in result.stdout
 
 
@@ -66,3 +90,18 @@ def test_loan_approval_fixture_and_policy_are_valid_json():
     ]
     assert policy["threshold_approve"] == 0.85
     assert policy["threshold_review_min"] == 0.65
+
+
+def test_packaged_pilot_resources_match_source_checkout_templates():
+    from importlib import resources
+
+    package_root = resources.files("ledge_lang.pilot_templates.loan_approval")
+    for name in [
+        "fixture.json",
+        "policy.json",
+        "expected_results.md",
+        "sample_final_report.md",
+    ]:
+        assert package_root.joinpath(name).read_text(encoding="utf-8") == (
+            PILOT_DIR / name
+        ).read_text(encoding="utf-8")

@@ -11,6 +11,8 @@ import glob
 import threading
 import webbrowser
 
+from ledge_lang._version import __version__
+
 # ── Flask / flask-socketio ────────────────────────────────────────────────────
 
 try:
@@ -36,7 +38,7 @@ WORKING_DIR = os.getcwd()
 
 @app.route("/")
 def index():
-    return render_template("studio.html")
+    return render_template("studio.html", ledge_version=__version__)
 
 
 @app.route("/favicon.ico")
@@ -162,7 +164,7 @@ def start_studio(host="127.0.0.1", port=5000, working_dir=None, open_browser=Tru
             webbrowser.open(f"http://{host}:{port}")
         threading.Thread(target=_open_browser, daemon=True).start()
 
-    print(f"Ledge Studio v1.2.0")
+    print(f"Ledge Studio v{__version__}")
     print(f"Working directory : {WORKING_DIR}")
     print(f"URL               : http://{host}:{port}")
     print(f"Press Ctrl+C to stop.\n")

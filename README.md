@@ -60,7 +60,7 @@ the model; it just makes "I forgot to check" turn into a static error.
 
 ## Install and run in 2 minutes
 
-From the published PyPI 1.2.0 package:
+From the currently published PyPI package:
 
 ```bash
 pip install ledge-lang
@@ -68,13 +68,16 @@ ledge demo
 ledge demo medical_triage
 ```
 
-From a source checkout containing the latest demo work:
+From a source checkout containing the unreleased 1.3.0 alpha candidate work,
+or from a locally built 1.3.0 candidate wheel:
 
 ```bash
 python -m build
-pip install dist/ledge_lang-1.2.0-py3-none-any.whl
+pip install dist/ledge_lang-1.3.0-py3-none-any.whl
 ledge demo
 ledge demo loan_approval
+ledge pilot-dry-run loan_approval
+ledge python-integration-demo
 ```
 
 Expected output (no API key, no clone, no setup):
@@ -114,9 +117,9 @@ example: debt-ratio rules may produce preliminary rule-based decisions even
 when AI history confidence is 0, and the output labels that distinction.
 
 The bundled `loan_approval` demo is synthetic and is part of the current source
-checkout. It is not a credit model and not a lending decision system. It
-demonstrates deterministic rule checks, confidence-gated AI use, human review
-fallback, and audit-chain verification.
+checkout and locally built 1.3.0 alpha candidate wheel. It is not a credit model
+and not a lending decision system. It demonstrates deterministic rule checks,
+confidence-gated AI use, human review fallback, and audit-chain verification.
 
 `ledge run` runs the static Uncertain checker before execution. If you are
 deliberately experimenting with unchecked extraction, use
@@ -127,11 +130,21 @@ programmatic execution helper. It runs the same static checker before execution
 and raises `LedgeError` without executing the program if type issues are found.
 `from ledge_lang import run` remains the low-level direct execution API for
 interpreter and test harness use; it bypasses the static checker by design.
-For a minimal source-checkout Python integration example:
+For minimal Python integration and CI checker examples after installing the
+1.3.0 alpha candidate wheel:
+
+```bash
+ledge python-integration-demo
+ledge ci-check path/to/your/ledge/files
+```
+
+From a source checkout, the wrappers and repository-path CI check remain
+available:
 
 ```bash
 python examples/python_integration/app.py
 python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
+ledge ci-check ledge_lang/demos examples/python_integration
 ```
 
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
@@ -146,7 +159,14 @@ For the path from alpha software toward production-critical readiness, see
 For a short technical review path, see [`EXPERT_REVIEW.md`](EXPERT_REVIEW.md).
 For demo and pilot planning materials, see [`DEMO.md`](DEMO.md),
 [`COMMERCIAL.md`](COMMERCIAL.md), and [`PILOT_PACK.md`](PILOT_PACK.md).
-For the synthetic pilot dry run in this source checkout:
+For the synthetic pilot dry run after installing the 1.3.0 alpha candidate
+wheel:
+
+```bash
+ledge pilot-dry-run loan_approval
+```
+
+From a source checkout, the wrapper remains available:
 
 ```bash
 python scripts/run_pilot_dry_run.py pilot_templates/loan_approval
@@ -438,7 +458,7 @@ These projects are related and useful; Ledge does not replace them.
   allowed to use an AI-derived value without checking confidence and recording
   the decision path.
 
-The specific 1.2.0 experiment is representing AI outputs as `Uncertain[T]`,
+The current experiment is representing AI outputs as `Uncertain[T]`,
 rejecting unchecked use before execution, and tying decisions to audit and
 calibration evidence. There is no claim here of being first, unique, or
 revolutionary.

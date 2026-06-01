@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ledge-lang"
-version = "1.2.0"
+version = "1.3.0"
 description = "Ledge is an experimental programming language for auditable, uncertainty-aware AI decision paths."
 readme = "README.md"
 license = "MIT"
@@ -45,6 +45,9 @@ include = ["ledge_lang*"]
 # Bundle .ledge demo files so `ledge demo <name>` works after `pip install`
 # without requiring users to clone the repo.
 "ledge_lang.demos" = ["*.ledge"]
+"ledge_lang.studio" = ["templates/*.html"]
+"ledge_lang.pilot_templates.loan_approval" = ["*.json", "*.md"]
+"ledge_lang.python_integration" = ["*.json", "*.ledge"]
 
 [tool.black]
 line-length = 100

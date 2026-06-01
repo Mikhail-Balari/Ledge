@@ -4,6 +4,11 @@ This roadmap is for expert review before production-critical use. It is not a pr
 
 ## Current Release: 1.2.0 Alpha
 
+The main branch also contains unreleased 1.3.0 alpha candidate work: a bundled
+synthetic `loan_approval` demo, public pilot templates, installable pilot
+dry-run / Python integration / CI-check commands, and source-checkout wrappers
+for adapting those examples.
+
 What exists now:
 
 - A small DSL with `Uncertain[T]` values for AI outputs.

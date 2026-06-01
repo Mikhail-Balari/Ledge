@@ -1,5 +1,51 @@
 # Ledge Changelog
 
+## [1.3.0 alpha candidate] - Unreleased / Not yet published
+
+Release status:
+
+- PyPI: not uploaded.
+- Git tag: not created.
+- GitHub Release: not created.
+
+Installed package / CLI candidate changes:
+
+- Bundled synthetic `loan_approval` demo for `ledge demo loan_approval`.
+- Existing bundled `medical_triage` demo remains available through
+  `ledge demo medical_triage`.
+- Packaged synthetic pilot dry-run command:
+  `ledge pilot-dry-run loan_approval`.
+- Packaged Python integration demo command:
+  `ledge python-integration-demo`.
+- Packaged CI/static checker command:
+  `ledge ci-check <paths...>`.
+- Version metadata prepared for `1.3.0`.
+
+Source-checkout materials preserved:
+
+- Public demo and pilot planning docs: `DEMO.md`, `COMMERCIAL.md`,
+  `PILOT_PACK.md`.
+- Pilot templates under `pilot_templates/`.
+- Synthetic pilot dry-run harness:
+  `python scripts/run_pilot_dry_run.py pilot_templates/loan_approval`.
+- Minimal Python integration example:
+  `python examples/python_integration/app.py`.
+- CI/static checker helper:
+  `python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration`.
+
+Notes:
+
+- The candidate wheel exposes installable commands for the pilot dry run,
+  Python integration demo, and CI/static checker.
+- The root-level `pilot_templates/`, `examples/python_integration/`, and
+  `scripts/` wrappers remain source-checkout materials for review and
+  adaptation.
+- This remains alpha software. This release candidate does not claim
+  production readiness, enterprise readiness, compliance certification, model
+  correctness, or calibrated confidence.
+
+---
+
 All changes follow semantic versioning.
 Breaking changes only occur on MAJOR version bumps.
 
