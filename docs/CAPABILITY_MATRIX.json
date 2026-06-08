@@ -1,5 +1,5 @@
 {
-  "version": "1.3.x-alpha",
+  "version": "1.4.x-alpha",
   "release_readiness": "See RELEASE_READINESS.md",
   "implemented": {
     "interpreter": "Tree-walker interpreter",
@@ -7,12 +7,15 @@
     "python_ffi": "Python import bridge with documented security caveats",
     "uncertain_checker": "Unchecked Uncertain[T] use is rejected by ledge check --types and default ledge run",
     "audit_store": "Hash-chained audit store with limited threat model",
-    "packaging": "1.3.x wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, and CI-check commands"
+    "python_sdk_core": "Minimal Uncertain, DecisionPolicy, DecisionResult, confidence evidence metadata, validators, and deterministic fake clients for normal Python code",
+    "packaging": "1.4.x wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, CI-check commands, and Python SDK Core"
   },
   "known_gaps": [
     "No known production deployments",
     "No mechanized proof or formal soundness theorem",
     "No legal compliance certification",
-    "Ledge 1.3.0 has been published; Ledge 1.3.1 is a documentation and release-metadata cleanup patch"
+    "Ledge 1.4.0 Alpha adds Python SDK Core, not a production deployment pattern",
+    "No Python static linting/type-checker enforcement for SDK code yet",
+    "No full Confidence Evidence Engine, ensemble scoring, logprobs, or calibration engine yet"
   ]
 }

@@ -63,7 +63,7 @@ the model; it just makes "I forgot to check" turn into a static error.
 From PyPI:
 
 ```bash
-pip install ledge-lang==1.3.1
+pip install ledge-lang==1.4.0
 ledge demo
 ledge demo medical_triage
 ledge demo loan_approval
@@ -128,6 +128,15 @@ programmatic execution helper. It runs the same static checker before execution
 and raises `LedgeError` without executing the program if type issues are found.
 `from ledge_lang import run` remains the low-level direct execution API for
 interpreter and test harness use; it bypasses the static checker by design.
+
+Python SDK Core: `from ledge_lang.sdk import Uncertain, DecisionPolicy`
+provides a minimal alpha SDK surface for modeling uncertain values and decision
+policies in normal Python code. This does not replace the DSL static checker.
+It is API-level and runtime-level handling; Python static linting/CI enforcement
+is planned for a later phase. `ConfidenceEvidence` is currently a minimal
+metadata container, not a calibrated confidence engine. See
+[`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/).
+
 For minimal Python integration and CI checker examples after installing the
 package:
 
@@ -147,6 +156,8 @@ ledge ci-check ledge_lang/demos examples/python_integration
 
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
 For Python integration guidance, see [`docs/PYTHON_INTEGRATION.md`](docs/PYTHON_INTEGRATION.md).
+For SDK-level uncertain values in normal Python, see
+[`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/).
 For current and future uncertainty semantics, see
 [`docs/UNCERTAINTY_MODEL.md`](docs/UNCERTAINTY_MODEL.md).
 For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).

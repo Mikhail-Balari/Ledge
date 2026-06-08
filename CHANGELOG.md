@@ -1,5 +1,21 @@
 # Ledge Changelog
 
+## [1.4.0] - Alpha
+
+- Adds Python SDK Core under `ledge_lang.sdk`.
+- Adds `Uncertain[T]`, `DecisionPolicy`, `DecisionResult[T]`, and minimal
+  `ConfidenceEvidence`.
+- Adds SDK exceptions and validation helpers.
+- Adds deterministic fake client utilities for examples and tests only.
+- Adds a low-stakes customer-support refund-routing SDK example.
+- Adds SDK unit and integration tests.
+- Keeps SDK enforcement API/runtime-level only.
+- Does not add Python static linting or CI enforcement yet.
+- Does not add a calibrated Confidence Evidence Engine yet.
+- Does not add provider integrations or real LLM clients.
+- Makes no production-readiness, enterprise-readiness, compliance-readiness, or
+  model-correctness claims.
+
 ## [1.3.1] - Alpha patch
 
 Documentation and release-metadata cleanup after the 1.3.0 publication.

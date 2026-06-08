@@ -1,5 +1,7 @@
 # Python Integration
 
+This page describes Ledge 1.4.0 Alpha integration surfaces.
+
 Ledge can be used around a narrow AI decision boundary without rewriting an
 entire Python application.
 
@@ -11,6 +13,33 @@ AI-derived `Uncertain[T]` value without a recognized confidence guard,
 
 This is alpha integration guidance. It is not a full SDK, enterprise gateway,
 sidecar, hosted service, production deployment pattern, or compliance workflow.
+
+## Python SDK Core
+
+The Python SDK Core provides a minimal way to model uncertain values and
+decision policies in normal Python code:
+
+```python
+from ledge_lang.sdk import DecisionPolicy, Uncertain
+
+policy = DecisionPolicy(min_confidence=0.8, name="refund-routing")
+result = Uncertain("refund_route_allowed", confidence=0.91).handle(policy)
+
+if result.allowed:
+    print(result.value)
+```
+
+This SDK surface is API-level and runtime-level handling. It does not replace
+the DSL static checker, and it does not statically enforce Python code yet.
+Python linting or CI enforcement is planned for a later phase.
+`ConfidenceEvidence` is currently a minimal metadata container, not a calibrated
+confidence engine.
+
+For a deterministic example, run:
+
+```bash
+python examples/sdk_decision_boundary/app.py
+```
 
 ## What Remains Normal Python
 
@@ -134,7 +163,7 @@ and exits nonzero if any file fails.
 
 ## What This Does Not Demonstrate
 
-- A full Python SDK.
+- A full Python SDK beyond the minimal SDK Core.
 - A gateway, sidecar, hosted service, or policy runtime.
 - Production deployment.
 - Legal or regulatory compliance.

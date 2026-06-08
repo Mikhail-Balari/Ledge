@@ -1,10 +1,8 @@
 # Ledge Capability Matrix
-## Version 1.3.x Alpha
+## Version 1.4.x Alpha
 
-This matrix reflects the 1.3.x alpha line. Ledge 1.3.0 has been published on
-PyPI, tagged as `v1.3.0`, and released on GitHub as a pre-release. Ledge 1.3.1
-is a documentation and release-metadata cleanup patch with no new runtime
-features.
+This matrix reflects the 1.4.x alpha line. Ledge 1.4.0 Alpha adds Python SDK
+Core while preserving the DSL and checked `.ledge` execution path.
 
 This matrix is a sober snapshot of implemented capabilities and known gaps.
 Release-readiness results live in `RELEASE_READINESS.md`.
@@ -23,6 +21,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - `ledge run` typechecks before execution by default.
 - `ledge run --unsafe` is the explicit bypass.
 - The audit store records AI decisions with input hashes and a hash chain under a limited threat model.
+- Python SDK Core provides `Uncertain`, `DecisionPolicy`, `DecisionResult`,
+  minimal confidence evidence metadata, validators, and deterministic fake
+  clients for normal Python examples.
 
 ## Packaging
 
@@ -41,4 +42,7 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - No known production deployments.
 - No mechanized proof or formal soundness theorem.
 - No legal compliance certification.
-- Ledge 1.3.0 has been published. Ledge 1.3.1 is a cleanup patch.
+- Ledge 1.4.0 Alpha adds Python SDK Core, not a production deployment pattern.
+- No Python static linting/type-checker enforcement for SDK code yet.
+- No full Confidence Evidence Engine, ensemble scoring, logprobs, or
+  calibration engine yet.
