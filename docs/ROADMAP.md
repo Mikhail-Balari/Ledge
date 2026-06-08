@@ -2,12 +2,14 @@
 
 This roadmap is for expert review before production-critical use. It is not a promise of dates or a claim that Ledge is already suitable for regulated deployment.
 
-## Current Release: 1.2.0 Alpha
+## Current Release Line: 1.3.x Alpha
 
-The main branch also contains unreleased 1.3.0 alpha candidate work: a bundled
-synthetic `loan_approval` demo, public pilot templates, installable pilot
-dry-run / Python integration / CI-check commands, and source-checkout wrappers
-for adapting those examples.
+Ledge 1.3.0 has been published on PyPI, tagged as `v1.3.0`, and released on
+GitHub as a pre-release. The 1.3.x line includes a bundled synthetic
+`loan_approval` demo, public pilot templates, installable pilot dry-run /
+Python integration / CI-check commands, and source-checkout wrappers for
+adapting those examples. Ledge 1.3.1 is a documentation and release-metadata
+cleanup patch with no new runtime features.
 
 What exists now:
 
@@ -111,8 +113,7 @@ Planned work:
 - Keep public CI aligned with `scripts/pre_release_check.py` for unit tests,
   integration tests, conformance tests, official example typechecks, bundled
   demo execution, package build, and wheel content checks.
-- Add broader OS and Python-version coverage once the project is past the 1.2.0
-  alpha release gate.
+- Add broader OS and Python-version coverage as release discipline matures.
 - Add clean installed-wheel smoke tests to CI if runtime or packaging behavior
   starts changing frequently.
 - Published release checklist matching `scripts/pre_release_check.py`.

@@ -60,24 +60,23 @@ the model; it just makes "I forgot to check" turn into a static error.
 
 ## Install and run in 2 minutes
 
-From the currently published PyPI package:
+From PyPI:
 
 ```bash
-pip install ledge-lang
+pip install ledge-lang==1.3.1
 ledge demo
 ledge demo medical_triage
-```
-
-From a source checkout containing the unreleased 1.3.0 alpha candidate work,
-or from a locally built 1.3.0 candidate wheel:
-
-```bash
-python -m build
-pip install dist/ledge_lang-1.3.0-py3-none-any.whl
-ledge demo
 ledge demo loan_approval
 ledge pilot-dry-run loan_approval
 ledge python-integration-demo
+```
+
+From a source checkout:
+
+```bash
+python scripts/run_pilot_dry_run.py pilot_templates/loan_approval
+python examples/python_integration/app.py
+python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
 ```
 
 Expected output (no API key, no clone, no setup):
@@ -116,9 +115,8 @@ ledge run examples/showcase/medical_triage.ledge
 example: debt-ratio rules may produce preliminary rule-based decisions even
 when AI history confidence is 0, and the output labels that distinction.
 
-The bundled `loan_approval` demo is synthetic and is part of the current source
-checkout and locally built 1.3.0 alpha candidate wheel. It is not a credit model
-and not a lending decision system. It demonstrates deterministic rule checks,
+The bundled `loan_approval` demo is synthetic. It is not a credit model and not
+a lending decision system. It demonstrates deterministic rule checks,
 confidence-gated AI use, human review fallback, and audit-chain verification.
 
 `ledge run` runs the static Uncertain checker before execution. If you are
@@ -131,7 +129,7 @@ and raises `LedgeError` without executing the program if type issues are found.
 `from ledge_lang import run` remains the low-level direct execution API for
 interpreter and test harness use; it bypasses the static checker by design.
 For minimal Python integration and CI checker examples after installing the
-1.3.0 alpha candidate wheel:
+package:
 
 ```bash
 ledge python-integration-demo
@@ -159,8 +157,7 @@ For the path from alpha software toward production-critical readiness, see
 For a short technical review path, see [`EXPERT_REVIEW.md`](EXPERT_REVIEW.md).
 For demo and pilot planning materials, see [`DEMO.md`](DEMO.md),
 [`COMMERCIAL.md`](COMMERCIAL.md), and [`PILOT_PACK.md`](PILOT_PACK.md).
-For the synthetic pilot dry run after installing the 1.3.0 alpha candidate
-wheel:
+For the synthetic pilot dry run after installing the package:
 
 ```bash
 ledge pilot-dry-run loan_approval

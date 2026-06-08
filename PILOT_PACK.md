@@ -89,8 +89,7 @@ point:
 - final report;
 - limitations and next steps.
 
-After installing a locally built 1.3.0 alpha candidate wheel, run the packaged
-synthetic loan approval dry run:
+After installing the package, run the packaged synthetic loan approval dry run:
 
 ```bash
 ledge pilot-dry-run loan_approval

@@ -1,8 +1,9 @@
 # Ledge Compatibility Policy
-## Version 1.3.0 Alpha Candidate
+## Version 1.3.x Alpha
 
-Note: Ledge 1.2.0 is the latest published PyPI release. The current main
-branch is being prepared as a 1.3.0 alpha candidate without a compatibility
+Note: Ledge 1.3.0 has been published on PyPI, tagged as `v1.3.0`, and released
+on GitHub as a pre-release. The 1.3.1 patch line is documentation and
+release-metadata cleanup only; it is not intended to introduce a compatibility
 break.
 
 This document describes the compatibility policy Ledge intends to follow across
@@ -64,7 +65,7 @@ Before a breaking change:
 Features marked [EXPERIMENTAL] in `docs/FEATURE_MATRIX.md` have **no**
 stability guarantee. They may change, break, or be removed without notice.
 
-Current experimental features (1.3.0 alpha candidate):
+Current experimental features (1.3.x alpha):
 - `stream from "url"` — parses but URL sources not connected
 - `agent ... :` blocks — syntax only, no MCP connectivity
 - `subscribe to / emit to` — basic syntax, no runtime support
@@ -93,7 +94,8 @@ MAJOR.MINOR.PATCH
 
 1.2.0  - published alpha release
 1.2.1  - bug fix (no behavior change)
-1.3.0  - alpha candidate; backwards compatible where practical
+1.3.0  - published alpha release; backwards compatible where practical
+1.3.1  - alpha patch; documentation/release-metadata cleanup only
 2.0.0  - breaking changes (90-day review, migration guide)
 ```
 

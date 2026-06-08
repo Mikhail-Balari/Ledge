@@ -1,14 +1,30 @@
 # Ledge Changelog
 
-## [1.3.0 alpha candidate] - Unreleased / Not yet published
+## [1.3.1] - Alpha patch
+
+Documentation and release-metadata cleanup after the 1.3.0 publication.
+
+- Bumps package metadata to `1.3.1`.
+- Clarifies that the installed package exposes:
+  `ledge demo loan_approval`, `ledge pilot-dry-run loan_approval`,
+  `ledge python-integration-demo`, and `ledge ci-check <paths...>`.
+- Removes stale "candidate", "unreleased", and "not yet published" wording
+  left over from the 1.3.0 release-readiness phase.
+- Keeps source-checkout wrapper commands documented separately from installed
+  package commands.
+- Adds no new runtime features.
+- Makes no production-readiness, enterprise-readiness, compliance-readiness, or
+  model-correctness claims.
+
+## [1.3.0] - Alpha pre-release
 
 Release status:
 
-- PyPI: not uploaded.
-- Git tag: not created.
-- GitHub Release: not created.
+- PyPI: published.
+- Git tag: `v1.3.0` created and pushed.
+- GitHub Release: `Ledge 1.3.0` created as a pre-release.
 
-Installed package / CLI candidate changes:
+Installed package / CLI changes:
 
 - Bundled synthetic `loan_approval` demo for `ledge demo loan_approval`.
 - Existing bundled `medical_triage` demo remains available through
@@ -35,12 +51,12 @@ Source-checkout materials preserved:
 
 Notes:
 
-- The candidate wheel exposes installable commands for the pilot dry run,
+- The wheel exposes installable commands for the pilot dry run,
   Python integration demo, and CI/static checker.
 - The root-level `pilot_templates/`, `examples/python_integration/`, and
   `scripts/` wrappers remain source-checkout materials for review and
   adaptation.
-- This remains alpha software. This release candidate does not claim
+- This remains alpha software. This release does not claim
   production readiness, enterprise readiness, compliance certification, model
   correctness, or calibrated confidence.
 

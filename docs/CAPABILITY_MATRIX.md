@@ -1,9 +1,10 @@
 # Ledge Capability Matrix
-## Version 1.3.0 Alpha Candidate
+## Version 1.3.x Alpha
 
-This matrix reflects the current main branch prepared for a 1.3.0 alpha
-candidate. Ledge 1.2.0 remains the latest published PyPI release until the
-candidate is uploaded and verified.
+This matrix reflects the 1.3.x alpha line. Ledge 1.3.0 has been published on
+PyPI, tagged as `v1.3.0`, and released on GitHub as a pre-release. Ledge 1.3.1
+is a documentation and release-metadata cleanup patch with no new runtime
+features.
 
 This matrix is a sober snapshot of implemented capabilities and known gaps.
 Release-readiness results live in `RELEASE_READINESS.md`.
@@ -27,9 +28,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 
 - The package builds as sdist and wheel.
 - The wheel contains `ledge_lang/demos/medical_triage.ledge`.
-- The 1.3.0 alpha candidate wheel is expected to contain both bundled demos:
+- The wheel contains both bundled demos:
   `medical_triage.ledge` and `loan_approval.ledge`.
-- The 1.3.0 alpha candidate wheel is expected to expose:
+- The installed package exposes:
   `ledge pilot-dry-run loan_approval`, `ledge python-integration-demo`, and
   `ledge ci-check <paths...>`.
 - Root-level `scripts/`, `examples/`, and `pilot_templates/` remain
@@ -40,4 +41,4 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - No known production deployments.
 - No mechanized proof or formal soundness theorem.
 - No legal compliance certification.
-- PyPI 1.2.0 has been published. PyPI 1.3.0 has not been uploaded yet.
+- Ledge 1.3.0 has been published. Ledge 1.3.1 is a cleanup patch.

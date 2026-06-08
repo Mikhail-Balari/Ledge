@@ -5,28 +5,28 @@
 
 ## 1. Install
 
-From the currently published PyPI package:
+From PyPI:
 
 ```bash
-python -m pip install ledge-lang
+python -m pip install ledge-lang==1.3.1
 ledge version
 ```
 
-From a source checkout prepared for the 1.3.0 alpha candidate:
+From a source checkout:
 
 ```bash
 python -m pip install --user build
 python -m build
-python -m pip install dist/ledge_lang-1.3.0-py3-none-any.whl
+python -m pip install dist/ledge_lang-1.3.1-py3-none-any.whl
 ```
 
 Verify:
 ```bash
 ledge version
-# Ledge 1.3.0
+# Ledge 1.3.1
 ```
 
-Candidate wheel commands:
+Installed package commands:
 
 ```bash
 ledge demo loan_approval

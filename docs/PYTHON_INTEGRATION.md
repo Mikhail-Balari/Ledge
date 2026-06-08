@@ -66,7 +66,7 @@ should use `checked_run(...)` or run `ledge check --types` before execution.
 
 ## Installed Demo Command
 
-After installing a locally built 1.3.0 alpha candidate wheel, run:
+After installing the package, run:
 
 ```bash
 ledge python-integration-demo
@@ -109,7 +109,7 @@ is explicit, reviewed, and documented.
 
 ## CI Checking
 
-After installing the 1.3.0 alpha candidate wheel, use `ledge ci-check` to check
+After installing the package, use `ledge ci-check` to check
 `.ledge` files in a repository:
 
 ```bash

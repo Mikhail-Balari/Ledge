@@ -26,31 +26,18 @@ decision-boundary tool.
 ## Requirements
 
 - Python 3.9 or newer.
-- `pip install ledge-lang`.
+- `pip install ledge-lang==1.3.1`.
 - No API key is required for the bundled demos.
-- No repository clone is required for the published `medical_triage` demo.
-- The `loan_approval` demo and installed pilot/Python/CI commands are included
-  in the unreleased 1.3.0 alpha candidate source checkout and locally built
-  wheel. They should not be described as available from PyPI until 1.3.0 is
-  uploaded.
+- No repository clone is required for the packaged demos and installed commands.
 
 ## Quick Start
 
-From the currently published PyPI package:
+From PyPI:
 
 ```bash
-pip install ledge-lang
+pip install ledge-lang==1.3.1
 ledge demo
 ledge demo medical_triage
-```
-
-From a source checkout containing the unreleased 1.3.0 alpha candidate work,
-or from a locally built 1.3.0 candidate wheel:
-
-```bash
-python -m build
-pip install dist/ledge_lang-1.3.0-py3-none-any.whl
-ledge demo
 ledge demo loan_approval
 ledge pilot-dry-run loan_approval
 ledge python-integration-demo
@@ -112,7 +99,7 @@ Interpretation:
 
 ## Synthetic Pilot Dry Run
 
-After installing the 1.3.0 alpha candidate wheel, run:
+After installing the package, run:
 
 ```bash
 ledge pilot-dry-run loan_approval
@@ -130,7 +117,7 @@ system, and not production or compliance software.
 
 ## Python Integration Example
 
-After installing the 1.3.0 alpha candidate wheel, run:
+After installing the package, run:
 
 ```bash
 ledge python-integration-demo
@@ -161,8 +148,7 @@ SDK, gateway, sidecar, hosted service, or production integration pattern.
    ledge demo medical_triage
    ```
 
-3. From a locally built 1.3.0 alpha candidate wheel or source checkout, run
-   the synthetic loan boundary:
+3. Run the synthetic loan boundary:
 
    ```bash
    ledge demo loan_approval
@@ -248,10 +234,7 @@ SDK, gateway, sidecar, hosted service, or production integration pattern.
   python -m ledge_lang.cli demo
   ```
 
-- If `ledge demo loan_approval` is not listed, you are probably using an
-  installed package that does not include the unreleased candidate demo rather
-  than a source checkout containing the latest demo work. To check the
-  installed version:
+- If `ledge demo loan_approval` is not listed, check the installed version:
 
   ```bash
   ledge version
