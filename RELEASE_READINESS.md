@@ -1,7 +1,7 @@
 # Release Readiness - Ledge 1.4.0 Alpha
 
-This document records release-readiness status for the Ledge 1.4.0 Alpha
-candidate. It is a process document, not the PyPI long description.
+This document records final release-readiness and post-release status for
+Ledge 1.4.0 Alpha. It is a process document, not the PyPI long description.
 
 ## Historical Release State
 
@@ -11,18 +11,31 @@ candidate. It is a process document, not the PyPI long description.
 - Ledge 1.3.1 has been published on PyPI.
 - Git tag `v1.3.1` exists and points at the 1.3.1 release commit.
 - GitHub Release `Ledge 1.3.1` exists as a pre-release.
+- Ledge 1.4.0 Alpha has been published on PyPI.
+- Git tag `v1.4.0` exists and points at the 1.4.0 release commit.
+- GitHub Release `Ledge 1.4.0 Alpha - Python SDK Core` exists as a
+  pre-release.
 - Ledge remains alpha software.
 
-## 1.4.0 Alpha Candidate Status
+## 1.4.0 Alpha Publication Status
 
-- Candidate version: `1.4.0`.
-- PyPI 1.4.0 uploaded: no.
-- Git tag `v1.4.0` created: no.
-- GitHub Release `Ledge 1.4.0` created: no.
-- Current status: release-preparation working tree.
+- Released version: `1.4.0`.
+- PyPI 1.4.0 uploaded: yes.
+- PyPI project version: `ledge-lang 1.4.0`.
+- PyPI URL: https://pypi.org/project/ledge-lang/1.4.0/
+- Git tag `v1.4.0` created and pushed: yes.
+- Tag target commit: `2837518d39d71128f9da74cdd1a14b7ee9c4d8c3`.
+- GitHub Release `v1.4.0` created: yes.
+- GitHub Release marked as pre-release: yes.
+- Real PyPI install verification: passed.
+- CLI smoke tests from real PyPI: passed.
+- Python API smoke test from real PyPI: passed.
+- SDK API smoke test from real PyPI: passed.
+- SDK validation hardening smoke tests from real PyPI: passed.
+- Current status: publicly released alpha.
 
-This candidate adds Python SDK Core. It does not add a Python linter, static
-Python CI enforcement, a calibrated Confidence Evidence Engine, provider
+This release adds Python SDK Core. It does not add a Python linter, static
+Python CI enforcement, a calibrated Confidence Evidence Engine, framework
 adapters, a gateway, a sidecar, a dashboard, a hosted service, or a policy
 runtime.
 
@@ -82,8 +95,8 @@ legal compliance, or prevent hallucinations.
 
 ## Packaging Checklist
 
-- `pyproject.toml` version: prepared as `1.4.0`.
-- `ledge_lang._version.__version__`: prepared as `1.4.0`.
+- `pyproject.toml` version: `1.4.0`.
+- `ledge_lang._version.__version__`: `1.4.0`.
 - `vscode-ledge/package.json`: not modified for this PyPI package release.
 - Bundled package data includes `ledge_lang/demos/*.ledge`.
 - Studio package data includes `ledge_lang/studio/templates/*.html` for the
@@ -105,27 +118,33 @@ legal compliance, or prevent hallucinations.
 
 ## Verification Checklist
 
-To complete before approving publication:
+Completed before and after publication:
 
-- `python -m ledge_lang.cli version`
-- `python examples/sdk_decision_boundary/app.py`
-- `python -m ledge_lang.cli demo`
-- `python -m ledge_lang.cli demo medical_triage`
-- `python -m ledge_lang.cli demo loan_approval`
-- `python -m ledge_lang.cli pilot-dry-run loan_approval`
-- `python -m ledge_lang.cli python-integration-demo`
-- `python -m ledge_lang.cli ci-check ledge_lang/demos examples/python_integration`
-- `python -m pytest tests/unit/ -q`
-- `python -m pytest tests/integration/ -q`
-- `python tests/conformance.py`
-- `python scripts/pre_release_check.py`
-- `python -m build`
-- `python -m twine check dist/*`
-- clean local wheel install verification from outside the repository
+- `python -m ledge_lang.cli version`: passed.
+- `python examples/sdk_decision_boundary/app.py`: passed.
+- `python -m ledge_lang.cli demo`: passed.
+- `python -m ledge_lang.cli demo medical_triage`: passed.
+- `python -m ledge_lang.cli demo loan_approval`: passed.
+- `python -m ledge_lang.cli pilot-dry-run loan_approval`: passed.
+- `python -m ledge_lang.cli python-integration-demo`: passed.
+- `python -m ledge_lang.cli ci-check ledge_lang/demos examples/python_integration`:
+  passed.
+- `python -m pytest tests/unit/ -q`: passed.
+- `python -m pytest tests/integration/ -q`: passed.
+- `python tests/conformance.py`: passed.
+- `python scripts/pre_release_check.py`: passed.
+- `python -m build`: passed.
+- `python -m twine check dist/*`: passed.
+- Clean local wheel install verification from outside the repository: passed.
+- Real PyPI install verification from outside the repository: passed.
+- Real PyPI CLI smoke tests: passed.
+- Real PyPI Python API smoke test: passed.
+- Real PyPI SDK API smoke test: passed.
+- Real PyPI SDK validation hardening smoke tests: passed.
 
 ## Claims Audit Summary
 
-The 1.4.0 Alpha candidate must not claim:
+The 1.4.0 Alpha release does not claim:
 
 - production readiness;
 - enterprise readiness;
@@ -151,18 +170,22 @@ Allowed framing:
 
 - Ledge remains alpha software.
 - The SDK does not statically enforce Python code yet.
+- Python static linting / CI enforcement remains future work.
 - The SDK does not replace the DSL static checker.
 - The static checker remains intentionally scoped and does not claim
   whole-program soundness.
+- The Confidence Evidence Engine remains future work.
+- Framework adapters remain future work.
+- Evidence Pack remains future work.
 - The SDK example is synthetic and low-stakes.
 - Root-level source examples, pilot templates, and scripts remain
   source-checkout materials even though packaged commands are available.
 - Audit records can support structured evidence review, but they do not
   establish legal or regulatory compliance.
+- There are no production, enterprise, or compliance guarantees.
 
 ## Current Recommendation
 
-Ready for human review as a 1.4.0 Alpha candidate once validation, build,
-claims audit, command accuracy audit, package content audit, and clean wheel
-verification all pass. Do not upload PyPI 1.4.0, create tag `v1.4.0`, or create
-a GitHub Release until this candidate is approved for publication.
+Ledge 1.4.0 Alpha release closure is complete. PyPI publication, real PyPI
+install verification, tag creation/push, and GitHub pre-release creation have
+all completed. Ready to close Phase 1 and proceed to future work planning.
