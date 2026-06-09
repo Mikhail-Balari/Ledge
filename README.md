@@ -401,40 +401,41 @@ ledge audit --validate-regulatory report.json
 
 ---
 
-## Why a DSL instead of a Python library, mypy plugin, Pyright plugin, linter, or framework?
+## Why a DSL plus SDK instead of only a Python library, mypy plugin, Pyright plugin, linter, or framework?
 
 The plain version, without inflated claims.
 
-**A plain Python library** would have to ask you to call
-`check_confidence()`. It cannot prevent you from forgetting. This is a real
-gap, but it is also the gap that frameworks have always had to live with.
+**A plain Python library** can help teams model uncertainty, apply policies,
+and make decision handling explicit. That is why Ledge now includes a Python
+SDK Core. But a library alone cannot prevent a developer from forgetting to
+use it, bypassing it, or directly passing an uncertain value into an action
+path.
 
-**A mypy or Pyright plugin** could express `Uncertain[T]` and force
-extraction at type-check time. This would cover a lot of what Ledge does and
-adopters wouldn't have to learn a new language. Limitations: the constraint
-"extraction must be inside a confidence guard" is awkward to express in
-Python's type system (it wants flow-sensitive narrowing on a non-type
-property, which is closer to refinement typing than what mypy supports
-without plugins); IDE diagnostics depend on the plugin being installed; the
-audit-trail and calibration parts still need to be a library.
+**The Ledge DSL** exists for the stricter case: a smaller controlled surface
+where unsafe extraction can become a static error before runtime.
 
-**A linter (ruff, pylint, custom AST rule)** can catch the obvious cases of
-forgotten checks. It works without anything special on the type side. The
-weakness is that linters operate on syntactic patterns, not on a typed
-representation of "this variable carries uncertainty"; cross-function flows
-and aliasing tend to slip through.
+**A mypy or Pyright plugin** could cover part of this problem inside normal
+Python, especially around `Uncertain[T]`. That path is valuable, but it still
+depends on plugin installation, project configuration, and the limits of
+expressing confidence-guarded extraction through Python's type system.
 
-**A framework or SDK** (LangChain-style) can require you to use specific
-classes whose method signatures force handling. This works well if everyone
-on the team adopts the framework consistently.
+**A linter** can catch obvious unsafe patterns in Python code. This is the
+planned direction for Ledge's next phase: Python CI enforcement for common
+unsafe AI-boundary patterns. The limitation is that linters work mostly
+through syntax and conventions, so cross-function flows, aliasing, and
+framework-specific behavior need careful handling.
 
-**What Ledge actually buys you over those.** A smaller, controlled surface
-area; the static rule is enforced on the language's only type system rather
-than as an add-on; the same workflow includes the audit trail and
-calibration; and the cost of "I forgot" is a static error at parse time
-rather than a runtime exception or a silent acceptance. The price is that
-Ledge is a new language with no ecosystem, and adopting it means writing
-the AI-decision layer in Ledge while everything else stays in Python.
+**A framework or SDK** can require specific classes and method signatures.
+This works well when a team consistently adopts the SDK or framework. Ledge's
+SDK follows this path for adoption and integration, while the DSL remains the
+stricter boundary layer.
+
+**What Ledge actually buys you is the combination.** A DSL for the most
+controlled decision-boundary layer, a Python SDK for normal application
+integration, and a roadmap toward CI enforcement and evidence capture. The
+trade-off is honest: the DSL is a new surface with no broad ecosystem yet,
+while the SDK is easier to adopt but cannot provide static enforcement by
+itself.
 
 ### Related work and adjacent tools
 
@@ -513,9 +514,10 @@ The regulatory export is intended to support structured evidence review, but it
 does not establish compliance. Compliance in any specific jurisdiction requires
 legal counsel.
 
-**Why not just use Python + mypy/Pyright?** See *Why a DSL* above -- that is
-a legitimate choice for many teams. Ledge buys a narrower surface area and a
-unified workflow at the cost of being a separate language.
+**Why not just use Python + mypy/Pyright?** See *Why a DSL plus SDK* above --
+that is a legitimate choice for many teams. Ledge pairs an adoptable Python
+SDK with a narrower DSL boundary for cases that need stricter checked
+execution.
 
 ### Known checker limitations
 
