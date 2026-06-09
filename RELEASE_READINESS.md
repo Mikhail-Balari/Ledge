@@ -1,7 +1,8 @@
-# Release Readiness - Ledge 1.4.0 Alpha
+# Release Readiness - Ledge 1.4.1 Alpha
 
-This document records final release-readiness and post-release status for
-Ledge 1.4.0 Alpha. It is a process document, not the PyPI long description.
+This document records release-readiness status for the Ledge 1.4.1 Alpha
+docs-only patch candidate. It is a process document, not the PyPI long
+description.
 
 ## Historical Release State
 
@@ -16,6 +17,27 @@ Ledge 1.4.0 Alpha. It is a process document, not the PyPI long description.
 - GitHub Release `Ledge 1.4.0 Alpha - Python SDK Core` exists as a
   pre-release.
 - Ledge remains alpha software.
+
+## 1.4.1 Alpha Candidate Status
+
+- Target version: `1.4.1 Alpha`.
+- Purpose: docs-only public surface correction after 1.4.0.
+- PyPI 1.4.1 uploaded: no.
+- Git tag `v1.4.1` created: no.
+- GitHub Release `v1.4.1` created: no.
+- Package version metadata prepared for `1.4.1`.
+- README install command prepared for `pip install ledge-lang==1.4.1`.
+- README positioning now describes Ledge as DSL plus Python SDK Core.
+- No SDK behavior changes.
+- No CLI changes.
+- No DSL/runtime changes.
+- No test, example, or package functionality changes.
+- Ledge remains alpha.
+- Python static linting / CI enforcement remains future work.
+- Confidence Evidence Engine remains future work.
+- Framework adapters remain future work.
+- Evidence Pack remains future work.
+- No production, enterprise, or compliance guarantees.
 
 ## 1.4.0 Alpha Publication Status
 
@@ -39,7 +61,7 @@ Python CI enforcement, a calibrated Confidence Evidence Engine, framework
 adapters, a gateway, a sidecar, a dashboard, a hosted service, or a policy
 runtime.
 
-## What Changed Since 1.3.1
+## What Changed in 1.4.0 Since 1.3.1
 
 - Package version metadata prepared for `1.4.0`.
 - Python SDK Core added under `ledge_lang.sdk`.
@@ -93,10 +115,10 @@ legal compliance, or prevent hallucinations.
   through `ledge_lang.checked_run(...)`.
 - `ledge ci-check <paths...>` recursively typechecks `.ledge` files for CI use.
 
-## Packaging Checklist
+## 1.4.1 Packaging Checklist
 
-- `pyproject.toml` version: `1.4.0`.
-- `ledge_lang._version.__version__`: `1.4.0`.
+- `pyproject.toml` version: prepared as `1.4.1`.
+- `ledge_lang._version.__version__`: prepared as `1.4.1`.
 - `vscode-ledge/package.json`: not modified for this PyPI package release.
 - Bundled package data includes `ledge_lang/demos/*.ledge`.
 - Studio package data includes `ledge_lang/studio/templates/*.html` for the
@@ -144,7 +166,7 @@ Completed before and after publication:
 
 ## Claims Audit Summary
 
-The 1.4.0 Alpha release does not claim:
+The 1.4.1 Alpha docs-only patch candidate must not claim:
 
 - production readiness;
 - enterprise readiness;
@@ -186,6 +208,7 @@ Allowed framing:
 
 ## Current Recommendation
 
-Ledge 1.4.0 Alpha release closure is complete. PyPI publication, real PyPI
-install verification, tag creation/push, and GitHub pre-release creation have
-all completed. Ready to close Phase 1 and proceed to future work planning.
+Ready for review as a 1.4.1 Alpha docs-only patch candidate once build,
+`twine check`, command accuracy audit, claims audit, and clean package
+verification pass. Do not upload PyPI 1.4.1, create tag `v1.4.1`, or create a
+GitHub Release until this candidate is approved for publication.

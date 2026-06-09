@@ -63,7 +63,7 @@ the model; it just makes "I forgot to check" turn into a static error.
 From PyPI:
 
 ```bash
-pip install ledge-lang==1.4.0
+pip install ledge-lang==1.4.1
 ledge demo
 ledge demo medical_triage
 ledge demo loan_approval

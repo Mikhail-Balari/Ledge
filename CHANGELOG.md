@@ -1,5 +1,22 @@
 # Ledge Changelog
 
+## [1.4.1] - Alpha
+
+Docs-only patch.
+
+- Clarifies README positioning now that Ledge includes both the DSL and the
+  Python SDK Core.
+- Replaces outdated "DSL instead of Python library" framing with "DSL plus SDK"
+  framing.
+- Keeps the honest trade-off: SDK improves adoption/integration, while the DSL
+  remains the stricter boundary layer.
+- No SDK behavior changes.
+- No CLI changes.
+- No DSL/runtime changes.
+- No new features.
+- No production-readiness, enterprise-readiness, compliance-readiness, or
+  model-correctness claims.
+
 ## [1.4.0] - Alpha
 
 - Adds Python SDK Core under `ledge_lang.sdk`.
