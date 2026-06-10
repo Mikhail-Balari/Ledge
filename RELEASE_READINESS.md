@@ -1,34 +1,46 @@
 # Release Readiness - Ledge 1.5.0 Alpha
 
-This document records pre-release readiness for Ledge 1.5.0 Alpha and
+This document records publication status for Ledge 1.5.0 Alpha and
 historical release status for earlier alpha releases. It is a process document,
 not the PyPI long description.
 
-## 1.5.0 Alpha Release Candidate Status
+## 1.5.0 Alpha Publication Status
 
-- Target version: `1.5.0 Alpha`.
+- Released version: `1.5.0 Alpha`.
 - Feature: Python Linter / CI Enforcement.
-- Source scope: AST-based local enforcement for common unsafe Python SDK
-  decision-boundary patterns.
-- PyPI 1.5.0 uploaded: no.
-- Git tag `v1.5.0` created: no.
-- GitHub Release `v1.5.0` created: no.
+- PyPI 1.5.0 uploaded: yes.
+- PyPI project version: `ledge-lang 1.5.0`.
+- PyPI URL: https://pypi.org/project/ledge-lang/1.5.0/
+- Release commit: `7409f855d541c399a705205a5c79a5ade4105192`.
+- Git tag `v1.5.0` created and pushed: yes.
+- Tag target commit: `7409f855d541c399a705205a5c79a5ade4105192`.
+- GitHub Release `v1.5.0` created: yes.
+- GitHub Release marked as pre-release: yes.
+- GitHub Release marked as stable/latest: no.
+- Real PyPI install verification: passed.
+- CLI smoke tests from real PyPI: passed.
+- SDK API smoke test from real PyPI: passed.
+- SDK validation hardening smoke tests from real PyPI: passed.
+- Python linter safe and unsafe tests from real PyPI: passed.
+- JSON linter output verification from real PyPI: passed.
+- PyPI badge verification: passed.
 - Ledge remains alpha.
-- This release candidate adds `ledge lint-python <paths...>`.
-- This release candidate adds `ledge_lang/python_linter`.
-- This release candidate adds linter rules:
+- Python linter / CI enforcement is available in 1.5.0 Alpha.
+- Linter scope remains AST-based and local for common unsafe Python SDK
+  decision-boundary patterns.
+- This release adds `ledge lint-python <paths...>`.
+- This release adds `ledge_lang/python_linter`.
+- This release adds linter rules:
   - `LPY001`: `unsafe_unwrap` requires a non-empty reason.
   - `LPY002`: direct `.value` access on tracked `Uncertain`.
   - `LPY003`: configured critical action receives an unhandled uncertain value.
   - `LPY004`: `DecisionResult.value` is used in a configured critical action
     outside an allow guard.
-- This release candidate adds `ledge.toml` support for configured critical
-  actions.
-- This release candidate adds text and JSON linter output.
-- This release candidate adds low-stakes safe and unsafe Python linter examples.
-- This release candidate adds a GitHub composite action for CI usage.
-- This release candidate adds unit and integration tests for Python linter
-  behavior.
+- This release adds `ledge.toml` support for configured critical actions.
+- This release adds text and JSON linter output.
+- This release adds low-stakes safe and unsafe Python linter examples.
+- This release adds a GitHub composite action for CI usage.
+- This release adds unit and integration tests for Python linter behavior.
 - Current limitations: no complete Python semantic verification; no mypy or
   Pyright plugin; no complete cross-file or interprocedural dataflow analysis;
   aliasing coverage is limited; framework behavior may require configuration
@@ -37,6 +49,9 @@ not the PyPI long description.
 - Framework adapters remain future work.
 - Evidence Pack remains future work.
 - No production, enterprise, or compliance guarantees.
+- No hallucination-prevention claim.
+- No formal verification claim.
+- No complete Python semantic verification claim.
 
 ## Historical Release State
 
@@ -54,6 +69,10 @@ not the PyPI long description.
 - Git tag `v1.4.1` exists and points at the 1.4.1 release commit.
 - GitHub Release `Ledge 1.4.1 Alpha - Docs-only Public Surface Patch` exists
   as a pre-release.
+- Ledge 1.5.0 Alpha has been published on PyPI.
+- Git tag `v1.5.0` exists and points at the 1.5.0 release commit.
+- GitHub Release `Ledge 1.5.0 Alpha - Python Linter CI Enforcement` exists as
+  a pre-release.
 - Ledge remains alpha software.
 
 ## 1.4.1 Alpha Publication Status
