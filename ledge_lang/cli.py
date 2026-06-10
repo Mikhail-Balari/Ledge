@@ -15,6 +15,7 @@ Usage:
   ledge python-integration-demo
                                Run packaged Python + checked_run(...) demo
   ledge ci-check <paths...>    Recursively typecheck .ledge files for CI
+  ledge lint-python <paths...> AST-based Python SDK unsafe-use linting
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -41,6 +42,7 @@ Examples:
   ledge debug --break 10 program.ledge
   ledge check *.ledge
   ledge ci-check ledge_lang/demos
+  ledge lint-python examples/python_linter --config examples/python_linter/ledge.toml
   ledge studio
 """
 
@@ -88,6 +90,10 @@ def main():
     if args[0] == "ci-check":
         from ledge_lang.ci_check import main as ci_main
         raise SystemExit(ci_main(args[1:]))
+
+    if args[0] == "lint-python":
+        from ledge_lang.python_linter.cli import main as lint_python_main
+        raise SystemExit(lint_python_main(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:

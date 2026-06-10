@@ -1,7 +1,42 @@
-# Release Readiness - Ledge 1.4.1 Alpha
+# Release Readiness - Ledge 1.5.0 Alpha
 
-This document records final release-readiness and post-release status for
-Ledge 1.4.1 Alpha. It is a process document, not the PyPI long description.
+This document records pre-release readiness for Ledge 1.5.0 Alpha and
+historical release status for earlier alpha releases. It is a process document,
+not the PyPI long description.
+
+## 1.5.0 Alpha Release Candidate Status
+
+- Target version: `1.5.0 Alpha`.
+- Feature: Python Linter / CI Enforcement.
+- Source scope: AST-based local enforcement for common unsafe Python SDK
+  decision-boundary patterns.
+- PyPI 1.5.0 uploaded: no.
+- Git tag `v1.5.0` created: no.
+- GitHub Release `v1.5.0` created: no.
+- Ledge remains alpha.
+- This release candidate adds `ledge lint-python <paths...>`.
+- This release candidate adds `ledge_lang/python_linter`.
+- This release candidate adds linter rules:
+  - `LPY001`: `unsafe_unwrap` requires a non-empty reason.
+  - `LPY002`: direct `.value` access on tracked `Uncertain`.
+  - `LPY003`: configured critical action receives an unhandled uncertain value.
+  - `LPY004`: `DecisionResult.value` is used in a configured critical action
+    outside an allow guard.
+- This release candidate adds `ledge.toml` support for configured critical
+  actions.
+- This release candidate adds text and JSON linter output.
+- This release candidate adds low-stakes safe and unsafe Python linter examples.
+- This release candidate adds a GitHub composite action for CI usage.
+- This release candidate adds unit and integration tests for Python linter
+  behavior.
+- Current limitations: no complete Python semantic verification; no mypy or
+  Pyright plugin; no complete cross-file or interprocedural dataflow analysis;
+  aliasing coverage is limited; framework behavior may require configuration
+  and code review.
+- Confidence Evidence Engine remains future work.
+- Framework adapters remain future work.
+- Evidence Pack remains future work.
+- No production, enterprise, or compliance guarantees.
 
 ## Historical Release State
 
@@ -126,16 +161,17 @@ legal compliance, or prevent hallucinations.
   through `ledge_lang.checked_run(...)`.
 - `ledge ci-check <paths...>` recursively typechecks `.ledge` files for CI use.
 
-## 1.4.1 Packaging Checklist
+## 1.5.0 Packaging Checklist
 
-- `pyproject.toml` version: `1.4.1`.
-- `ledge_lang._version.__version__`: `1.4.1`.
+- `pyproject.toml` version: `1.5.0`.
+- `ledge_lang._version.__version__`: `1.5.0`.
 - `vscode-ledge/package.json`: not modified for this PyPI package release.
 - Bundled package data includes `ledge_lang/demos/*.ledge`.
 - Studio package data includes `ledge_lang/studio/templates/*.html` for the
   optional `ledge-lang[studio]` extra.
 - Expected wheel contents include:
   - `ledge_lang/sdk/*.py`
+  - `ledge_lang/python_linter/*.py`
   - `ledge_lang/demos/medical_triage.ledge`
   - `ledge_lang/demos/loan_approval.ledge`
   - `ledge_lang/pilot_templates/loan_approval/fixture.json`
@@ -149,11 +185,11 @@ legal compliance, or prevent hallucinations.
   source-checkout materials; the wheel does not install them as standalone
   filesystem trees.
 
-## Verification Checklist
+## 1.5.0 Pre-release Verification Checklist
 
-Completed before and after publication:
+Expected before publication:
 
-- `python -m ledge_lang.cli version`: passed.
+- `python -m ledge_lang.cli version`: should report `Ledge 1.5.0`.
 - `python examples/sdk_decision_boundary/app.py`: passed.
 - `python -m ledge_lang.cli demo`: passed.
 - `python -m ledge_lang.cli demo medical_triage`: passed.
@@ -162,22 +198,25 @@ Completed before and after publication:
 - `python -m ledge_lang.cli python-integration-demo`: passed.
 - `python -m ledge_lang.cli ci-check ledge_lang/demos examples/python_integration`:
   passed.
+- `python -m ledge_lang.cli lint-python examples/python_linter/safe_usage.py
+  --config examples/python_linter/ledge.toml`: should pass.
+- `python -m ledge_lang.cli lint-python examples/python_linter/unsafe_usage.py
+  --config examples/python_linter/ledge.toml`: should fail with `LPY001`,
+  `LPY002`, `LPY003`, and `LPY004`.
 - `python -m pytest tests/unit/ -q`: passed.
 - `python -m pytest tests/integration/ -q`: passed.
 - `python tests/conformance.py`: passed.
 - `python scripts/pre_release_check.py`: passed.
 - `python -m build`: passed.
 - `python -m twine check dist/*`: passed.
-- Clean local wheel install verification from outside the repository: passed.
-- Real PyPI install verification from outside the repository: passed.
-- Real PyPI CLI smoke tests: passed.
-- Real PyPI Python API smoke test: passed.
-- Real PyPI SDK API smoke test: passed.
-- Real PyPI SDK validation hardening smoke tests: passed.
+- Clean local wheel install verification from outside the repository: pending
+  before PyPI upload.
+- Real PyPI install verification from outside the repository: pending after
+  PyPI upload.
 
 ## Claims Audit Summary
 
-The 1.4.1 Alpha docs-only patch release does not claim:
+The 1.5.0 Alpha release candidate does not claim:
 
 - production readiness;
 - enterprise readiness;
@@ -196,14 +235,17 @@ Allowed framing:
 - API/runtime-level SDK handling;
 - synthetic demos;
 - checked execution path for `.ledge` boundaries;
-- future Python linting/CI enforcement;
+- AST-based Python linting/CI enforcement for common unsafe SDK patterns;
 - future Confidence Evidence Engine work.
 
 ## Remaining Risks
 
 - Ledge remains alpha software.
-- The SDK does not statically enforce Python code yet.
-- Python static linting / CI enforcement remains future work.
+- The Python linter is AST-based and intentionally scoped.
+- The Python linter does not provide complete Python semantic verification.
+- No mypy or Pyright plugin is included.
+- Cross-function aliasing, dynamic flows, and framework-specific behavior may
+  require configuration and code review.
 - The SDK does not replace the DSL static checker.
 - The static checker remains intentionally scoped and does not claim
   whole-program soundness.
@@ -219,7 +261,6 @@ Allowed framing:
 
 ## Current Recommendation
 
-Ledge 1.4.1 Alpha release closure is complete. PyPI publication, real PyPI
-install verification, PyPI badge verification, tag creation/push, and GitHub
-pre-release creation have all completed. Ready to close Phase 1 and start
-Phase 2 planning.
+Ledge 1.5.0 Alpha is ready for review as a release candidate if validation
+passes. Do not upload to PyPI, create tag `v1.5.0`, or create a GitHub Release
+until the release candidate is explicitly approved.

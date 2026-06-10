@@ -1,0 +1,30 @@
+name: Ledge CI
+description: Run Ledge Python decision-boundary linting in CI.
+
+inputs:
+  paths:
+    description: Space-separated files or directories to scan.
+    required: true
+  config:
+    description: Optional path to ledge.toml.
+    required: false
+    default: ""
+  format:
+    description: Output format: text or json.
+    required: false
+    default: text
+
+runs:
+  using: composite
+  steps:
+    - name: Install Ledge
+      shell: bash
+      run: python -m pip install ledge-lang
+    - name: Run Ledge Python lint
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.config }}" ]; then
+          ledge lint-python ${{ inputs.paths }} --config "${{ inputs.config }}" --format "${{ inputs.format }}"
+        else
+          ledge lint-python ${{ inputs.paths }} --format "${{ inputs.format }}"
+        fi

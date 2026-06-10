@@ -1,8 +1,10 @@
 # Ledge Capability Matrix
-## Version 1.4.x Alpha
+## Version 1.5.0 Alpha
 
-This matrix reflects the 1.4.x alpha line. Ledge 1.4.0 Alpha adds Python SDK
-Core while preserving the DSL and checked `.ledge` execution path.
+This matrix reflects the 1.5.0 alpha release candidate. Ledge 1.4.0 Alpha
+added Python SDK Core while preserving the DSL and checked `.ledge` execution
+path. Ledge 1.5.0 Alpha adds AST-based Python linter / CI enforcement for
+common unsafe SDK decision-boundary patterns.
 
 This matrix is a sober snapshot of implemented capabilities and known gaps.
 Release-readiness results live in `RELEASE_READINESS.md`.
@@ -24,6 +26,8 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - Python SDK Core provides `Uncertain`, `DecisionPolicy`, `DecisionResult`,
   minimal confidence evidence metadata, validators, and deterministic fake
   clients for normal Python examples.
+- Python linter / CI enforcement provides `ledge lint-python` for common unsafe
+  SDK decision-boundary patterns in normal Python code.
 
 ## Packaging
 
@@ -34,6 +38,8 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - The installed package exposes:
   `ledge pilot-dry-run loan_approval`, `ledge python-integration-demo`, and
   `ledge ci-check <paths...>`.
+- The installed package exposes `ledge lint-python <paths...>` for Python SDK
+  unsafe-use linting.
 - Root-level `scripts/`, `examples/`, and `pilot_templates/` remain
   source-checkout materials for review and adaptation.
 
@@ -43,6 +49,11 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - No mechanized proof or formal soundness theorem.
 - No legal compliance certification.
 - Ledge 1.4.0 Alpha adds Python SDK Core, not a production deployment pattern.
-- No Python static linting/type-checker enforcement for SDK code yet.
+- Ledge 1.5.0 Alpha adds AST-based Python linter / CI enforcement, not
+  complete Python semantic verification.
+- No complete Python semantic verification or mypy/Pyright plugin.
+- Python linter coverage is AST-based and intentionally scoped to common local
+  unsafe-use patterns; it does not yet perform complete cross-file or
+  interprocedural dataflow analysis.
 - No full Confidence Evidence Engine, ensemble scoring, logprobs, or
   calibration engine yet.

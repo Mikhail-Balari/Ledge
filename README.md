@@ -63,7 +63,7 @@ the model; it just makes "I forgot to check" turn into a static error.
 From PyPI:
 
 ```bash
-pip install ledge-lang==1.4.1
+pip install ledge-lang==1.5.0
 ledge demo
 ledge demo medical_triage
 ledge demo loan_approval
@@ -132,9 +132,11 @@ interpreter and test harness use; it bypasses the static checker by design.
 Python SDK Core: `from ledge_lang.sdk import Uncertain, DecisionPolicy`
 provides a minimal alpha SDK surface for modeling uncertain values and decision
 policies in normal Python code. This does not replace the DSL static checker.
-It is API-level and runtime-level handling; Python static linting/CI enforcement
-is planned for a later phase. `ConfidenceEvidence` is currently a minimal
-metadata container, not a calibrated confidence engine. See
+It is API-level and runtime-level handling. Ledge 1.5.0 Alpha adds
+`ledge lint-python` for AST-based CI enforcement of common unsafe Python
+decision-boundary patterns, but it does not provide complete Python semantic
+verification or complete cross-file/interprocedural dataflow analysis.
+`ConfidenceEvidence` is currently a minimal metadata container, not a calibrated confidence engine. See
 [`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/).
 
 For minimal Python integration and CI checker examples after installing the
@@ -143,6 +145,7 @@ package:
 ```bash
 ledge python-integration-demo
 ledge ci-check path/to/your/ledge/files
+ledge lint-python path/to/your/python/files --config ledge.toml
 ```
 
 From a source checkout, the wrappers and repository-path CI check remain
@@ -152,6 +155,7 @@ available:
 python examples/python_integration/app.py
 python scripts/ledge_check_ci.py ledge_lang/demos examples/python_integration
 ledge ci-check ledge_lang/demos examples/python_integration
+ledge lint-python examples/python_linter --config examples/python_linter/ledge.toml
 ```
 
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
@@ -419,10 +423,10 @@ Python, especially around `Uncertain[T]`. That path is valuable, but it still
 depends on plugin installation, project configuration, and the limits of
 expressing confidence-guarded extraction through Python's type system.
 
-**A linter** can catch obvious unsafe patterns in Python code. This is the
-planned direction for Ledge's next phase: Python CI enforcement for common
-unsafe AI-boundary patterns. The limitation is that linters work mostly
-through syntax and conventions, so cross-function flows, aliasing, and
+**A linter** can catch obvious unsafe patterns in Python code. Ledge includes
+`ledge lint-python` for AST-based CI enforcement of common unsafe SDK
+decision-boundary patterns. The limitation is that linters work mostly through
+syntax and conventions, so cross-file flows, interprocedural flows, aliasing, and
 framework-specific behavior need careful handling.
 
 **A framework or SDK** can require specific classes and method signatures.
@@ -432,10 +436,11 @@ stricter boundary layer.
 
 **What Ledge actually buys you is the combination.** A DSL for the most
 controlled decision-boundary layer, a Python SDK for normal application
-integration, and a roadmap toward CI enforcement and evidence capture. The
-trade-off is honest: the DSL is a new surface with no broad ecosystem yet,
-while the SDK is easier to adopt but cannot provide static enforcement by
-itself.
+integration, AST-based CI enforcement for common Python unsafe-use patterns,
+and a roadmap toward richer evidence capture. The trade-off is honest: the DSL
+is a new surface with no broad ecosystem yet, while the SDK and linter are
+easier to adopt but cannot provide complete semantic verification by
+themselves.
 
 ### Related work and adjacent tools
 

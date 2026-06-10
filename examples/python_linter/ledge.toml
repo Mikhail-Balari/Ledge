@@ -1,0 +1,8 @@
+[ledge]
+min_confidence = 0.85
+
+[ledge.actions]
+critical = ["refund_customer", "send_email", "release_payment"]
+
+[ledge.allow]
+unsafe_unwrap_requires_reason = true

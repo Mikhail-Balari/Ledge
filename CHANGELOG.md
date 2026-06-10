@@ -1,5 +1,30 @@
 # Ledge Changelog
 
+## [1.5.0] - Alpha
+
+- Adds `ledge lint-python <paths...>` for AST-based Python decision-boundary
+  linting.
+- Adds the Python linter package under `ledge_lang/python_linter`.
+- Adds rules:
+  - `LPY001`: `unsafe_unwrap` requires a non-empty reason.
+  - `LPY002`: direct `.value` access on tracked `Uncertain`.
+  - `LPY003`: configured critical action receives an unhandled uncertain value.
+  - `LPY004`: `DecisionResult.value` is used in a configured critical action
+    outside an allow guard.
+- Adds `ledge.toml` support for configured critical actions.
+- Adds text and JSON linter output.
+- Adds low-stakes safe and unsafe Python linter examples.
+- Adds a GitHub composite action for CI usage.
+- Adds unit and integration tests for Python linter behavior.
+- Tracks `from ledge_lang import sdk` for straightforward SDK constructor use.
+- Validates configured `ledge.min_confidence` when present.
+- Notes realistic AST limitations for dynamic Python flows, cross-function
+  aliasing, and framework-specific behavior.
+- Does not add provider integrations.
+- Does not add a mypy or Pyright plugin.
+- Makes no production-readiness, enterprise-readiness, compliance-readiness, or
+  formal-verification claims.
+
 ## [1.4.1] - Alpha
 
 Docs-only patch.

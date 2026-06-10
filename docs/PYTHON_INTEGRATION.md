@@ -1,6 +1,6 @@
 # Python Integration
 
-This page describes Ledge 1.4.0 Alpha integration surfaces.
+This page describes Ledge 1.5.0 Alpha integration surfaces.
 
 Ledge can be used around a narrow AI decision boundary without rewriting an
 entire Python application.
@@ -16,8 +16,9 @@ sidecar, hosted service, production deployment pattern, or compliance workflow.
 
 ## Python SDK Core
 
-The Python SDK Core provides a minimal way to model uncertain values and
-decision policies in normal Python code:
+The Python SDK Core, available from Ledge 1.4.0 Alpha onward, provides a
+minimal way to model uncertain values and decision policies in normal Python
+code:
 
 ```python
 from ledge_lang.sdk import DecisionPolicy, Uncertain
@@ -31,7 +32,9 @@ if result.allowed:
 
 This SDK surface is API-level and runtime-level handling. It does not replace
 the DSL static checker, and it does not statically enforce Python code yet.
-Python linting or CI enforcement is planned for a later phase.
+Ledge 1.5.0 Alpha adds `ledge lint-python` for AST-based CI enforcement of
+common unsafe Python decision-boundary patterns, but it is not complete Python
+semantic verification and it is not a mypy or Pyright plugin.
 `ConfidenceEvidence` is currently a minimal metadata container, not a calibrated
 confidence engine.
 
@@ -161,10 +164,45 @@ python -m ledge_lang.cli check --types <file>
 
 and exits nonzero if any file fails.
 
+## Python SDK Linting
+
+Use `ledge lint-python` to scan Python files for common unsafe SDK patterns:
+
+```bash
+ledge lint-python src tests --config ledge.toml
+```
+
+The linter is AST-based. It tracks straightforward local uses of
+`Uncertain(...)`, `uncertain_from_validation(...)`, deterministic fake client
+predictions, and `DecisionResult` values returned by `.handle(...)`.
+
+It detects patterns such as:
+
+- `unsafe_unwrap()` without a non-empty reason;
+- direct `.value` access on tracked `Uncertain` values;
+- configured critical actions receiving an unhandled uncertain value;
+- `DecisionResult.value` passed to a configured critical action outside an
+  `if decision.allowed:` or `if decision.action == "allow":` guard.
+
+It is intended to catch meaningful unsafe patterns before merge. It does not
+provide complete semantic verification for arbitrary Python, and it does not
+yet perform complete cross-file or interprocedural dataflow analysis. Dynamic
+flows, aliasing, and framework-specific behavior may require additional
+configuration or review.
+
+For a source-checkout example, run:
+
+```bash
+ledge lint-python examples/python_linter/safe_usage.py --config examples/python_linter/ledge.toml
+ledge lint-python examples/python_linter/unsafe_usage.py --config examples/python_linter/ledge.toml
+```
+
 ## What This Does Not Demonstrate
 
 - A full Python SDK beyond the minimal SDK Core.
 - A gateway, sidecar, hosted service, or policy runtime.
+- Complete Python semantic verification.
+- A mypy or Pyright plugin.
 - Production deployment.
 - Legal or regulatory compliance.
 - Model correctness.
