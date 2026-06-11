@@ -1,0 +1,86 @@
+[
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_001",
+    "score": 0.82,
+    "outcome": true,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_002",
+    "score": 0.74,
+    "outcome": true,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_003",
+    "score": 0.67,
+    "outcome": false,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_004",
+    "score": 0.91,
+    "outcome": true,
+    "action": "allow"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_005",
+    "score": 0.58,
+    "outcome": false,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_006",
+    "score": 0.88,
+    "outcome": true,
+    "action": "allow"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_007",
+    "score": 0.62,
+    "outcome": true,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_008",
+    "score": 0.49,
+    "outcome": false,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_009",
+    "score": 0.77,
+    "outcome": true,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_010",
+    "score": 0.93,
+    "outcome": true,
+    "action": "allow"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_011",
+    "score": 0.55,
+    "outcome": false,
+    "action": "human_review"
+  },
+  {
+    "boundary_id": "refund_routing",
+    "prediction_id": "pred_012",
+    "score": 0.71,
+    "outcome": true,
+    "action": "human_review"
+  }
+]

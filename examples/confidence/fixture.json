@@ -1,0 +1,32 @@
+{
+  "boundary_id": "refund_routing",
+  "evidence_id": "ev_refund_001",
+  "base_score": 0.86,
+  "raw_output": {
+    "route": "manual_review",
+    "reason": "refund reason requires review"
+  },
+  "required_fields": ["route", "reason"],
+  "critical_fields": ["route"],
+  "expected_types": {
+    "route": "str",
+    "reason": "str"
+  },
+  "candidates": [
+    {
+      "route": "manual_review",
+      "reason": "refund reason requires review"
+    },
+    {
+      "route": "manual_review",
+      "reason": "refund reason requires review"
+    },
+    {
+      "route": "approve",
+      "reason": "refund reason requires review"
+    }
+  ],
+  "logprobs": null,
+  "policy_id": "refund_policy_v1",
+  "policy_hash": "sha256:example_policy_hash"
+}

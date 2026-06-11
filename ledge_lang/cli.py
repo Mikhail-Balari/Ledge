@@ -16,6 +16,10 @@ Usage:
                                Run packaged Python + checked_run(...) demo
   ledge ci-check <paths...>    Recursively typecheck .ledge files for CI
   ledge lint-python <paths...> AST-based Python SDK unsafe-use linting
+  ledge confidence-eval <fixture.json> [--format json]
+                               Evaluate confidence evidence fixture
+  ledge calibration-report <outcomes.json> [--format json]
+                               Report Brier/ECE calibration metrics
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -94,6 +98,12 @@ def main():
     if args[0] == "lint-python":
         from ledge_lang.python_linter.cli import main as lint_python_main
         raise SystemExit(lint_python_main(args[1:]))
+
+    if args[0] == "confidence-eval":
+        raise SystemExit(_confidence_eval(args[1:]))
+
+    if args[0] == "calibration-report":
+        raise SystemExit(_calibration_report(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:
@@ -190,6 +200,108 @@ def _demo(args):
               file=sys.stderr)
         sys.exit(1)
     _run_file(path, extra_args=args[1:])
+
+
+def _confidence_eval(args):
+    import argparse
+    import json
+
+    from ledge_lang.confidence import (
+        extract_logprob_signal,
+        evaluate_ensemble,
+        evaluate_schema,
+        render_confidence_report,
+        score_evidence,
+    )
+    from ledge_lang.confidence.exceptions import ConfidenceEvidenceError
+
+    parser = argparse.ArgumentParser(prog="ledge confidence-eval")
+    parser.add_argument("fixture", help="confidence fixture JSON file")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    opts = parser.parse_args(args)
+
+    try:
+        with open(opts.fixture, encoding="utf-8") as f:
+            fixture = json.load(f)
+        if not isinstance(fixture, dict):
+            raise ValueError("fixture must be a JSON object")
+
+        boundary_id = fixture.get("boundary_id", "unknown")
+        base_score = fixture.get("base_score", 0.0)
+        evidence_id = fixture.get("evidence_id")
+        policy_id = fixture.get("policy_id")
+        policy_hash = fixture.get("policy_hash")
+        raw_output = fixture.get("raw_output")
+
+        schema_evidence = evaluate_schema(
+            raw_output,
+            required_fields=fixture.get("required_fields"),
+            expected_types=fixture.get("expected_types"),
+            critical_fields=fixture.get("critical_fields"),
+            boundary_id=boundary_id,
+        )
+        evidence_sources = list(schema_evidence.sources)
+
+        candidates = fixture.get("candidates")
+        if candidates is not None:
+            ensemble_evidence = evaluate_ensemble(
+                candidates,
+                boundary_id=boundary_id,
+                policy_id=policy_id,
+                policy_hash=policy_hash,
+            )
+            evidence_sources.extend(ensemble_evidence.sources)
+
+        if "logprobs" in fixture:
+            logprob_evidence = extract_logprob_signal(
+                fixture.get("logprobs"),
+                boundary_id=boundary_id,
+                policy_id=policy_id,
+                policy_hash=policy_hash,
+            )
+            evidence_sources.extend(logprob_evidence.sources)
+
+        evidence = score_evidence(
+            boundary_id=boundary_id,
+            base_score=base_score,
+            sources=evidence_sources,
+            evidence_id=evidence_id,
+            policy_id=policy_id,
+            policy_hash=policy_hash,
+            output_hash=schema_evidence.output_hash,
+            metadata={"fixture_file": os.path.basename(opts.fixture)},
+        )
+        print(render_confidence_report(evidence, format=opts.format))
+        return 1 if "hard_evidence_failure" in evidence.warnings else 0
+    except (OSError, json.JSONDecodeError, ValueError, ConfidenceEvidenceError) as exc:
+        print(f"ledge confidence-eval: {exc}", file=sys.stderr)
+        return 2
+
+
+def _calibration_report(args):
+    import argparse
+
+    from ledge_lang.confidence import (
+        generate_calibration_report,
+        load_outcomes,
+        render_calibration_report,
+    )
+    from ledge_lang.confidence.exceptions import ConfidenceEvidenceError
+
+    parser = argparse.ArgumentParser(prog="ledge calibration-report")
+    parser.add_argument("outcomes", help="calibration outcomes JSON file")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--boundary-id", dest="boundary_id", default=None)
+    opts = parser.parse_args(args)
+
+    try:
+        outcomes = load_outcomes(opts.outcomes)
+        report = generate_calibration_report(outcomes, boundary_id=opts.boundary_id)
+        print(render_calibration_report(report, format=opts.format))
+        return 0
+    except ConfidenceEvidenceError as exc:
+        print(f"ledge calibration-report: {exc}", file=sys.stderr)
+        return 2
 
 
 def _run_file(path, extra_args=None):
