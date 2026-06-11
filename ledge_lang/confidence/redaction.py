@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .exceptions import CanonicalSerializationError
 from .hashing import hash_text, stable_json_dumps
 
 
@@ -18,8 +19,10 @@ def _stable_value_text(value: Any) -> str:
         return value.decode("utf-8", errors="replace")
     try:
         return stable_json_dumps(value)
-    except Exception:
-        return repr(value)
+    except CanonicalSerializationError as exc:
+        raise CanonicalSerializationError(
+            f"unsupported redaction hash input type: {type(value).__name__}"
+        ) from exc
 
 
 def hash_input(value: Any) -> str:

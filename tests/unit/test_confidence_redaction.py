@@ -1,4 +1,9 @@
+import math
+
+import pytest
+
 from ledge_lang.confidence import ConfidenceEvidence, EvidenceSource
+from ledge_lang.confidence.exceptions import CanonicalSerializationError
 from ledge_lang.confidence.redaction import hash_input, hash_output, redacted_summary
 
 
@@ -61,3 +66,50 @@ def test_redaction_metadata_preserved():
     assert restored.redaction_applied is True
     assert restored.redaction_strategy == "hash_only"
     assert restored.metadata["redaction_note"] == "fixture"
+
+
+def test_hash_input_rejects_unsupported_object_without_repr_hashing():
+    class NonCanonical:
+        pass
+
+    with pytest.raises(CanonicalSerializationError) as exc_info:
+        hash_input(NonCanonical())
+
+    assert "NonCanonical" in str(exc_info.value)
+    assert "object at 0x" not in str(exc_info.value)
+
+
+def test_hash_output_rejects_unsupported_object_without_repr_hashing():
+    class NonCanonical:
+        pass
+
+    with pytest.raises(CanonicalSerializationError) as exc_info:
+        hash_output(NonCanonical())
+
+    assert "NonCanonical" in str(exc_info.value)
+    assert "object at 0x" not in str(exc_info.value)
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_hash_helpers_reject_non_finite_floats(value):
+    with pytest.raises(CanonicalSerializationError):
+        hash_input(value)
+
+    with pytest.raises(CanonicalSerializationError):
+        hash_output(value)
+
+
+def test_valid_json_like_values_hash_deterministically():
+    values = [
+        "refund",
+        {"route": "review", "score": 0.7},
+        ["refund", {"route": "review"}],
+        0.7,
+        True,
+        None,
+        b"refund bytes",
+    ]
+
+    for value in values:
+        assert hash_input(value) == hash_input(value)
+        assert hash_output(value) == hash_output(value)
