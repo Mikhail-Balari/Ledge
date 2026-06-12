@@ -1,4 +1,7 @@
 import json
+import math
+
+import pytest
 
 from ledge_lang.confidence import extract_logprob_signal
 
@@ -23,7 +26,8 @@ def test_numeric_logprob_list_produces_deterministic_summary():
 
     assert evidence.sources[0].status == "passed"
     assert details["count"] == 3
-    assert details["mean_logprob"] == (-0.1 - 0.2 - 0.3) / 3
+    assert details["mean_logprob"] == pytest.approx(-0.2)
+    assert math.isfinite(details["mean_logprob"])
     assert details["min_logprob"] == -0.3
     assert details["max_logprob"] == -0.1
     assert 0.0 < evidence.score <= 1.0
