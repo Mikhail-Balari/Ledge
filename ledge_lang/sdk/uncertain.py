@@ -7,7 +7,7 @@ from typing import Any, Generic, TypeVar
 
 from ._validation import _coerce_confidence
 from .decision import DecisionResult
-from .evidence import ConfidenceEvidence
+from ._evidence_compat import extract_evidence_context
 from .exceptions import UnsafeUnwrapError
 from .policy import DecisionPolicy, normalize_action
 
@@ -23,7 +23,10 @@ class Uncertain(Generic[T]):
     source: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
-    evidence: ConfidenceEvidence | None = None
+    # Evidence is normalized through sdk._evidence_compat and may be legacy
+    # sdk.ConfidenceEvidence, audit-ready confidence.ConfidenceEvidence, or an
+    # unknown evidence-like object that is treated conservatively.
+    evidence: object | None = None
 
     def __post_init__(self) -> None:
         self.confidence = _coerce_confidence(self.confidence)
@@ -45,10 +48,10 @@ class Uncertain(Generic[T]):
         metadata = dict(self.metadata)
         if self.source is not None:
             metadata.setdefault("source", self.source)
-        if self.evidence is not None:
-            metadata.setdefault("evidence_score", self.evidence.score)
-            if self.evidence.source is not None:
-                metadata.setdefault("evidence_source", self.evidence.source)
+        evidence_context = extract_evidence_context(self.evidence)
+        for key, value in evidence_context.metadata.items():
+            if value is not None:
+                metadata.setdefault(key, value)
 
         if self.value is None and not policy.allow_missing_value:
             return DecisionResult(
@@ -106,6 +109,5 @@ class Uncertain(Generic[T]):
 
     def _combined_warnings(self) -> list[str]:
         warnings = list(self.warnings)
-        if self.evidence is not None:
-            warnings.extend(self.evidence.warnings)
+        warnings.extend(extract_evidence_context(self.evidence).warnings)
         return warnings
