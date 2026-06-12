@@ -34,7 +34,7 @@ Usage:
   ledge audit --calibration <model> <domain>            Calibration report for a model/domain
   ledge audit --calibration-metrics <model> <domain>   Brier score, ECE, and reliability table
   ledge audit --compare <model_a> <model_b> <domain>            Compare two models for migration risk
-  ledge audit --export-regulatory <file> [--program <id>]      Export EU AI Act JSON-LD report
+  ledge audit --export-regulatory <file> [--program <id>]      Export structured evidence JSON-LD report
   ledge audit --validate-regulatory <file>                     Validate a JSON-LD report
   ledge version                Show version info
   ledge help                   Show this help
@@ -590,12 +590,12 @@ def _audit(args):
         parsed = _json.loads(data)
         s = parsed["summary"]
         print(f"Exported regulatory report to {out_path}")
-        print(f"  Format           : EU AI Act Article 12/13 JSON-LD")
+        print(f"  Format           : structured evidence JSON-LD")
         print(f"  Total decisions  : {s['total_decisions']}")
         print(f"  Models used      : {', '.join(s['models_used']) or '(none)'}")
         print(f"  Domains          : {', '.join(s['domains']) or '(none)'}")
         print(f"  Chain valid      : {parsed['chain_valid']}")
-        print(f"  Article 12       : {parsed['eu_ai_act:article12_compliant']}")
+        print(f"  Evidence fields  : {parsed['structured_evidence_fields_present']}")
         if s["overall_accuracy"] is not None:
             print(f"  Overall accuracy : {s['overall_accuracy']:.1%}")
         return
@@ -613,7 +613,7 @@ def _audit(args):
             print(f"  [{mark}] {c['name']}")
         print()
         if result["valid"]:
-            print("VALIDATION PASSED - EU AI Act Article 12/13 evidence fields present")
+            print("VALIDATION PASSED - structured evidence fields present")
         else:
             failed = [c["name"] for c in result["checks"] if not c["passed"]]
             print(f"VALIDATION FAILED - {len(failed)} check(s) failed: {', '.join(failed)}")

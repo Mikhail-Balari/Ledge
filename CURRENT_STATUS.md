@@ -36,7 +36,7 @@ safe-failure default.
     ledge audit --calibration <model> <domain>   # measured vs declared accuracy
     ledge audit --calibration-metrics <m> <d>    # Brier, ECE, false accept/reject
     ledge audit --compare <m_a> <m_b> <domain>   # migration risk between models
-    ledge audit --export-regulatory report.json  # EU AI Act Article 12/13 JSON-LD
+    ledge audit --export-regulatory report.json  # structured evidence JSON-LD
     ledge audit --validate-regulatory report.json
 
 ### Breaking change in 1.2.0

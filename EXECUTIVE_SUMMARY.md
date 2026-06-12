@@ -67,7 +67,7 @@ list of cases it does NOT yet recognize.
 | SHA-256 chained audit log with external anchor file | works, threat model documented |
 | Domain calibration (Brier, ECE, false accept/reject) | works |
 | Model migration comparison | works |
-| EU AI Act Article 12/13 evidence export (JSON-LD) | works (structural only — see caveats) |
+| Structured evidence export (JSON-LD) | works (structural only; not a legal compliance determination) |
 | OpenAI backend (token logprobs) | works (logprobs are signals, not calibrated probabilities) |
 | Anthropic backend (structured self-assessment) | works (self-reported, not derived from weights) |
 | LSP server, formatter, debugger | works |

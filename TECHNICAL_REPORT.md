@@ -25,7 +25,7 @@ This report makes the following contributions:
 
 3. **Domain calibration infrastructure.** We implement a calibration layer that compares declared model confidence against empirically recorded outcomes per (model, domain) pair, computing Brier score, Expected Calibration Error (ECE), false accept rate, false reject rate, and calibrated decision thresholds.
 
-4. **Persistent cryptographic audit trail with external anchoring.** We implement per-decision SHA-256 hash chains persisted to SQLite, with an external anchor file that records chain state every 10 decisions. If the database is deleted and regenerated, the anchor file detects the inconsistency. Export to JSON-LD structured for EU AI Act Article 12/13 evidence documentation.
+4. **Persistent cryptographic audit trail with external anchoring.** We implement per-decision SHA-256 hash chains persisted to SQLite, with an external anchor file that records chain state every 10 decisions. If the database is deleted and regenerated, the anchor file detects the inconsistency. Export to JSON-LD is structured for evidence review and is not a legal compliance determination.
 
 5. **Position-weighted chain confidence.** We implement transitive uncertainty propagation using position-weighted confidence decay and weak-step penalization, producing more conservative and informative estimates than simple confidence multiplication.
 

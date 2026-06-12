@@ -1,10 +1,11 @@
 # Ledge Capability Matrix
-## Version 1.5.0 Alpha
+## Version 1.6.0 Alpha
 
-This matrix reflects the 1.5.0 alpha release candidate. Ledge 1.4.0 Alpha
+This matrix reflects the 1.6.0 alpha release candidate. Ledge 1.4.0 Alpha
 added Python SDK Core while preserving the DSL and checked `.ledge` execution
 path. Ledge 1.5.0 Alpha adds AST-based Python linter / CI enforcement for
-common unsafe SDK decision-boundary patterns.
+common unsafe SDK decision-boundary patterns. Ledge 1.6.0 Alpha adds the
+Confidence Evidence Engine.
 
 This matrix is a sober snapshot of implemented capabilities and known gaps.
 Release-readiness results live in `RELEASE_READINESS.md`.
@@ -28,6 +29,10 @@ Release-readiness results live in `RELEASE_READINESS.md`.
   clients for normal Python examples.
 - Python linter / CI enforcement provides `ledge lint-python` for common unsafe
   SDK decision-boundary patterns in normal Python code.
+- Confidence Evidence Engine provides audit-ready confidence evidence records,
+  schema validation evidence, ensemble stability evidence, logprob signal
+  evidence, conservative scoring, calibration reports, redaction-safe report
+  rendering, and SDK evidence interoperability.
 
 ## Packaging
 
@@ -40,6 +45,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
   `ledge ci-check <paths...>`.
 - The installed package exposes `ledge lint-python <paths...>` for Python SDK
   unsafe-use linting.
+- The installed package exposes `ledge confidence-eval <fixture.json>` and
+  `ledge calibration-report <outcomes.json>` for confidence evidence and
+  calibration report examples.
 - Root-level `scripts/`, `examples/`, and `pilot_templates/` remain
   source-checkout materials for review and adaptation.
 
@@ -55,5 +63,8 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - Python linter coverage is AST-based and intentionally scoped to common local
   unsafe-use patterns; it does not yet perform complete cross-file or
   interprocedural dataflow analysis.
-- No full Confidence Evidence Engine, ensemble scoring, logprobs, or
-  calibration engine yet.
+- Confidence Evidence Engine is alpha. It does not claim calibrated confidence
+  without historical outcomes, legal compliance certification, production
+  readiness, or formal verification.
+- No hidden persistence is added by the Confidence Evidence Engine.
+- Tamper-evident decision ledger remains future Phase 4.

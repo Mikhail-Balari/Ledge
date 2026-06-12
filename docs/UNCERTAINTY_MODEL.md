@@ -1,6 +1,6 @@
 # Uncertainty Model
 
-This document describes the current Ledge 1.2.0 uncertainty model and sketches
+This document describes the current Ledge uncertainty model and sketches
 future semantics for richer uncertainty handling. It is design documentation,
 not an implemented runtime contract beyond the current `Uncertain[T]` behavior.
 
@@ -48,6 +48,18 @@ In particular:
 The current safety contract is narrower: checked execution rejects unchecked use
 of AI-derived values before the program runs.
 
+## Evidence-Backed Confidence
+
+In Ledge 1.6.0 Alpha, confidence can also be backed by explicit evidence
+records through `ledge_lang.confidence`. Evidence records can include schema
+validation results, ensemble stability signals, backend-provided logprob
+signals, conservative scoring details, warnings, redaction posture, hashes, and
+calibration diagnostics.
+
+This does not make confidence the same thing as correctness. It makes the
+reasoning behind a confidence score more inspectable and easier to block or
+review.
+
 ## Proposed Future Uncertainty States
 
 Future versions may distinguish several uncertainty states instead of treating
@@ -83,8 +95,8 @@ A richer uncertainty value may need metadata beyond a single confidence number:
 - Policy threshold: the threshold or policy rule applied when deciding whether
   to use, block, or escalate the value.
 
-Future APIs should preserve enough metadata for audit and calibration without
-turning sensitive input data into unnecessary logs.
+APIs should preserve enough metadata for audit and calibration without turning
+sensitive input data into unnecessary logs.
 
 ## Propagation Questions
 

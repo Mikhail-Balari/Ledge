@@ -1,8 +1,127 @@
-# Release Readiness - Ledge 1.5.0 Alpha
+# Release Readiness - Ledge 1.6.0 Alpha
 
-This document records publication status for Ledge 1.5.0 Alpha and
-historical release status for earlier alpha releases. It is a process document,
-not the PyPI long description.
+This document records release-prep status for Ledge 1.6.0 Alpha and
+publication status for earlier alpha releases. It is a process document, not
+the PyPI long description.
+
+## 1.6.0 Alpha Release Prep Status
+
+- Target version: `1.6.0 Alpha`.
+- Feature: Confidence Evidence Engine.
+- PyPI 1.6.0 uploaded: no.
+- PyPI project version: pending.
+- Git tag `v1.6.0` created and pushed: no.
+- GitHub Release `v1.6.0` created: no.
+- GitHub Release should be marked as pre-release: yes.
+- Ledge remains alpha.
+- Confidence Evidence Engine is available in local release-prep state.
+- Tamper-evident decision ledger remains future Phase 4.
+- No production, enterprise, or compliance guarantees.
+- No hallucination-prevention claim.
+- No truth guarantee.
+- No formal verification claim.
+- No audit-proof, immutable, blockchain-secured, or certification claim.
+
+## 1.6.0 Scope
+
+- Adds audit-ready `ledge_lang.confidence.ConfidenceEvidence`.
+- Adds `EvidenceSource` records and canonical evidence serialization.
+- Adds SHA-256 evidence hashing and redaction helpers.
+- Adds schema validation evidence.
+- Adds ensemble agreement evidence as an exact stability signal, not truth.
+- Adds backend-provided logprob signal evidence and unavailable-logprob
+  warnings.
+- Adds conservative scoring with hard schema/type failure dominance.
+- Adds calibration reports with Brier score, simplified ECE, low-sample
+  warnings, and cautious threshold guidance.
+- Adds redaction-safe text and JSON report rendering.
+- Adds CLI commands:
+  - `ledge confidence-eval <fixture.json>`
+  - `ledge confidence-eval <fixture.json> --format json`
+  - `ledge calibration-report <outcomes.json>`
+  - `ledge calibration-report <outcomes.json> --format json`
+- Adds low-stakes synthetic confidence examples under `examples/confidence/`.
+- Adds SDK evidence interoperability for legacy SDK evidence, audit-ready
+  confidence evidence, unknown evidence, and malformed evidence-like objects.
+- Corrects legacy compliance-shaped wording to structured evidence-field
+  wording.
+
+## 1.6.0 Packaging Checklist
+
+- `pyproject.toml` version: `1.6.0`.
+- `ledge_lang._version.__version__`: `1.6.0`.
+- Bundled package data still includes `ledge_lang/demos/*.ledge`.
+- Studio package data still includes `ledge_lang/studio/templates/*.html` for
+  the optional `ledge-lang[studio]` extra.
+- Expected wheel contents include:
+  - `ledge_lang/confidence/*.py`
+  - `ledge_lang/sdk/_evidence_compat.py`
+  - `ledge_lang/sdk/*.py`
+  - `ledge_lang/python_linter/*.py`
+  - bundled demos and pilot templates listed in the 1.5.0 checklist below.
+- Root-level `examples/`, including `examples/confidence/`, remain
+  source-checkout materials for review and adaptation.
+
+## 1.6.0 Pre-release Verification Checklist
+
+Expected before publication:
+
+- `python -m ledge_lang.cli version`: should report `Ledge 1.6.0`.
+- Focused confidence tests:
+  `python -m pytest tests/unit/test_confidence_*.py tests/unit/test_sdk_confidence_evidence_compat.py -q`.
+- `python -m pytest tests/unit/ -q`.
+- `python -m pytest tests/integration/ -q`.
+- `python tests/conformance.py`.
+- `python scripts/pre_release_check.py`.
+- `python examples/sdk_decision_boundary/app.py`.
+- `python -m ledge_lang.cli confidence-eval examples/confidence/fixture.json`.
+- `python -m ledge_lang.cli confidence-eval examples/confidence/fixture.json --format json`.
+- `python -m ledge_lang.cli calibration-report examples/confidence/outcomes.json`.
+- `python -m ledge_lang.cli calibration-report examples/confidence/outcomes.json --format json`.
+- `python -m ledge_lang.cli lint-python examples/python_linter/safe_usage.py --config examples/python_linter/ledge.toml`: should pass.
+- `python -m ledge_lang.cli lint-python examples/python_linter/unsafe_usage.py --config examples/python_linter/ledge.toml`: should fail with `LPY001`, `LPY002`, `LPY003`, and `LPY004`.
+- `python -m build`.
+- `python -m twine check dist/*`.
+- Clean local wheel install verification from outside the repository: pending
+  before PyPI upload.
+- Real PyPI install verification from outside the repository: pending after
+  PyPI upload.
+- PyPI page verification after upload: pending.
+- PyPI badge SVG verification after upload: pending.
+- Git tag and GitHub Release verification: pending.
+- Public claims audit: pending before publication.
+- No generated artifacts staged.
+- Working tree clean before tag/upload/release.
+
+## 1.6.0 Claims Audit Summary
+
+The 1.6.0 Alpha release candidate must not claim:
+
+- production readiness;
+- enterprise readiness;
+- compliance readiness, legal compliance, or certification;
+- model correctness;
+- calibrated confidence without representative historical outcomes;
+- hallucination prevention;
+- truth guarantee;
+- formal verification;
+- tamper-proof, audit-proof, immutable, or blockchain-secured behavior.
+
+Allowed framing:
+
+- alpha software;
+- evidence-backed confidence records;
+- redaction-aware reports;
+- deterministic schema, ensemble, logprob, scoring, and calibration helpers;
+- SDK interoperability for legacy and audit-ready evidence;
+- structured evidence review support;
+- future tamper-evident decision ledger work.
+
+## 1.6.0 Current Recommendation
+
+Ledge 1.6.0 Alpha is in local release-prep state. Do not upload to PyPI,
+create tag `v1.6.0`, or create a GitHub Release until the release candidate is
+explicitly approved.
 
 ## 1.5.0 Alpha Publication Status
 

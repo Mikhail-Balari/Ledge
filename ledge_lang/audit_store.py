@@ -277,7 +277,7 @@ class AuditStore:
         return [dict(r) for r in rows]
 
     def export_json_ld(self, program_id: Optional[str] = None) -> str:
-        """Export JSON-LD fields mapped to EU AI Act Article 12/13 evidence needs."""
+        """Export JSON-LD fields for structured evidence review."""
         now_iso  = datetime.now(timezone.utc).isoformat()
         entries  = self.query(program_id=program_id, limit=1_000_000)
         valid, _ = self.verify(program_id=program_id)
@@ -352,7 +352,7 @@ class AuditStore:
                 "@type":                         "AuditTrail",
                 "dcterms:created":               now_iso,
                 "dcterms:creator":               f"Ledge v{__version__}",
-                "eu_ai_act:article12_compliant": True,
+                "structured_evidence_fields_present": True,
                 "chain_valid":                   valid,
                 "chain_verified_at":             now_iso,
                 "summary": {
@@ -375,7 +375,7 @@ class AuditStore:
     def validate_regulatory_json_ld(self, path: Optional[str] = None,
                                      data: Optional[dict] = None) -> Dict:
         """
-        Validate that the JSON-LD file has the expected EU AI Act evidence fields.
+        Validate that the JSON-LD file has the expected structured evidence fields.
         Returns {'valid': bool, 'checks': [{'name', 'passed', 'detail'}]}.
         """
         if data is None:
@@ -390,8 +390,8 @@ class AuditStore:
 
         _check("@type == AuditTrail",
                data.get("@type") == "AuditTrail")
-        _check("eu_ai_act:article12_compliant == true",
-               data.get("eu_ai_act:article12_compliant") is True)
+        _check("structured_evidence_fields_present == true",
+               data.get("structured_evidence_fields_present") is True)
         _check("chain_valid == true",
                data.get("chain_valid") is True)
         _check("summary block present",

@@ -1,6 +1,6 @@
 # Python Integration
 
-This page describes Ledge 1.5.0 Alpha integration surfaces.
+This page describes Ledge 1.6.0 Alpha integration surfaces.
 
 Ledge can be used around a narrow AI decision boundary without rewriting an
 entire Python application.
@@ -35,14 +35,34 @@ the DSL static checker, and it does not statically enforce Python code yet.
 Ledge 1.5.0 Alpha adds `ledge lint-python` for AST-based CI enforcement of
 common unsafe Python decision-boundary patterns, but it is not complete Python
 semantic verification and it is not a mypy or Pyright plugin.
-`ConfidenceEvidence` is currently a minimal metadata container, not a calibrated
-confidence engine.
+Ledge 1.6.0 Alpha adds an audit-ready Confidence Evidence Engine under
+`ledge_lang.confidence`.
 
 For a deterministic example, run:
 
 ```bash
 python examples/sdk_decision_boundary/app.py
 ```
+
+## SDK Evidence Interoperability
+
+`Uncertain(..., evidence=...)` accepts evidence through a private SDK
+interoperability layer. Legacy SDK evidence remains available:
+
+```python
+from ledge_lang.sdk import ConfidenceEvidence
+```
+
+Audit-ready confidence evidence is available separately:
+
+```python
+from ledge_lang.confidence import ConfidenceEvidence, EvidenceSource
+```
+
+The SDK normalizes legacy, audit-ready, unknown, and malformed evidence objects
+before adding evidence metadata to `DecisionResult`. Unknown or malformed
+evidence is visible and invalid; it is not silently trusted. Raw-like metadata
+is redacted or warning-marked.
 
 ## What Remains Normal Python
 
@@ -199,14 +219,13 @@ ledge lint-python examples/python_linter/unsafe_usage.py --config examples/pytho
 
 ## What This Does Not Demonstrate
 
-- A full Python SDK beyond the minimal SDK Core.
 - A gateway, sidecar, hosted service, or policy runtime.
 - Complete Python semantic verification.
 - A mypy or Pyright plugin.
 - Production deployment.
 - Legal or regulatory compliance.
 - Model correctness.
-- Calibrated confidence.
+- Calibrated confidence without representative historical outcomes.
 - Security isolation for untrusted code.
 
 This is a minimal alpha integration example around one checked decision

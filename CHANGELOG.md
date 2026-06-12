@@ -1,5 +1,37 @@
 # Ledge Changelog
 
+## [1.6.0] - Alpha
+
+### Added
+
+- Adds audit-ready `ledge_lang.confidence.ConfidenceEvidence`.
+- Adds `EvidenceSource` and canonical evidence serialization.
+- Adds evidence hashing and redaction helpers.
+- Adds schema validation, ensemble agreement, logprob signal, conservative
+  scoring, and calibration report support.
+- Adds redaction-safe confidence and calibration report rendering.
+- Adds CLI commands:
+  - `ledge confidence-eval`
+  - `ledge calibration-report`
+- Adds low-stakes examples under `examples/confidence/`.
+- Adds an SDK evidence interoperability layer for legacy and audit-ready
+  evidence objects.
+
+### Changed
+
+- `Uncertain(..., evidence=...)` now normalizes legacy, audit-ready, unknown,
+  and malformed evidence through a private SDK interoperability layer.
+- Legacy regulatory/compliance-shaped wording is corrected to
+  evidence-field wording.
+
+### Notes
+
+- Alpha release.
+- Not production-ready.
+- Not legal compliance certification.
+- Does not guarantee truth or prevent hallucinations.
+- Tamper-evident decision ledger remains future Phase 4.
+
 ## [1.5.0] - Alpha
 
 - Adds `ledge lint-python <paths...>` for AST-based Python decision-boundary

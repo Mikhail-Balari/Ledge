@@ -11,8 +11,9 @@ It does not prove that a model is correct. It helps make unchecked AI
 uncertainty visible, enforceable, and auditable before it becomes action. Ledge
 surrounds AI calls with a static analysis pass that rejects direct use of
 results whose confidence has not been checked, records AI decisions in a
-hash-chained audit log, and compares declared confidence against real outcomes
-over time so thresholds can be recalibrated.
+hash-chained audit log, compares declared confidence against real outcomes
+over time, and can attach structured confidence evidence before an AI output
+crosses into a business action.
 
 Ledge is alpha software. It is not an AI model, not a formal proof system, not
 a compliance product, and not a replacement for evaluation, monitoring, or
@@ -63,7 +64,7 @@ the model; it just makes "I forgot to check" turn into a static error.
 From PyPI:
 
 ```bash
-pip install ledge-lang==1.5.0
+pip install ledge-lang==1.6.0
 ledge demo
 ledge demo medical_triage
 ledge demo loan_approval
@@ -132,12 +133,15 @@ interpreter and test harness use; it bypasses the static checker by design.
 Python SDK Core: `from ledge_lang.sdk import Uncertain, DecisionPolicy`
 provides a minimal alpha SDK surface for modeling uncertain values and decision
 policies in normal Python code. This does not replace the DSL static checker.
-It is API-level and runtime-level handling. Ledge 1.5.0 Alpha adds
+It is API-level and runtime-level handling. Ledge 1.5.0 Alpha added
 `ledge lint-python` for AST-based CI enforcement of common unsafe Python
-decision-boundary patterns, but it does not provide complete Python semantic
-verification or complete cross-file/interprocedural dataflow analysis.
-`ConfidenceEvidence` is currently a minimal metadata container, not a calibrated confidence engine. See
-[`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/).
+decision-boundary patterns. Ledge 1.6.0 Alpha adds a Confidence Evidence
+Engine: structured, redaction-aware, hashable evidence for confidence scores
+before AI outputs cross into business actions. It does not provide complete
+Python semantic verification, complete cross-file/interprocedural dataflow
+analysis, a truth guarantee, hallucination prevention, or legal compliance.
+See [`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/) and
+[`examples/confidence`](examples/confidence/).
 
 For minimal Python integration and CI checker examples after installing the
 package:
@@ -158,12 +162,24 @@ ledge ci-check ledge_lang/demos examples/python_integration
 ledge lint-python examples/python_linter --config examples/python_linter/ledge.toml
 ```
 
+Confidence Evidence Engine examples that use the repository fixture files also
+require a source checkout where `examples/confidence/` is available:
+
+```bash
+ledge confidence-eval examples/confidence/fixture.json
+ledge confidence-eval examples/confidence/fixture.json --format json
+ledge calibration-report examples/confidence/outcomes.json
+ledge calibration-report examples/confidence/outcomes.json --format json
+```
+
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
 For Python integration guidance, see [`docs/PYTHON_INTEGRATION.md`](docs/PYTHON_INTEGRATION.md).
 For SDK-level uncertain values in normal Python, see
 [`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/).
 For current and future uncertainty semantics, see
 [`docs/UNCERTAINTY_MODEL.md`](docs/UNCERTAINTY_MODEL.md).
+For confidence evidence records, signal generation, reporting, and limits, see
+[`docs/CONFIDENCE_EVIDENCE_ENGINE.md`](docs/CONFIDENCE_EVIDENCE_ENGINE.md).
 For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 For the future audit anchoring design, see
 [`docs/AUDIT_ANCHORING.md`](docs/AUDIT_ANCHORING.md).

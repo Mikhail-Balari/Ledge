@@ -137,8 +137,8 @@ def test_low_sample_size_warning_does_not_make_calibration_cli_fail():
     assert "low_sample_size" in result.stdout
 
 
-def test_existing_version_command_still_reports_1_5_0():
+def test_existing_version_command_still_reports_current_version():
     result = run_cli("version")
 
     assert result.returncode == 0
-    assert "Ledge 1.5.0" in result.stdout
+    assert "Ledge 1.6.0" in result.stdout

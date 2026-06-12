@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0-alpha",
+  "version": "1.6.0-alpha",
   "release_readiness": "See RELEASE_READINESS.md",
   "implemented": {
     "interpreter": "Tree-walker interpreter",
@@ -9,7 +9,8 @@
     "audit_store": "Hash-chained audit store with limited threat model",
     "python_sdk_core": "Minimal Uncertain, DecisionPolicy, DecisionResult, confidence evidence metadata, validators, and deterministic fake clients for normal Python code",
     "python_linter_ci": "AST-based ledge lint-python enforcement for common unsafe SDK decision-boundary patterns",
-    "packaging": "1.5.0 wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, CI-check, lint-python commands, Python SDK Core, and Python linter package"
+    "confidence_evidence_engine": "Alpha confidence evidence records, schema validation evidence, ensemble stability evidence, logprob signal evidence, conservative scoring, calibration reports, redaction-safe rendering, CLI examples, and SDK evidence interoperability",
+    "packaging": "1.6.0 wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, CI-check, lint-python commands, Python SDK Core, Python linter package, confidence package, and SDK evidence interoperability layer"
   },
   "known_gaps": [
     "No known production deployments",
@@ -19,6 +20,8 @@
     "Ledge 1.5.0 Alpha adds AST-based Python linter / CI enforcement, not complete Python semantic verification",
     "No complete Python semantic verification or mypy/Pyright plugin",
     "Python linter coverage is AST-based and intentionally scoped to common local unsafe-use patterns; it does not yet perform complete cross-file or interprocedural dataflow analysis",
-    "No full Confidence Evidence Engine, ensemble scoring, logprobs, or calibration engine yet"
+    "Confidence Evidence Engine is alpha and does not claim calibrated confidence without historical outcomes",
+    "No hidden persistence is added by the Confidence Evidence Engine",
+    "Tamper-evident decision ledger remains future Phase 4"
   ]
 }
