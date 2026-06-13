@@ -28,6 +28,8 @@ Usage:
                                Initialize an append-oriented local decision ledger
   ledge ledger-append --store <ledger.jsonl> --event <decision_event.json> [--init] [--format json]
                                Append a semantic decision event to a local ledger
+  ledge ledger-export --store <ledger.jsonl> [--manifest <manifest.json>] [--boundary <id>] --out <dir> [--force]
+                               Create a local audit review package
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -124,6 +126,9 @@ def main():
 
     if args[0] == "ledger-append":
         raise SystemExit(_ledger_append(args[1:]))
+
+    if args[0] == "ledger-export":
+        raise SystemExit(_ledger_export(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:
@@ -486,6 +491,40 @@ def _ledger_append(args):
         print(f"  Current event hash : {event.current_event_hash}")
         if event.previous_event_hash is not None:
             print(f"  Previous event hash: {event.previous_event_hash}")
+    return 0
+
+
+def _ledger_export(args):
+    import argparse
+
+    from ledge_lang.ledger import export_ledger_review_package
+    from ledge_lang.ledger.exceptions import LedgerError
+
+    parser = argparse.ArgumentParser(prog="ledge ledger-export")
+    parser.add_argument("--store", required=True, help="decision ledger JSONL path")
+    parser.add_argument("--manifest", default=None, help="optional ledger manifest JSON path")
+    parser.add_argument("--boundary", dest="boundary_id", default=None, help="optional boundary id filter")
+    parser.add_argument("--out", required=True, help="output directory for the local audit review package")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing non-empty output directory")
+    opts = parser.parse_args(args)
+
+    try:
+        result = export_ledger_review_package(
+            store_path=opts.store,
+            out_dir=opts.out,
+            manifest_path=opts.manifest,
+            boundary_id=opts.boundary_id,
+            force=opts.force,
+        )
+    except (LedgerError, OSError) as exc:
+        print(f"ledge ledger-export: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"Wrote local audit review package: {result.output_dir}")
+    print(f"  Events exported     : {result.events_exported}")
+    print(f"  Verification status : {result.verification_status}")
+    if result.boundary_filter is not None:
+        print(f"  Boundary filter     : {result.boundary_filter}")
     return 0
 
 

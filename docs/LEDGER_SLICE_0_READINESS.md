@@ -79,5 +79,19 @@ It rejects raw payload fields and still does not add SDK integration, export
 packages, AI review pack generation, remote anchoring, version bumps, or
 release actions.
 
+Slice 6 adds local audit review export packages:
+
+- `ledge ledger-export` for generating a local review folder;
+- copied ledger events;
+- manifest JSON;
+- verification report JSON and Markdown;
+- safe aggregate decision summary;
+- README limitations and anti-claims;
+- optional boundary filtering.
+
+Filtered exports still use full-ledger verification as the integrity source.
+Slice 6 still does not add SDK integration, AI review pack generation, remote
+anchoring, version bumps, or release actions.
+
 The next implementation slice should focus on the next narrow ledger capability
 while preserving the same anti-claims.

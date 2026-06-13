@@ -15,7 +15,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   `DecisionEvent` core. Slice 2 adds append-oriented JSONL storage and a
   `LedgerManifest` foundation. Slice 3 adds verifier core results for the
   planned Tamper-Evident Decision Ledger. Slice 4 adds public CLI verification
-  and manifest commands. Slice 5 adds ledger init and append commands.
+  and manifest commands. Slice 5 adds ledger init and append commands. Slice 6
+  adds local audit review export packages.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -45,6 +46,9 @@ The likely next implementation release target is `1.7.0 Alpha`.
 - `ledge ledger-init` creates or validates append-oriented local ledger files.
 - `ledge ledger-append` appends completed or draft semantic `DecisionEvent`
   JSON while enforcing hash and sequence continuity.
+- `ledge ledger-export` generates local audit review packages with copied
+  ledger events, manifest JSON, verification reports, safe summaries, and
+  limitations.
 
 ## Phase 4 Slice 0 Scope
 
@@ -146,6 +150,24 @@ Slice 5 adds local ledger operation commands only:
 No SDK integration, export package, AI review pack generation, remote anchoring,
 version bump, or release action is part of Slice 5.
 
+## Phase 4 Slice 6 Scope
+
+Slice 6 adds a local audit review export package only:
+
+- `ledge ledger-export --store <ledger.jsonl> --out <audit_export/>`;
+- optional manifest verification with `--manifest`;
+- optional boundary filtering with `--boundary`;
+- overwrite protection with `--force`;
+- generated `ledger_events.jsonl`, `ledger_manifest.json`,
+  `verification_report.json`, `verification_report.md`,
+  `decision_summary.json`, and `README.md`.
+
+Full-ledger verification remains the integrity source for filtered exports.
+The package is a local audit review aid, not compliance certification.
+
+No SDK integration, AI review pack generation, remote anchoring, version bump,
+or release action is part of Slice 6.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -163,11 +185,12 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 6: the next narrow ledger
-capability after local initialization and append.
+The next recommended slice is Phase 4 Slice 7: the next narrow ledger
+capability after local audit review exports.
 
 Expected scope:
 
 - no version bump or release action unless explicitly requested;
 - preserve the tamper-evident, not tamper-proof boundary;
-- keep SDK integration, export, or AI review pack work scoped to one slice.
+- keep SDK integration, AI review pack, or remote anchoring work scoped to one
+  slice.

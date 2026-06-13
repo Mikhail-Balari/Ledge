@@ -7,8 +7,8 @@ Slice 2 adds append-oriented JSONL storage and a local manifest foundation.
 Slice 3 implements the verifier core for human-readable and machine-readable
 integrity results. Slice 4 exposes the verifier and manifest foundation through
 public CLI commands. Slice 5 adds local ledger initialization and event append
-commands. Export packages, AI review pack generation, SDK integration, and
-remote anchoring remain future work.
+commands. Slice 6 adds local audit review export packages. AI review pack
+generation, SDK integration, and remote anchoring remain future work.
 
 ## Output Modes
 
@@ -57,6 +57,28 @@ truncates valid existing events.
 `ledger-append` validates completed or draft `DecisionEvent` JSON, rejects raw
 payload fields, enforces sequence and previous-hash continuity through the
 store layer, and returns either human-readable text or parseable JSON.
+
+Slice 6 adds:
+
+```bash
+ledge ledger-export --store ledge_audit.jsonl --out audit_export/
+ledge ledger-export --store ledge_audit.jsonl --manifest ledger_manifest.json --out audit_export/
+ledge ledger-export --store ledge_audit.jsonl --manifest ledger_manifest.json --boundary refund_decision --out audit_export/
+ledge ledger-export --store ledge_audit.jsonl --out audit_export/ --force
+```
+
+`ledger-export` writes a local audit review package with:
+
+- `ledger_events.jsonl`
+- `ledger_manifest.json`
+- `verification_report.json`
+- `verification_report.md`
+- `decision_summary.json`
+- `README.md`
+
+Filtered exports use the full source ledger verification report as the
+integrity source, then copy only matching boundary events into the package.
+The package is for local audit review, not compliance certification.
 
 ## Verification Statuses
 

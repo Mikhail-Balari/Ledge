@@ -471,6 +471,89 @@ def test_ledger_manifest_force_overwrites(tmp_path):
     assert json.loads(manifest_path.read_text(encoding="utf-8"))["event_count"] == 2
 
 
+def test_ledger_export_valid_ledger_succeeds(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    out_dir = tmp_path / "audit_export"
+    write_valid_ledger(ledger_path)
+
+    result = run_cli("ledger-export", "--store", ledger_path, "--out", out_dir)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "local audit review package" in result.stdout
+    assert "Events exported" in result.stdout
+    assert "passed_with_warnings" in result.stdout
+    assert (out_dir / "ledger_events.jsonl").exists()
+    assert (out_dir / "ledger_manifest.json").exists()
+    assert (out_dir / "verification_report.json").exists()
+    assert (out_dir / "verification_report.md").exists()
+    assert (out_dir / "decision_summary.json").exists()
+    assert (out_dir / "README.md").exists()
+
+
+def test_ledger_export_with_manifest_succeeds(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    manifest_path = tmp_path / "manifest.json"
+    out_dir = tmp_path / "audit_export"
+    write_valid_ledger(ledger_path)
+    manifest_result = run_cli("ledger-manifest", "--store", ledger_path, "--out", manifest_path)
+    assert manifest_result.returncode == 0, manifest_result.stdout + manifest_result.stderr
+
+    result = run_cli("ledger-export", "--store", ledger_path, "--manifest", manifest_path, "--out", out_dir)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "passed" in result.stdout
+    report = json.loads((out_dir / "verification_report.json").read_text(encoding="utf-8"))
+    assert report["status"] == "passed"
+
+
+def test_ledger_export_boundary_filter_succeeds(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    first = make_event(boundary_id="refund_routing")
+    second = make_event(
+        sequence=2,
+        previous_event_hash=first.current_event_hash,
+        event_id="evt_shipping_0002",
+        boundary_id="shipping_routing",
+    )
+    ledger = DecisionLedger(ledger_path)
+    ledger.append(first)
+    ledger.append(second)
+    out_dir = tmp_path / "audit_export"
+
+    result = run_cli("ledger-export", "--store", ledger_path, "--boundary", "refund_routing", "--out", out_dir)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Boundary filter" in result.stdout
+    summary = json.loads((out_dir / "decision_summary.json").read_text(encoding="utf-8"))
+    exported = [
+        json.loads(line)
+        for line in (out_dir / "ledger_events.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert summary["boundary_filter"] == "refund_routing"
+    assert summary["total_events_checked"] == 2
+    assert [event["boundary_id"] for event in exported] == ["refund_routing"]
+
+
+def test_ledger_export_fails_cleanly_for_corrupt_ledger(tmp_path):
+    ledger_path = tmp_path / "corrupt.jsonl"
+    out_dir = tmp_path / "audit_export"
+    ledger_path.write_text("{bad-json}\n", encoding="utf-8")
+
+    result = run_cli("ledger-export", "--store", ledger_path, "--out", out_dir)
+
+    assert result.returncode != 0
+    assert "verification failed" in result.stderr
+    assert "Traceback" not in result.stderr
+    assert not out_dir.exists()
+
+
+def test_ledger_export_help_is_listed():
+    result = run_cli("help")
+
+    assert result.returncode == 0
+    assert "ledger-export" in result.stdout
+
+
 def test_ledger_manifest_missing_store_returns_nonzero(tmp_path):
     result = run_cli(
         "ledger-manifest",
@@ -502,3 +585,4 @@ def test_public_help_lists_ledger_commands():
     assert "ledger-manifest" in result.stdout
     assert "ledger-init" in result.stdout
     assert "ledger-append" in result.stdout
+    assert "ledger-export" in result.stdout

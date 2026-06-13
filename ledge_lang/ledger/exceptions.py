@@ -25,3 +25,7 @@ class LedgerSequenceError(LedgerStoreError):
 
 class LedgerManifestError(LedgerError):
     """Raised when a ledger manifest is malformed or inconsistent."""
+
+
+class LedgerExportError(LedgerError):
+    """Raised when a local ledger review export cannot be produced safely."""

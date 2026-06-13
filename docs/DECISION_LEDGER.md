@@ -111,8 +111,8 @@ ledge ledger-manifest --store ledge_audit.jsonl --out ledger_manifest.json --for
 The CLI is intended for humans, CI, shell scripts, and future governance
 workflows. JSON output is designed for machine readers and other AI systems.
 `--strict` can make warnings nonzero when a CI pipeline requires a manifest.
-Export packages, AI review pack generation, and SDK integration remain future
-work.
+Local audit review export packages, AI review pack generation, and SDK
+integration remain future work.
 
 ## Init And Append CLI Surface
 
@@ -138,6 +138,31 @@ same canonical event path before append. Raw payload fields such as `input`,
 These commands make the local ledger operational for humans, CI jobs, shell
 scripts, and structured event producers. They do not add SDK auto-persistence,
 remote anchoring, export packages, or AI review pack generation.
+
+## Local Audit Review Export Packages
+
+Phase 4 Slice 6 adds a local review package command:
+
+```bash
+ledge ledger-export --store ledge_audit.jsonl --out audit_export/
+ledge ledger-export --store ledge_audit.jsonl --manifest ledger_manifest.json --out audit_export/
+ledge ledger-export --store ledge_audit.jsonl --manifest ledger_manifest.json --boundary refund_decision --out audit_export/
+ledge ledger-export --store ledge_audit.jsonl --out audit_export/ --force
+```
+
+`ledger-export` writes a local audit review package containing copied ledger
+events, a manifest, machine-readable verification JSON, a human-readable
+verification report, a safe aggregate decision summary, and a README with
+limitations.
+
+When `--boundary` is used, the exported `ledger_events.jsonl` is filtered to
+matching events only. The verification report still describes the full source
+ledger because filtering breaks full-chain continuity. Full-ledger verification
+remains the integrity source for the package.
+
+The export package is a review aid, not compliance certification. It does not
+add AI review pack generation, SDK integration, remote anchoring, immutable
+storage, or production readiness.
 
 ## What It Is Not
 
