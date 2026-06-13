@@ -3,6 +3,11 @@
 This document defines the proposed Phase 4 `DecisionEvent` schema. It is a
 contract document only. Runtime ledger code is not implemented in Slice 0.
 
+Slice 1 implemented the `DecisionEvent` core. Slice 2 adds append-oriented
+JSONL storage and a local `LedgerManifest` foundation. The store remains local
+append-oriented storage; it is not immutable storage, blockchain, or a
+compliance certification mechanism.
+
 ## Required Fields
 
 Every `DecisionEvent` should include:
@@ -109,3 +114,45 @@ Rules:
 
 This example is synthetic and low stakes. The hashes are placeholders, not
 computed values.
+
+## JSONL Ledger Store
+
+Slice 2 stores decision events as JSONL:
+
+- one canonical `DecisionEvent` JSON object per line;
+- no raw input or output payloads;
+- each line must validate through the `DecisionEvent` schema;
+- blank or malformed lines are treated as corruption, not silently ignored;
+- appends enforce monotonic sequence continuity;
+- appends enforce `previous_event_hash` continuity.
+
+This is append-oriented local storage. It is append-only by convention plus
+verification, not immutable storage.
+
+## Ledger Manifest Foundation
+
+Slice 2 defines a local `LedgerManifest` summary with schema version
+`ledge.ledger_manifest.v1`.
+
+Manifest fields:
+
+- `schema_version`
+- `ledger_path`
+- `event_count`
+- `first_event_hash`
+- `last_event_hash`
+- `created_at_utc`
+- `updated_at_utc`
+- `ledge_version`
+
+An empty ledger manifest is allowed with `event_count` set to `0` and both
+event hashes set to `null`.
+
+For a non-empty ledger:
+
+- `event_count` equals the number of validated ledger events;
+- `first_event_hash` equals the first event `current_event_hash`;
+- `last_event_hash` equals the last event `current_event_hash`.
+
+The manifest is a local summary and anchor point for later verification. It is
+not a security boundary by itself and does not contain raw inputs or outputs.

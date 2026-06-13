@@ -41,3 +41,17 @@ The expected next slice is Ledger Core implementation:
 - unit tests for tamper detection.
 
 Slice 1 should still avoid release actions unless explicitly requested.
+
+## Post-Slice Progress
+
+Slice 1 added the `DecisionEvent` core, canonical event serialization, event
+hashing, and previous-hash linking semantics.
+
+Slice 2 adds append-oriented JSONL storage and a `LedgerManifest` foundation.
+It still does not add CLI ledger commands, SDK integration, export packages, AI
+review pack generation, a full verifier report implementation, version bumps,
+or release actions.
+
+The next implementation slice should focus on verifier core behavior for
+sequence continuity, hash-chain integrity, manifest consistency, and
+machine-readable findings.

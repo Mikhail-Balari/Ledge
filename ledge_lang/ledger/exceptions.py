@@ -13,3 +13,15 @@ class LedgerValidationError(LedgerError):
 
 class LedgerHashError(LedgerError):
     """Raised when a ledger event hash is malformed or inconsistent."""
+
+
+class LedgerStoreError(LedgerError):
+    """Raised when a local ledger store cannot be read or written safely."""
+
+
+class LedgerSequenceError(LedgerStoreError):
+    """Raised when ledger sequence or previous-hash continuity is broken."""
+
+
+class LedgerManifestError(LedgerError):
+    """Raised when a ledger manifest is malformed or inconsistent."""

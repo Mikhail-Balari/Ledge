@@ -12,7 +12,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
 - Phase 2: Python Linter / CI Enforcement released.
 - Phase 3: Confidence Evidence Engine released in 1.6.0 Alpha.
 - Phase 4: Slice 0 architecture is defined. Slice 1 adds the local
-  `DecisionEvent` core for the planned Tamper-Evident Decision Ledger.
+  `DecisionEvent` core. Slice 2 adds append-oriented JSONL storage and a
+  `LedgerManifest` foundation for the planned Tamper-Evident Decision Ledger.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -28,6 +29,10 @@ The likely next implementation release target is `1.7.0 Alpha`.
   evidence records with canonical serialization and evidence hashing.
 - `ledge_lang.ledger.DecisionEvent` provides a strict, canonical, hashable
   event model for semantic AI decision boundary events.
+- `ledge_lang.ledger.DecisionLedger` provides append-oriented local JSONL
+  storage for validated decision events.
+- `ledge_lang.ledger.LedgerManifest` provides a local summary and anchor point
+  for later verification.
 
 ## Phase 4 Slice 0 Scope
 
@@ -65,6 +70,23 @@ generation is added in Slice 1.
 
 No version bump or release action is part of Slice 1.
 
+## Phase 4 Slice 2 Scope
+
+Slice 2 adds local storage and manifest primitives only:
+
+- append-oriented JSONL event storage;
+- sequence continuity checks;
+- previous-event hash continuity checks;
+- strict rejection of blank or malformed ledger lines;
+- local manifest summary for event count, first event hash, and last event hash.
+
+No CLI ledger commands are added in Slice 2.
+
+No full verifier output contract, export package, AI review pack generation, or
+SDK integration is added in Slice 2.
+
+No version bump or release action is part of Slice 2.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -82,12 +104,12 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 2: append-oriented ledger storage
-and manifest foundation.
+The next recommended slice is Phase 4 Slice 3: verifier core.
 
 Expected scope:
 
-- append-oriented local writer;
-- manifest schema and writer;
-- sequence and previous-hash continuity checks;
-- storage-focused tamper detection tests.
+- human-readable verification summary;
+- machine-readable verification result;
+- sequence and hash-chain validation findings;
+- manifest consistency checks;
+- tamper detection tests.

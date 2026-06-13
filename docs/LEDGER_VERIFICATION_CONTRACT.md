@@ -3,6 +3,10 @@
 This document defines expected verifier behavior before implementation. It is a
 contract for Phase 4 Slice 1 and later.
 
+Slice 2 adds append-oriented JSONL storage and a local manifest foundation, but
+does not implement the full verifier output contract. Full human-readable and
+machine-readable verifier reports remain future Slice 3 work.
+
 ## Output Modes
 
 The verifier must produce:
@@ -94,3 +98,15 @@ which review path is recommended.
 
 The verifier should not claim legal compliance, production readiness, formal
 verification, truth, hallucination prevention, or immutable storage.
+
+Until the full verifier is implemented, the Slice 2 store performs local
+structural checks while reading and appending events:
+
+- each JSONL line must parse as JSON;
+- each line must validate as a `DecisionEvent`;
+- event hashes must verify;
+- sequence numbers must be continuous;
+- `previous_event_hash` must match the previous event.
+
+These checks are a foundation for the verifier, not a replacement for the full
+verification report contract above.
