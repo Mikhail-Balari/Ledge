@@ -5,8 +5,9 @@ contract for Phase 4 Slice 1 and later.
 
 Slice 2 adds append-oriented JSONL storage and a local manifest foundation.
 Slice 3 implements the verifier core for human-readable and machine-readable
-integrity results. CLI commands, export packages, AI review pack generation,
-and SDK integration remain future work.
+integrity results. Slice 4 exposes the verifier and manifest foundation through
+public CLI commands. Export packages, AI review pack generation, and SDK
+integration remain future work.
 
 ## Output Modes
 
@@ -16,6 +17,29 @@ The verifier must produce:
 - machine-readable JSON output for CI, governance tools, and AI review packs.
 
 The JSON output should be deterministic enough for tests and automation.
+
+## CLI Surface
+
+Slice 4 adds two public operation commands:
+
+```bash
+ledge ledger-verify --store ledge_audit.jsonl
+ledge ledger-verify --store ledge_audit.jsonl --manifest ledger_manifest.json
+ledge ledger-verify --store ledge_audit.jsonl --manifest ledger_manifest.json --format json
+ledge ledger-verify --store ledge_audit.jsonl --strict
+ledge ledger-manifest --store ledge_audit.jsonl --out ledger_manifest.json
+ledge ledger-manifest --store ledge_audit.jsonl --out ledger_manifest.json --force
+```
+
+`ledger-verify` prints human-readable text by default and deterministic JSON
+with `--format json`. A valid ledger without a manifest returns
+`passed_with_warnings`; this exits zero by default and exits nonzero with
+`--strict` for CI environments that require a manifest.
+
+`ledger-manifest` writes a local manifest summary for a valid ledger and refuses
+to overwrite an existing file unless `--force` is provided. It is a local
+summary and anchor point, not immutable storage and not compliance
+certification.
 
 ## Verification Statuses
 

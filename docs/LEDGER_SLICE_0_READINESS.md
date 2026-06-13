@@ -58,5 +58,15 @@ output, and structured findings. It still does not add CLI ledger commands, SDK
 integration, export packages, AI review pack generation, version bumps, or
 release actions.
 
-The next implementation slice should focus on a narrow public operation surface
-such as CLI verification commands, while preserving the same anti-claims.
+Slice 4 adds a narrow public operation surface:
+
+- `ledge ledger-verify` for text and JSON verification output;
+- optional manifest validation;
+- `--strict` handling for CI;
+- `ledge ledger-manifest` for local manifest generation.
+
+It still does not add SDK integration, export packages, AI review pack
+generation, version bumps, or release actions.
+
+The next implementation slice should focus on the next narrow ledger capability,
+such as export or SDK integration, while preserving the same anti-claims.

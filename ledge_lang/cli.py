@@ -20,6 +20,10 @@ Usage:
                                Evaluate confidence evidence fixture
   ledge calibration-report <outcomes.json> [--format json]
                                Report Brier/ECE calibration metrics
+  ledge ledger-verify --store <ledger.jsonl> [--manifest <manifest.json>] [--format json] [--strict]
+                               Verify decision ledger JSONL integrity
+  ledge ledger-manifest --store <ledger.jsonl> --out <manifest.json> [--force]
+                               Build a local decision ledger manifest
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -104,6 +108,12 @@ def main():
 
     if args[0] == "calibration-report":
         raise SystemExit(_calibration_report(args[1:]))
+
+    if args[0] == "ledger-verify":
+        raise SystemExit(_ledger_verify(args[1:]))
+
+    if args[0] == "ledger-manifest":
+        raise SystemExit(_ledger_manifest(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:
@@ -302,6 +312,84 @@ def _calibration_report(args):
     except ConfidenceEvidenceError as exc:
         print(f"ledge calibration-report: {exc}", file=sys.stderr)
         return 2
+
+
+def _ledger_verify(args):
+    import argparse
+
+    from ledge_lang.ledger import verify_ledger
+
+    parser = argparse.ArgumentParser(prog="ledge ledger-verify")
+    parser.add_argument("--store", required=True, help="decision ledger JSONL path")
+    parser.add_argument("--manifest", default=None, help="optional ledger manifest JSON path")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="treat passed_with_warnings as a nonzero result for CI",
+    )
+    opts = parser.parse_args(args)
+
+    result = verify_ledger(opts.store, opts.manifest)
+    if opts.format == "json":
+        print(result.to_json())
+    else:
+        print(result.to_text())
+
+    if result.status == "failed":
+        return 1
+    if result.status == "passed_with_warnings" and opts.strict:
+        return 1
+    return 0
+
+
+def _ledger_manifest(args):
+    import argparse
+    from pathlib import Path
+
+    from ledge_lang.ledger import DecisionLedger, build_manifest
+    from ledge_lang.ledger.exceptions import LedgerError
+
+    parser = argparse.ArgumentParser(prog="ledge ledger-manifest")
+    parser.add_argument("--store", required=True, help="decision ledger JSONL path")
+    parser.add_argument("--out", required=True, help="manifest output JSON path")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing manifest")
+    opts = parser.parse_args(args)
+
+    out_path = Path(opts.out)
+    if out_path.exists() and not opts.force:
+        print(
+            f"ledge ledger-manifest: refusing to overwrite existing manifest: {out_path}",
+            file=sys.stderr,
+        )
+        return 1
+
+    try:
+        ledger = DecisionLedger(opts.store)
+        if not ledger.exists():
+            print(f"ledge ledger-manifest: ledger store not found: {ledger.path}", file=sys.stderr)
+            return 1
+        manifest = build_manifest(ledger)
+        rendered = manifest.to_canonical_json() + "\n"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = out_path.with_name(f".{out_path.name}.tmp")
+        tmp_path.write_text(rendered, encoding="utf-8")
+        tmp_path.replace(out_path)
+    except (LedgerError, OSError) as exc:
+        try:
+            tmp_path = out_path.with_name(f".{out_path.name}.tmp")
+            if tmp_path.exists():
+                tmp_path.unlink()
+        except OSError:
+            pass
+        print(f"ledge ledger-manifest: {exc}", file=sys.stderr)
+        return 1
+
+    last_hash = manifest.last_event_hash if manifest.last_event_hash is not None else "none"
+    print(f"Wrote ledger manifest: {out_path}")
+    print(f"  Event count     : {manifest.event_count}")
+    print(f"  Last event hash : {last_hash}")
+    return 0
 
 
 def _run_file(path, extra_args=None):

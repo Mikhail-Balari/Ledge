@@ -90,6 +90,30 @@ reviewing system to inspect the boundary, evidence, policy result, action,
 warnings, and integrity findings. It must not ask a reviewing AI to trust the
 original AI output.
 
+## Verification CLI Surface
+
+Phase 4 Slice 4 exposes the local verifier through:
+
+```bash
+ledge ledger-verify --store ledge_audit.jsonl
+ledge ledger-verify --store ledge_audit.jsonl --manifest ledger_manifest.json
+ledge ledger-verify --store ledge_audit.jsonl --manifest ledger_manifest.json --format json
+ledge ledger-verify --store ledge_audit.jsonl --strict
+```
+
+It also exposes local manifest generation through:
+
+```bash
+ledge ledger-manifest --store ledge_audit.jsonl --out ledger_manifest.json
+ledge ledger-manifest --store ledge_audit.jsonl --out ledger_manifest.json --force
+```
+
+The CLI is intended for humans, CI, shell scripts, and future governance
+workflows. JSON output is designed for machine readers and other AI systems.
+`--strict` can make warnings nonzero when a CI pipeline requires a manifest.
+Export packages, AI review pack generation, and SDK integration remain future
+work.
+
 ## What It Is Not
 
 The ledger is an audit review package, not compliance certification.

@@ -14,7 +14,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
 - Phase 4: Slice 0 architecture is defined. Slice 1 adds the local
   `DecisionEvent` core. Slice 2 adds append-oriented JSONL storage and a
   `LedgerManifest` foundation. Slice 3 adds verifier core results for the
-  planned Tamper-Evident Decision Ledger.
+  planned Tamper-Evident Decision Ledger. Slice 4 adds public CLI verification
+  and manifest commands.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -37,6 +38,10 @@ The likely next implementation release target is `1.7.0 Alpha`.
 - `ledge_lang.ledger.LedgerVerifier` verifies local ledger JSONL files and
   optional manifests with structured findings, deterministic JSON output, and
   human-readable summaries.
+- `ledge ledger-verify` exposes ledger verification for humans, CI, shell
+  scripts, and JSON-consuming workflows.
+- `ledge ledger-manifest` writes local manifest summaries for valid ledger
+  JSONL files.
 
 ## Phase 4 Slice 0 Scope
 
@@ -110,6 +115,20 @@ Slice 3.
 
 No version bump or release action is part of Slice 3.
 
+## Phase 4 Slice 4 Scope
+
+Slice 4 adds CLI operation commands only:
+
+- `ledge ledger-verify --store <ledger.jsonl>`;
+- optional `--manifest <manifest.json>`;
+- `--format text|json`;
+- `--strict` warning handling for CI;
+- `ledge ledger-manifest --store <ledger.jsonl> --out <manifest.json>`;
+- manifest overwrite protection with `--force`.
+
+No SDK integration, export package, AI review pack generation, remote anchoring,
+version bump, or release action is part of Slice 4.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -127,13 +146,11 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 4: public verification operation
-surface.
+The next recommended slice is Phase 4 Slice 5: the next narrow ledger
+capability after public verification.
 
 Expected scope:
 
-- CLI command for ledger verification;
-- text and JSON verifier output from the command;
-- examples for local source-checkout ledger verification;
-- no SDK auto-persistence yet;
-- no export package or AI review pack generation yet.
+- no version bump or release action unless explicitly requested;
+- preserve the tamper-evident, not tamper-proof boundary;
+- keep SDK integration, export, or AI review pack work scoped to one slice.
