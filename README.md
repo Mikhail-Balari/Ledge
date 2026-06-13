@@ -1,6 +1,6 @@
 # Ledge
 
-[![PyPI](https://img.shields.io/pypi/v/ledge-lang?label=pypi)](https://pypi.org/project/ledge-lang/)
+[![PyPI version](https://img.shields.io/pypi/v/ledge-lang.svg)](https://pypi.org/project/ledge-lang/)
 [![CI](https://github.com/Mikhail-Balari/Ledge/actions/workflows/ci.yml/badge.svg)](https://github.com/Mikhail-Balari/Ledge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Status: alpha / experimental](https://img.shields.io/badge/status-alpha%20%2F%20experimental-orange)

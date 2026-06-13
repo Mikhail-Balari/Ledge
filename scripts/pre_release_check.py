@@ -30,6 +30,12 @@ DEMOS_IN_WHEEL = [
     "ledge_lang/studio/templates/studio.html",
 ]
 BUNDLED_DEMOS = ["medical_triage", "loan_approval"]
+EXPECTED_PYPI_BADGE = "https://img.shields.io/pypi/v/ledge-lang.svg"
+STALE_PYPI_BADGE_PATTERNS = [
+    r"pypi[-_ ]?v\d+\.\d+\.\d+",
+    r"badge/pypi[-_ ]?v",
+    r"img\.shields\.io/badge/pypi",
+]
 
 
 def log(message: str) -> None:
@@ -62,6 +68,27 @@ def package_version() -> str:
     import ledge_lang
 
     return ledge_lang.__version__
+
+
+def check_readme_pypi_badge() -> None:
+    readme = ROOT / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    metadata_block = "\n".join(text.splitlines()[:40])
+
+    if EXPECTED_PYPI_BADGE not in metadata_block:
+        raise SystemExit(
+            "FAIL: README PyPI badge must use the dynamic PyPI version badge: "
+            f"{EXPECTED_PYPI_BADGE}"
+        )
+
+    for pattern in STALE_PYPI_BADGE_PATTERNS:
+        if re.search(pattern, metadata_block, re.IGNORECASE):
+            raise SystemExit(
+                "FAIL: README top metadata appears to contain a static or stale PyPI badge. "
+                "Use the dynamic PyPI version badge instead."
+            )
+
+    log("PASS: README uses dynamic PyPI version badge")
 
 
 def official_ledge_files() -> list[Path]:
@@ -136,6 +163,7 @@ def main() -> int:
             f"pyproject.toml={pyproject_version}, ledge_lang.__version__={init_version}"
         )
     log(f"PASS: version consistency pyproject/import = {pyproject_version}")
+    check_readme_pypi_badge()
 
     run_step("unit tests", [sys.executable, "-m", "pytest", "tests/unit/"])
     run_step("conformance tests", [sys.executable, "tests/conformance.py"])
