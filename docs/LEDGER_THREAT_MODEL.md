@@ -4,6 +4,10 @@ This document defines the planned threat model for the Phase 4
 Tamper-Evident Decision Ledger. It is a contract document only. Runtime ledger
 code is not implemented in Slice 0.
 
+Slice 3 implements the verifier core for local ledger files and manifests. The
+verifier reports tamper evidence as structured findings; it does not make local
+storage immutable, tamper-proof, production-ready, or legally compliant.
+
 ## Designed To Detect
 
 The ledger verifier should be designed to detect:
@@ -25,6 +29,10 @@ The ledger verifier should be designed to detect:
 
 These findings depend on preserved ledger files, preserved manifests, and
 deterministic canonicalization.
+
+Slice 3 covers these checks as verifier findings for JSONL event files and
+optional manifests. Export packages, AI review packs, CLI commands, and SDK
+integration remain future work.
 
 ## Not Designed To Prevent
 

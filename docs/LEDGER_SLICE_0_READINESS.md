@@ -52,6 +52,11 @@ It still does not add CLI ledger commands, SDK integration, export packages, AI
 review pack generation, a full verifier report implementation, version bumps,
 or release actions.
 
-The next implementation slice should focus on verifier core behavior for
-sequence continuity, hash-chain integrity, manifest consistency, and
-machine-readable findings.
+Slice 3 adds verifier core behavior for sequence continuity, hash-chain
+integrity, manifest consistency, human-readable output, machine-readable JSON
+output, and structured findings. It still does not add CLI ledger commands, SDK
+integration, export packages, AI review pack generation, version bumps, or
+release actions.
+
+The next implementation slice should focus on a narrow public operation surface
+such as CLI verification commands, while preserving the same anti-claims.

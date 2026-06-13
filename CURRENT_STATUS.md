@@ -13,7 +13,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
 - Phase 3: Confidence Evidence Engine released in 1.6.0 Alpha.
 - Phase 4: Slice 0 architecture is defined. Slice 1 adds the local
   `DecisionEvent` core. Slice 2 adds append-oriented JSONL storage and a
-  `LedgerManifest` foundation for the planned Tamper-Evident Decision Ledger.
+  `LedgerManifest` foundation. Slice 3 adds verifier core results for the
+  planned Tamper-Evident Decision Ledger.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -33,6 +34,9 @@ The likely next implementation release target is `1.7.0 Alpha`.
   storage for validated decision events.
 - `ledge_lang.ledger.LedgerManifest` provides a local summary and anchor point
   for later verification.
+- `ledge_lang.ledger.LedgerVerifier` verifies local ledger JSONL files and
+  optional manifests with structured findings, deterministic JSON output, and
+  human-readable summaries.
 
 ## Phase 4 Slice 0 Scope
 
@@ -87,6 +91,25 @@ SDK integration is added in Slice 2.
 
 No version bump or release action is part of Slice 2.
 
+## Phase 4 Slice 3 Scope
+
+Slice 3 adds local verifier primitives only:
+
+- human-readable verification summaries;
+- deterministic machine-readable verification JSON;
+- stable finding severities and codes;
+- ledger JSONL parsing findings;
+- event schema and event hash findings;
+- sequence and previous-hash continuity findings;
+- optional manifest consistency findings.
+
+No CLI ledger commands are added in Slice 3.
+
+No export package, AI review pack generation, or SDK integration is added in
+Slice 3.
+
+No version bump or release action is part of Slice 3.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -104,12 +127,13 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 3: verifier core.
+The next recommended slice is Phase 4 Slice 4: public verification operation
+surface.
 
 Expected scope:
 
-- human-readable verification summary;
-- machine-readable verification result;
-- sequence and hash-chain validation findings;
-- manifest consistency checks;
-- tamper detection tests.
+- CLI command for ledger verification;
+- text and JSON verifier output from the command;
+- examples for local source-checkout ledger verification;
+- no SDK auto-persistence yet;
+- no export package or AI review pack generation yet.

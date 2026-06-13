@@ -13,11 +13,15 @@ from .exceptions import (
 from .hashing import compute_event_hash, verify_event_hash
 from .manifest import LedgerManifest, build_manifest, read_manifest, write_manifest
 from .store import DecisionLedger
+from .verifier import LedgerFinding, LedgerVerificationResult, LedgerVerifier, verify_ledger
 
 __all__ = [
     "DecisionEvent",
     "DecisionLedger",
     "LedgerManifest",
+    "LedgerFinding",
+    "LedgerVerificationResult",
+    "LedgerVerifier",
     "LedgerError",
     "LedgerValidationError",
     "LedgerHashError",
@@ -30,4 +34,5 @@ __all__ = [
     "build_manifest",
     "write_manifest",
     "read_manifest",
+    "verify_ledger",
 ]

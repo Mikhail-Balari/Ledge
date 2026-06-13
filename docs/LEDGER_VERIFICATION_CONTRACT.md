@@ -3,9 +3,10 @@
 This document defines expected verifier behavior before implementation. It is a
 contract for Phase 4 Slice 1 and later.
 
-Slice 2 adds append-oriented JSONL storage and a local manifest foundation, but
-does not implement the full verifier output contract. Full human-readable and
-machine-readable verifier reports remain future Slice 3 work.
+Slice 2 adds append-oriented JSONL storage and a local manifest foundation.
+Slice 3 implements the verifier core for human-readable and machine-readable
+integrity results. CLI commands, export packages, AI review pack generation,
+and SDK integration remain future work.
 
 ## Output Modes
 
@@ -99,14 +100,17 @@ which review path is recommended.
 The verifier should not claim legal compliance, production readiness, formal
 verification, truth, hallucination prevention, or immutable storage.
 
-Until the full verifier is implemented, the Slice 2 store performs local
-structural checks while reading and appending events:
+The Slice 3 verifier inspects the ledger as potentially corrupted evidence. It
+does not simply call the store reader and stop on the first malformed line.
+It reports structured findings for:
 
+- missing or unreadable ledger files;
 - each JSONL line must parse as JSON;
 - each line must validate as a `DecisionEvent`;
 - event hashes must verify;
 - sequence numbers must be continuous;
-- `previous_event_hash` must match the previous event.
+- `previous_event_hash` must match the previous event;
+- optional manifest count and chain-anchor consistency.
 
-These checks are a foundation for the verifier, not a replacement for the full
-verification report contract above.
+These checks report tamper evidence. They do not make local storage immutable
+or tamper-proof.
