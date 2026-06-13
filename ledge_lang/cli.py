@@ -24,6 +24,10 @@ Usage:
                                Verify decision ledger JSONL integrity
   ledge ledger-manifest --store <ledger.jsonl> --out <manifest.json> [--force]
                                Build a local decision ledger manifest
+  ledge ledger-init --store <ledger.jsonl>
+                               Initialize an append-oriented local decision ledger
+  ledge ledger-append --store <ledger.jsonl> --event <decision_event.json> [--init] [--format json]
+                               Append a semantic decision event to a local ledger
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -114,6 +118,12 @@ def main():
 
     if args[0] == "ledger-manifest":
         raise SystemExit(_ledger_manifest(args[1:]))
+
+    if args[0] == "ledger-init":
+        raise SystemExit(_ledger_init(args[1:]))
+
+    if args[0] == "ledger-append":
+        raise SystemExit(_ledger_append(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:
@@ -390,6 +400,166 @@ def _ledger_manifest(args):
     print(f"  Event count     : {manifest.event_count}")
     print(f"  Last event hash : {last_hash}")
     return 0
+
+
+def _ledger_init(args):
+    import argparse
+
+    from ledge_lang.ledger import DecisionLedger
+    from ledge_lang.ledger.exceptions import LedgerError
+
+    parser = argparse.ArgumentParser(prog="ledge ledger-init")
+    parser.add_argument("--store", required=True, help="decision ledger JSONL path")
+    opts = parser.parse_args(args)
+
+    ledger = DecisionLedger(opts.store)
+    existed = ledger.exists()
+    try:
+        if existed:
+            ledger.read_events()
+        else:
+            ledger.initialize()
+    except LedgerError as exc:
+        print(f"ledge ledger-init: {exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"ledge ledger-init: {exc}", file=sys.stderr)
+        return 1
+
+    state = "already existed" if existed else "created"
+    print(f"Initialized append-oriented local ledger: {ledger.path}")
+    print(f"  State: {state}")
+    return 0
+
+
+def _ledger_append(args):
+    import argparse
+    import json
+    from pathlib import Path
+
+    from ledge_lang.ledger import DecisionEvent, DecisionLedger, canonical_json
+    from ledge_lang.ledger.exceptions import LedgerError
+
+    parser = argparse.ArgumentParser(prog="ledge ledger-append")
+    parser.add_argument("--store", required=True, help="decision ledger JSONL path")
+    parser.add_argument("--event", required=True, help="decision event JSON path")
+    parser.add_argument("--init", action="store_true", help="initialize the ledger if missing")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    opts = parser.parse_args(args)
+
+    ledger = DecisionLedger(opts.store)
+    if not ledger.exists():
+        if not opts.init:
+            print(
+                f"ledge ledger-append: ledger store not found: {ledger.path}; use --init to create it",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            ledger.initialize()
+        except OSError as exc:
+            print(f"ledge ledger-append: {exc}", file=sys.stderr)
+            return 1
+
+    try:
+        payload = _load_json_object(Path(opts.event), command="ledger-append")
+        event = _decision_event_from_payload(payload)
+        ledger.append(event)
+    except (LedgerError, OSError, ValueError) as exc:
+        print(f"ledge ledger-append: {exc}", file=sys.stderr)
+        return 1
+
+    result = {
+        "status": "appended",
+        "store": str(ledger.path),
+        "sequence": event.sequence,
+        "event_id": event.event_id,
+        "current_event_hash": event.current_event_hash,
+        "previous_event_hash": event.previous_event_hash,
+    }
+    if opts.format == "json":
+        print(canonical_json(result))
+    else:
+        print(f"Appended decision event to ledger: {ledger.path}")
+        print(f"  Sequence           : {event.sequence}")
+        print(f"  Event ID           : {event.event_id}")
+        print(f"  Current event hash : {event.current_event_hash}")
+        if event.previous_event_hash is not None:
+            print(f"  Previous event hash: {event.previous_event_hash}")
+    return 0
+
+
+def _load_json_object(path, *, command):
+    import json
+
+    try:
+        with path.open(encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{command} event file contains malformed JSON") from exc
+    except OSError as exc:
+        raise ValueError(f"{command} event file could not be read") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"{command} event file must contain a JSON object")
+    return payload
+
+
+def _decision_event_from_payload(payload):
+    from ledge_lang.ledger import DecisionEvent
+
+    if "current_event_hash" in payload:
+        return DecisionEvent.from_dict(payload)
+
+    allowed_fields = {
+        "schema_version",
+        "event_id",
+        "sequence",
+        "timestamp_utc",
+        "boundary_id",
+        "boundary_version",
+        "policy_hash",
+        "evidence_hash",
+        "input_hash",
+        "output_hash",
+        "confidence_score",
+        "action",
+        "policy_result",
+        "warnings",
+        "redaction_profile",
+        "previous_event_hash",
+        "trace_id",
+        "span_id",
+        "request_id",
+        "actor_id_hash",
+        "service_name",
+        "environment",
+    }
+    unknown_fields = set(payload) - allowed_fields
+    if unknown_fields:
+        raw_fields = sorted(
+            unknown_fields
+            & {
+                "input",
+                "output",
+                "raw_input",
+                "raw_output",
+                "prompt",
+                "completion",
+                "messages",
+                "response",
+                "payload",
+            }
+        )
+        if raw_fields:
+            raise ValueError(f"raw fields are not allowed in decision events: {raw_fields}")
+        raise ValueError(f"unknown decision event fields: {sorted(unknown_fields)}")
+
+    if payload.get("schema_version") != DecisionEvent.SCHEMA_VERSION:
+        raise ValueError("unsupported decision event schema_version")
+
+    create_payload = dict(payload)
+    create_payload.pop("schema_version", None)
+    return DecisionEvent.create(**create_payload)
 
 
 def _run_file(path, extra_args=None):

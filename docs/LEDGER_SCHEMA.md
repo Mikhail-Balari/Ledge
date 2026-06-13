@@ -4,7 +4,8 @@ This document defines the proposed Phase 4 `DecisionEvent` schema. It is a
 contract document only. Runtime ledger code is not implemented in Slice 0.
 
 Slice 1 implemented the `DecisionEvent` core. Slice 2 adds append-oriented
-JSONL storage and a local `LedgerManifest` foundation. The store remains local
+JSONL storage and a local `LedgerManifest` foundation. Slice 5 exposes local
+ledger initialization and event append commands. The store remains local
 append-oriented storage; it is not immutable storage, blockchain, or a
 compliance certification mechanism.
 
@@ -156,3 +157,30 @@ For a non-empty ledger:
 
 The manifest is a local summary and anchor point for later verification. It is
 not a security boundary by itself and does not contain raw inputs or outputs.
+
+## Event Append CLI Semantics
+
+Slice 5 exposes event append through:
+
+```bash
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json --init
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json --format json
+```
+
+The event file may contain either:
+
+- a completed `DecisionEvent` with `current_event_hash`; or
+- a draft event with all required fields except `current_event_hash`.
+
+Draft events must still include `schema_version` and all other required
+semantic fields. The CLI computes `current_event_hash` through canonical
+`DecisionEvent` creation before appending. Unknown fields and raw-looking
+payload fields are rejected.
+
+Appending uses the same store continuity rules as the Python API:
+
+- the first event must have sequence `1`;
+- later events must use the next sequence number;
+- later events must link to the previous event hash;
+- duplicate sequence numbers and mismatched previous hashes fail.

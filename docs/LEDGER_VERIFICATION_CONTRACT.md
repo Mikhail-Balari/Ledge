@@ -6,8 +6,9 @@ contract for Phase 4 Slice 1 and later.
 Slice 2 adds append-oriented JSONL storage and a local manifest foundation.
 Slice 3 implements the verifier core for human-readable and machine-readable
 integrity results. Slice 4 exposes the verifier and manifest foundation through
-public CLI commands. Export packages, AI review pack generation, and SDK
-integration remain future work.
+public CLI commands. Slice 5 adds local ledger initialization and event append
+commands. Export packages, AI review pack generation, SDK integration, and
+remote anchoring remain future work.
 
 ## Output Modes
 
@@ -40,6 +41,22 @@ with `--format json`. A valid ledger without a manifest returns
 to overwrite an existing file unless `--force` is provided. It is a local
 summary and anchor point, not immutable storage and not compliance
 certification.
+
+Slice 5 also adds:
+
+```bash
+ledge ledger-init --store ledge_audit.jsonl
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json --init
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json --format json
+```
+
+`ledger-init` verifies an existing ledger before reporting it usable and never
+truncates valid existing events.
+
+`ledger-append` validates completed or draft `DecisionEvent` JSON, rejects raw
+payload fields, enforces sequence and previous-hash continuity through the
+store layer, and returns either human-readable text or parseable JSON.
 
 ## Verification Statuses
 

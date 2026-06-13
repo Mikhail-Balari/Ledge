@@ -50,6 +50,273 @@ def write_valid_ledger(path):
     return first, second
 
 
+def write_event_file(path, event):
+    path.write_text(event.to_canonical_json() + "\n", encoding="utf-8")
+
+
+def test_ledger_init_creates_missing_ledger_file(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    result = run_cli("ledger-init", "--store", ledger_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert ledger_path.exists()
+    assert ledger_path.read_text(encoding="utf-8") == ""
+    assert str(ledger_path) in result.stdout
+    assert "created" in result.stdout
+    assert "append-oriented local ledger" in result.stdout
+
+
+def test_ledger_init_creates_parent_directories(tmp_path):
+    ledger_path = tmp_path / "nested" / "ledger" / "events.jsonl"
+
+    result = run_cli("ledger-init", "--store", ledger_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert ledger_path.exists()
+
+
+def test_ledger_init_does_not_truncate_existing_valid_ledger(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    first, second = write_valid_ledger(ledger_path)
+    before = ledger_path.read_text(encoding="utf-8")
+
+    result = run_cli("ledger-init", "--store", ledger_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert ledger_path.read_text(encoding="utf-8") == before
+    assert "already existed" in result.stdout
+    assert DecisionLedger(ledger_path).read_events() == [first, second]
+
+
+def test_ledger_init_fails_on_malformed_existing_ledger(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    ledger_path.write_text("{bad-json}\n", encoding="utf-8")
+
+    result = run_cli("ledger-init", "--store", ledger_path)
+
+    assert result.returncode != 0
+    assert "malformed JSON ledger line" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_ledger_append_fails_when_store_missing_without_init(tmp_path):
+    event_path = tmp_path / "event.json"
+    write_event_file(event_path, make_event())
+
+    result = run_cli("ledger-append", "--store", tmp_path / "missing.jsonl", "--event", event_path)
+
+    assert result.returncode != 0
+    assert "ledger store not found" in result.stderr
+    assert "--init" in result.stderr
+
+
+def test_ledger_append_init_creates_store_and_appends_first_event(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event = make_event()
+    event_path = tmp_path / "event.json"
+    write_event_file(event_path, event)
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path, "--init")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert DecisionLedger(ledger_path).read_events() == [event]
+    assert "Sequence" in result.stdout
+    assert event.current_event_hash in result.stdout
+
+
+def test_ledger_append_appends_valid_first_completed_event(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    event = make_event()
+    init_result = run_cli("ledger-init", "--store", ledger_path)
+    assert init_result.returncode == 0, init_result.stdout + init_result.stderr
+    write_event_file(event_path, event)
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert DecisionLedger(ledger_path).read_events() == [event]
+
+
+def test_ledger_append_appends_valid_second_linked_completed_event(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    first = make_event()
+    second = make_event(sequence=2, previous_event_hash=first.current_event_hash)
+    first_path = tmp_path / "first.json"
+    second_path = tmp_path / "second.json"
+    write_event_file(first_path, first)
+    write_event_file(second_path, second)
+    first_result = run_cli("ledger-append", "--store", ledger_path, "--event", first_path, "--init")
+    assert first_result.returncode == 0, first_result.stdout + first_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", second_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert DecisionLedger(ledger_path).read_events() == [first, second]
+    assert second.previous_event_hash in result.stdout
+
+
+def test_ledger_append_accepts_draft_event_without_current_hash(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "draft.json"
+    event = make_event()
+    payload = event.to_dict()
+    del payload["current_event_hash"]
+    event_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path, "--init")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    appended = DecisionLedger(ledger_path).read_events()[0]
+    assert appended.current_event_hash == event.current_event_hash
+    assert appended.verify_hash()
+
+
+def test_ledger_append_json_output_is_parseable_only(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    event = make_event()
+    write_event_file(event_path, event)
+
+    result = run_cli(
+        "ledger-append",
+        "--store",
+        ledger_path,
+        "--event",
+        event_path,
+        "--init",
+        "--format",
+        "json",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    data = json.loads(result.stdout)
+    assert data["status"] == "appended"
+    assert data["sequence"] == 1
+    assert data["event_id"] == event.event_id
+    assert data["current_event_hash"] == event.current_event_hash
+    assert data["previous_event_hash"] is None
+    assert result.stderr == ""
+
+
+def test_ledger_append_text_output_includes_sequence_and_hash(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    event = make_event()
+    write_event_file(event_path, event)
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path, "--init")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Sequence" in result.stdout
+    assert str(event.sequence) in result.stdout
+    assert event.current_event_hash in result.stdout
+
+
+def test_appended_ledger_verifies_successfully(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    write_event_file(event_path, make_event())
+    append_result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path, "--init")
+    assert append_result.returncode == 0, append_result.stdout + append_result.stderr
+
+    result = run_cli("ledger-verify", "--store", ledger_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Status: passed_with_warnings" in result.stdout
+
+
+def test_ledger_append_wrong_previous_hash_returns_nonzero(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    first = make_event()
+    second = make_event(sequence=2, previous_event_hash="b" * 64)
+    first_path = tmp_path / "first.json"
+    second_path = tmp_path / "second.json"
+    write_event_file(first_path, first)
+    write_event_file(second_path, second)
+    first_result = run_cli("ledger-append", "--store", ledger_path, "--event", first_path, "--init")
+    assert first_result.returncode == 0, first_result.stdout + first_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", second_path)
+
+    assert result.returncode != 0
+    assert "previous_event_hash does not match" in result.stderr
+
+
+def test_ledger_append_duplicate_sequence_returns_nonzero(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event = make_event()
+    event_path = tmp_path / "event.json"
+    write_event_file(event_path, event)
+    first_result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path, "--init")
+    assert first_result.returncode == 0, first_result.stdout + first_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path)
+
+    assert result.returncode != 0
+    assert "sequence 1 does not match expected 2" in result.stderr
+
+
+def test_ledger_append_tampered_event_hash_returns_nonzero(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    payload = make_event().to_dict()
+    payload["current_event_hash"] = "0" * 64
+    event_path.write_text(json.dumps(payload), encoding="utf-8")
+    init_result = run_cli("ledger-init", "--store", ledger_path)
+    assert init_result.returncode == 0, init_result.stdout + init_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path)
+
+    assert result.returncode != 0
+    assert "current_event_hash does not match" in result.stderr
+
+
+def test_ledger_append_malformed_event_json_returns_nonzero_without_traceback(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    event_path.write_text("{bad-json}", encoding="utf-8")
+    init_result = run_cli("ledger-init", "--store", ledger_path)
+    assert init_result.returncode == 0, init_result.stdout + init_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path)
+
+    assert result.returncode != 0
+    output = result.stdout + result.stderr
+    assert "malformed JSON" in output
+    assert "Traceback" not in output
+
+
+def test_ledger_append_event_with_raw_field_returns_nonzero_without_value_leak(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    event_path = tmp_path / "event.json"
+    payload = make_event().to_dict()
+    del payload["current_event_hash"]
+    payload["raw_input"] = "SECRET_SHOULD_NOT_LEAK"
+    event_path.write_text(json.dumps(payload), encoding="utf-8")
+    init_result = run_cli("ledger-init", "--store", ledger_path)
+    assert init_result.returncode == 0, init_result.stdout + init_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", event_path)
+
+    assert result.returncode != 0
+    output = result.stdout + result.stderr
+    assert "raw fields are not allowed" in output
+    assert "SECRET_SHOULD_NOT_LEAK" not in output
+
+
+def test_ledger_append_missing_event_file_returns_nonzero(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    init_result = run_cli("ledger-init", "--store", ledger_path)
+    assert init_result.returncode == 0, init_result.stdout + init_result.stderr
+
+    result = run_cli("ledger-append", "--store", ledger_path, "--event", tmp_path / "missing.json")
+
+    assert result.returncode != 0
+    assert "event file could not be read" in result.stderr
+
+
 def test_ledger_verify_valid_without_manifest_text_passes_with_warning(tmp_path):
     ledger_path = tmp_path / "valid.jsonl"
     write_valid_ledger(ledger_path)
@@ -233,3 +500,5 @@ def test_public_help_lists_ledger_commands():
     assert result.returncode == 0
     assert "ledger-verify" in result.stdout
     assert "ledger-manifest" in result.stdout
+    assert "ledger-init" in result.stdout
+    assert "ledger-append" in result.stdout

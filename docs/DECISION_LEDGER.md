@@ -114,6 +114,31 @@ workflows. JSON output is designed for machine readers and other AI systems.
 Export packages, AI review pack generation, and SDK integration remain future
 work.
 
+## Init And Append CLI Surface
+
+Phase 4 Slice 5 adds operational commands for creating local ledger files and
+appending semantic decision events:
+
+```bash
+ledge ledger-init --store ledge_audit.jsonl
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json --init
+ledge ledger-append --store ledge_audit.jsonl --event decision_event.json --format json
+```
+
+`ledger-init` creates an append-oriented local ledger file if it is missing and
+does not truncate an existing valid ledger.
+
+`ledger-append` accepts completed `DecisionEvent` JSON or draft event JSON that
+omits `current_event_hash`. Draft events are validated and hashed through the
+same canonical event path before append. Raw payload fields such as `input`,
+`output`, `raw_input`, `raw_output`, `prompt`, `completion`, `messages`,
+`response`, and `payload` are rejected.
+
+These commands make the local ledger operational for humans, CI jobs, shell
+scripts, and structured event producers. They do not add SDK auto-persistence,
+remote anchoring, export packages, or AI review pack generation.
+
 ## What It Is Not
 
 The ledger is an audit review package, not compliance certification.

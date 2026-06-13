@@ -68,5 +68,16 @@ Slice 4 adds a narrow public operation surface:
 It still does not add SDK integration, export packages, AI review pack
 generation, version bumps, or release actions.
 
-The next implementation slice should focus on the next narrow ledger capability,
-such as export or SDK integration, while preserving the same anti-claims.
+Slice 5 adds local ledger operation commands:
+
+- `ledge ledger-init` for creating or validating an append-oriented local
+  ledger file;
+- `ledge ledger-append` for appending completed or draft `DecisionEvent` JSON;
+- JSON append output for shell scripts, CI, and structured event producers.
+
+It rejects raw payload fields and still does not add SDK integration, export
+packages, AI review pack generation, remote anchoring, version bumps, or
+release actions.
+
+The next implementation slice should focus on the next narrow ledger capability
+while preserving the same anti-claims.
