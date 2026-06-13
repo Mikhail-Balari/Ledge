@@ -1,99 +1,76 @@
-# Ledge — Current Status
+# Ledge Current Status
 
-**Version 1.2.0 — May 2026**
+## Public Release
 
-## Quickstart
+Current public release: `ledge-lang==1.6.0`
 
-```bash
-pip install ledge-lang
-ledge demo medical_triage
-```
+Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
 
-Ledge 1.2.0 is published on PyPI. For a source checkout, you can also build and
-install the local wheel from `dist/`.
+## Phase Status
 
-No clone, no API key, no setup. The bundled demo escalates every patient to
-human review because there is no AI backend connected — that is the
-safe-failure default.
+- Phase 1: Python SDK Core released.
+- Phase 2: Python Linter / CI Enforcement released.
+- Phase 3: Confidence Evidence Engine released in 1.6.0 Alpha.
+- Phase 4: Slice 0 in progress as architecture and contract documentation for
+  the planned Tamper-Evident Decision Ledger.
 
-## What works today
+The likely next implementation release target is `1.7.0 Alpha`.
 
-### The four runtime properties (see GUARANTEES.md for caveats)
+## What Works Today
 
-    python demo_guarantee1.py  # confidence = 0 without a backend
-    python demo_guarantee2.py  # static checker rejects direct use of Uncertain
-    python demo_guarantee3.py  # SHA-256 chained audit log detects modification
-    python demo_guarantee4.py  # zero automatic decisions without a backend
+- `Uncertain[T]` represents values that require explicit decision handling.
+- `DecisionPolicy` and `DecisionResult` provide SDK decision-boundary behavior.
+- `ledge lint-python` detects common unsafe SDK decision-boundary patterns.
+- `ledge confidence-eval` renders redaction-aware confidence evidence reports.
+- `ledge calibration-report` renders calibration diagnostics from historical
+  outcomes.
+- `ledge_lang.confidence.ConfidenceEvidence` provides audit-ready confidence
+  evidence records with canonical serialization and evidence hashing.
 
-### Toolchain
+## Phase 4 Slice 0 Scope
 
-    ledge run program.ledge                      # typecheck, then interpret
-    ledge run program.ledge --unsafe             # skip typecheck and interpret
-    ledge check --types program.ledge            # run the static analyzer
-    ledge demo medical_triage                    # run a bundled demo
-    ledge audit --verify                         # verify the chain
-    ledge audit --verify-anchors                 # cross-check anchors vs store
-    ledge audit --calibration <model> <domain>   # measured vs declared accuracy
-    ledge audit --calibration-metrics <m> <d>    # Brier, ECE, false accept/reject
-    ledge audit --compare <m_a> <m_b> <domain>   # migration risk between models
-    ledge audit --export-regulatory report.json  # structured evidence JSON-LD
-    ledge audit --validate-regulatory report.json
+Slice 0 defines docs only:
 
-### Breaking change in 1.2.0
+- ledger architecture;
+- proposed `DecisionEvent` schema;
+- canonicalization contract;
+- threat model;
+- verifier output contract;
+- AI review pack contract;
+- limitations and anti-claims;
+- readiness checklist for Ledger Core implementation.
 
-`value_of(x)` on an Uncertain `x` is now a static analysis error outside
-of a recognized confidence guard (`if confidence_of(x) >= t:`,
-`if is_confident(x):`, alias-aware variants, or `when(x, t, fallback)`).
-The runtime behavior of `value_of` is unchanged. The escape hatch is the
-new `unsafe_value_of(x)`, which is allowed anywhere and signals to readers
-that confidence was not checked.
+No runtime ledger code is added in Slice 0.
 
-Migration:
+No CLI ledger commands are added in Slice 0.
 
-```ledge
-# Before (1.1.x — accepted by checker, silently unsafe):
-show value_of(r)
+No version bump or release action is part of Slice 0.
 
-# After (1.2.0 — pick one):
-if confidence_of(r) >= 0.85: show value_of(r)   # idiomatic
-show when(r, 0.85, "fallback")                  # runtime-checked
-show unsafe_value_of(r)                         # explicit unchecked
-```
+## Important Limits
 
-## Tests
+Ledge does not guarantee truth.
 
-- Conformance: 284 / 284 passing
-- Unit suite: 373 / 373 passing
-- Integration suite: 21 / 21 passing
-- 0 known failures on Linux, macOS, Windows
+Ledge does not prevent hallucinations.
 
-(See CI for the authoritative numbers.)
+Ledge does not provide legal compliance certification.
 
-## Known limitations of the static checker
+Ledge is not production-ready or enterprise-ready as an alpha.
 
-- Intraprocedural only — does not track Uncertain across function calls.
-- Conservative on early-return guards: `if c < t: return; use(r)` does not
-  narrow the rest of the block. Use `if c >= t: ... else:` instead.
-- No `not is_uncertain(x)` — only positive forms.
-- One-hop alias support; no multi-hop.
-- No flow narrowing inside lambda bodies.
+The planned ledger is tamper-evident, not tamper-proof.
 
-See [GUARANTEES.md](GUARANTEES.md) Property 2 for the full list.
+The planned ledger uses append-oriented local records, not immutable storage or
+blockchain.
 
-## What does not yet exist
+## Next Slice
 
-- Distributed audit storage (audit is per-process, optionally persisted to
-  local SQLite via the audit store).
-- A mature package ecosystem.
-- IDE tooling beyond the bundled LSP server.
-- Mechanized proofs of the static rules.
-- Known production deployments.
+The next recommended slice is Phase 4 Slice 1: Ledger Core implementation.
 
-## Checked execution paths
+Expected scope:
 
-- `ledge run file.ledge` typechecks before execution.
-- `ledge run file.ledge --unsafe` bypasses that static check explicitly.
-- `ledge check --types file.ledge` reports type issues without execution.
-- `checked_run(source)` is the safety-gated Python API.
-- `run(source)` remains the low-level direct execution API for interpreter and
-  test harness use.
+- `DecisionEvent` data model;
+- canonical event serialization;
+- event hash computation;
+- previous-event hash linking;
+- append-oriented local writer;
+- verifier core for sequence and hash-chain integrity;
+- tamper detection tests.

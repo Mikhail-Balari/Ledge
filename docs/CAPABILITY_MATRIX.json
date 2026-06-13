@@ -10,6 +10,7 @@
     "python_sdk_core": "Minimal Uncertain, DecisionPolicy, DecisionResult, confidence evidence metadata, validators, and deterministic fake clients for normal Python code",
     "python_linter_ci": "AST-based ledge lint-python enforcement for common unsafe SDK decision-boundary patterns",
     "confidence_evidence_engine": "Alpha confidence evidence records, schema validation evidence, ensemble stability evidence, logprob signal evidence, conservative scoring, calibration reports, redaction-safe rendering, CLI examples, and SDK evidence interoperability",
+    "decision_ledger": "Planned / architecture-defined in docs only for Phase 4 Slice 0; runtime ledger writing, verification, export, and AI review pack generation are not implemented",
     "packaging": "1.6.0 wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, CI-check, lint-python commands, Python SDK Core, Python linter package, confidence package, and SDK evidence interoperability layer"
   },
   "known_gaps": [
@@ -22,6 +23,9 @@
     "Python linter coverage is AST-based and intentionally scoped to common local unsafe-use patterns; it does not yet perform complete cross-file or interprocedural dataflow analysis",
     "Confidence Evidence Engine is alpha and does not claim calibrated confidence without historical outcomes",
     "No hidden persistence is added by the Confidence Evidence Engine",
-    "Tamper-evident decision ledger remains future Phase 4"
+    "Tamper-Evident Decision Ledger is architecture-defined but not implemented",
+    "Ledger architecture is not production-ready and does not claim legal compliance certification",
+    "Ledger architecture is tamper-evident in design, not tamper-proof, and makes no immutable storage claim",
+    "Ledger architecture uses append-oriented local records, not blockchain"
   ]
 }

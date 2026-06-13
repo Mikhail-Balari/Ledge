@@ -1,11 +1,12 @@
 # Ledge Capability Matrix
 ## Version 1.6.0 Alpha
 
-This matrix reflects the 1.6.0 alpha release candidate. Ledge 1.4.0 Alpha
+This matrix reflects the 1.6.0 alpha release. Ledge 1.4.0 Alpha
 added Python SDK Core while preserving the DSL and checked `.ledge` execution
 path. Ledge 1.5.0 Alpha adds AST-based Python linter / CI enforcement for
 common unsafe SDK decision-boundary patterns. Ledge 1.6.0 Alpha adds the
-Confidence Evidence Engine.
+Confidence Evidence Engine. Phase 4 Slice 0 defines the planned ledger
+architecture and contract in docs only.
 
 This matrix is a sober snapshot of implemented capabilities and known gaps.
 Release-readiness results live in `RELEASE_READINESS.md`.
@@ -33,6 +34,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
   schema validation evidence, ensemble stability evidence, logprob signal
   evidence, conservative scoring, calibration reports, redaction-safe report
   rendering, and SDK evidence interoperability.
+- Tamper-Evident Decision Ledger is planned / architecture-defined in
+  documentation only. Runtime ledger writing, verification, export, and review
+  pack generation are not implemented in this release.
 
 ## Packaging
 
@@ -67,4 +71,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
   without historical outcomes, legal compliance certification, production
   readiness, or formal verification.
 - No hidden persistence is added by the Confidence Evidence Engine.
-- Tamper-evident decision ledger remains future Phase 4.
+- Tamper-Evident Decision Ledger is architecture-defined but not implemented.
+- Ledger architecture is not production-ready and does not claim legal
+  compliance certification.
+- Ledger architecture is tamper-evident in design, not tamper-proof, and makes
+  no immutable storage claim.
+- Ledger architecture uses append-oriented local records, not blockchain.
