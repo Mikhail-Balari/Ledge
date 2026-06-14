@@ -110,5 +110,17 @@ It does not ask the reviewing AI to trust the original AI output. Slice 7 still
 does not add SDK integration, remote anchoring, version bumps, or release
 actions.
 
+Slice 8 adds an SDK-facing ledger recorder:
+
+- `LedgerRecordContext` for stable boundary and policy context;
+- `LedgerRecorder` for automatic sequence, previous-hash, timestamp, event id,
+  event hash, and append handling;
+- `record_decision_event` for a small functional API.
+
+The recorder still requires explicit evidence/input/output hashes and does not
+accept raw payloads. A direct `DecisionResult` adapter remains future work until
+the SDK exposes enough stable ledger context to avoid guessing. Slice 8 still
+does not add remote anchoring, version bumps, or release actions.
+
 The next implementation slice should focus on the next narrow ledger capability
 while preserving the same anti-claims.

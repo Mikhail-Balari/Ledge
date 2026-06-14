@@ -17,7 +17,7 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   planned Tamper-Evident Decision Ledger. Slice 4 adds public CLI verification
   and manifest commands. Slice 5 adds ledger init and append commands. Slice 6
   adds local audit review export packages. Slice 7 adds AI-readable review
-  packs.
+  packs. Slice 8 adds an SDK-facing ledger recorder.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -52,6 +52,9 @@ The likely next implementation release target is `1.7.0 Alpha`.
   limitations.
 - `ledge ledger-review-pack` writes a single machine-readable JSON review pack
   for AI, governance, CI, or reviewer workflows.
+- `ledge_lang.ledger.LedgerRecorder` appends semantic decision events while
+  managing sequence numbers, previous hashes, timestamps, event ids, event
+  hashes, and local ledger append behavior.
 
 ## Phase 4 Slice 0 Scope
 
@@ -190,6 +193,26 @@ evidence hashes, policy results, actions, warnings, and integrity status.
 No SDK integration, remote anchoring, version bump, or release action is part
 of Slice 7.
 
+## Phase 4 Slice 8 Scope
+
+Slice 8 adds an SDK-facing recorder API only:
+
+- `LedgerRecordContext` for boundary id, boundary version, policy hash,
+  redaction profile, and optional correlation fields;
+- `LedgerRecorder` for appending validated `DecisionEvent` records without
+  manual sequence, previous-hash, timestamp, event id, or event-hash handling;
+- `record_decision_event` as a small helper.
+
+The recorder requires explicit evidence/input/output hashes or references. It
+does not store raw prompts, completions, messages, inputs, outputs, responses,
+or payloads.
+
+A direct `DecisionResult` adapter is deferred because current SDK result fields
+do not include enough stable ledger context to infer policy hashes,
+evidence hashes, input hashes, or output hashes safely.
+
+No remote anchoring, version bump, or release action is part of Slice 8.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -207,8 +230,8 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 8: the next narrow ledger
-capability after AI-readable review packs.
+The next recommended slice is Phase 4 Slice 9: the next narrow ledger
+capability after the SDK-facing recorder.
 
 Expected scope:
 

@@ -5,9 +5,10 @@ contract document only. Runtime ledger code is not implemented in Slice 0.
 
 Slice 1 implemented the `DecisionEvent` core. Slice 2 adds append-oriented
 JSONL storage and a local `LedgerManifest` foundation. Slice 5 exposes local
-ledger initialization and event append commands. The store remains local
-append-oriented storage; it is not immutable storage, blockchain, or a
-compliance certification mechanism.
+ledger initialization and event append commands. Slice 8 adds an SDK-facing
+recorder over the same schema. The store remains local append-oriented storage;
+it is not immutable storage, blockchain, or a compliance certification
+mechanism.
 
 ## Required Fields
 
@@ -184,3 +185,30 @@ Appending uses the same store continuity rules as the Python API:
 - later events must use the next sequence number;
 - later events must link to the previous event hash;
 - duplicate sequence numbers and mismatched previous hashes fail.
+
+## SDK-Facing Recorder Semantics
+
+Slice 8 adds `LedgerRecorder` and `LedgerRecordContext` as a convenience layer
+over the same `DecisionEvent` schema.
+
+The recorder does not define a second schema. It fills operational fields that
+callers should not have to manage manually:
+
+- `sequence`
+- `previous_event_hash`
+- `timestamp_utc`
+- `event_id`
+- `current_event_hash`
+
+The caller still supplies semantic evidence fields:
+
+- `evidence_hash`
+- `input_hash`
+- `output_hash`
+- `confidence_score`
+- `action`
+- `policy_result`
+- `warnings`
+
+The recorder stores hashes and references only. It does not accept raw inputs,
+outputs, prompts, completions, messages, responses, or payloads.

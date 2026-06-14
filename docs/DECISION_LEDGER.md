@@ -111,8 +111,9 @@ ledge ledger-manifest --store ledge_audit.jsonl --out ledger_manifest.json --for
 The CLI is intended for humans, CI, shell scripts, and future governance
 workflows. JSON output is designed for machine readers and other AI systems.
 `--strict` can make warnings nonzero when a CI pipeline requires a manifest.
-Local audit review export packages, AI review pack generation, and SDK
-integration remain future work.
+Local audit review export packages, AI review pack generation, and the
+SDK-facing recorder are covered by later slices. Remote anchoring and direct
+SDK auto-persistence remain future work.
 
 ## Init And Append CLI Surface
 
@@ -188,6 +189,40 @@ full-ledger integrity for verification.
 
 The AI review pack is not legal compliance certification, not a production
 governance system, not remote anchoring, and not immutable storage.
+
+## SDK-Facing Ledger Recorder
+
+Phase 4 Slice 8 adds a narrow Python recorder API:
+
+```python
+from ledge_lang.ledger import LedgerRecordContext, LedgerRecorder
+
+context = LedgerRecordContext(
+    boundary_id="refund_routing",
+    boundary_version="refund_routing.v1",
+    policy_hash="sha256:policy",
+)
+recorder = LedgerRecorder("ledge_audit.jsonl", context, initialize=True)
+event = recorder.record(
+    evidence_hash="sha256:evidence",
+    input_hash="sha256:input",
+    output_hash="sha256:output",
+    confidence_score=0.82,
+    action="route_to_manual_review",
+    policy_result="escalate",
+    warnings=["low_sample_size"],
+)
+```
+
+The recorder manages sequence numbers, previous-event hashes, UTC timestamps,
+event ids, event hashes, and append behavior by delegating to `DecisionEvent`
+and `DecisionLedger`.
+
+The recorder still requires explicit hashes or references for evidence, input,
+and output. It does not accept raw prompts, completions, messages, inputs,
+outputs, responses, or payloads. Direct `DecisionResult` recording remains
+future work until the SDK exposes enough stable ledger context to avoid
+guessing policy hashes and evidence/input/output hashes.
 
 ## What It Is Not
 
