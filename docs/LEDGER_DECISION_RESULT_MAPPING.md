@@ -1,8 +1,9 @@
 # DecisionResult Ledger Mapping
 
 This document defines the safe mapping contract between SDK `DecisionResult`
-objects and ledger `DecisionEvent` records. It is a contract for a future
-adapter. Slice 9 does not implement `record_decision_result(...)`.
+objects and ledger `DecisionEvent` records. Slice 9 defined the contract.
+Slice 10 implements the narrow `record_decision_result(...)` adapter without
+changing the fail-closed mapping rules.
 
 ## Mapping Table
 
@@ -78,9 +79,8 @@ The ledger uses policy results such as:
 - `block`
 - `escalate`
 
-These vocabularies are related but not identical. A future adapter must not
-silently translate `human_review` into `escalate` unless that mapping is
-documented and tested. Until then, `policy_result` should be explicit.
+These vocabularies are related but not identical. The Slice 10 adapter does not
+silently translate `human_review` into `escalate`; `policy_result` is explicit.
 
 ## Evidence Hash
 
@@ -89,7 +89,8 @@ Phase 3 evidence compatibility can place a safe `evidence_hash` in
 Future adapters may use that field only when it is present as a string and has
 passed the SDK evidence normalization path.
 
-If no validated evidence hash is available, the caller must supply one.
+The Slice 10 adapter keeps this conservative and requires `evidence_hash`
+explicitly.
 
 ## Input And Output Hashes
 
@@ -112,9 +113,9 @@ The adapter must not record an event when:
 No event should be partially appended. If mapping fails, the ledger file should
 not gain a new line.
 
-## Future Adapter Test Plan
+## Adapter Test Plan
 
-The implementation slice should include tests proving:
+The implementation tests prove:
 
 - records only when all required fields are explicit;
 - rejects missing evidence hash;

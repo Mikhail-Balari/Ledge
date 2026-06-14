@@ -220,14 +220,15 @@ and `DecisionLedger`.
 
 The recorder still requires explicit hashes or references for evidence, input,
 and output. It does not accept raw prompts, completions, messages, inputs,
-outputs, responses, or payloads. Direct `DecisionResult` recording remains
-future work until the SDK exposes enough stable ledger context to avoid
-guessing policy hashes and evidence/input/output hashes.
+outputs, responses, or payloads. Direct `DecisionResult` recording is handled
+by a separate fail-closed adapter that still requires explicit policy hashes
+and evidence/input/output hashes.
 
 ## SDK DecisionResult Mapping Contract
 
-Phase 4 Slice 9 defines the safe mapping contract for a future
-`DecisionResult` adapter. The contract is documented in:
+Phase 4 Slice 9 defines the safe mapping contract for `DecisionResult`
+recording. Phase 4 Slice 10 implements the narrow adapter. The contract is
+documented in:
 
 - `docs/LEDGER_SDK_INTEGRATION.md`
 - `docs/LEDGER_DECISION_RESULT_MAPPING.md`
@@ -238,7 +239,7 @@ provide confidence, warnings, and an SDK action string. They do not by
 themselves provide boundary id, boundary version, policy hash, input hash,
 output hash, or a guaranteed ledger policy result.
 
-The future adapter must fail closed when a field is missing or ambiguous. It
+The adapter must fail closed when a field is missing or ambiguous. It
 must not serialize `Uncertain.value`, `DecisionResult.value`, prompts,
 completions, messages, inputs, outputs, responses, or payloads.
 

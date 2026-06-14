@@ -1,13 +1,16 @@
 import pytest
 
+from ledge_lang.sdk import DecisionResult
 from ledge_lang.ledger import (
     DecisionLedger,
+    LedgerMappingError,
     LedgerRecordContext,
     LedgerRecorder,
     LedgerStoreError,
     LedgerValidationError,
     LedgerVerifier,
     record_decision_event,
+    record_decision_result,
 )
 
 
@@ -34,6 +37,31 @@ def record_kwargs(**overrides):
     }
     values.update(overrides)
     return values
+
+
+def sdk_result(**overrides):
+    values = {
+        "action": "human_review",
+        "allowed": False,
+        "value": {"raw_output": "SECRET_SHOULD_NOT_LEAK"},
+        "confidence": 0.73,
+        "reason": "low confidence",
+        "warnings": ["sdk_warning"],
+        "metadata": {"raw_output": "SECRET_SHOULD_NOT_LEAK"},
+    }
+    values.update(overrides)
+    return DecisionResult(**values)
+
+
+class ResultStub:
+    def __init__(self, **values):
+        self.__dict__.update(values)
+
+
+def line_count(path):
+    if not path.exists():
+        return 0
+    return len(path.read_text(encoding="utf-8").splitlines())
 
 
 def test_recorder_initializes_missing_ledger_when_requested(tmp_path):
@@ -198,6 +226,8 @@ def test_public_exports_import_correctly():
     assert LedgerRecorder is not None
     assert LedgerRecordContext is not None
     assert record_decision_event is not None
+    assert record_decision_result is not None
+    assert LedgerMappingError is not None
 
 
 def test_no_raw_input_or_output_values_appear_in_recorded_event(tmp_path):
@@ -211,3 +241,245 @@ def test_no_raw_input_or_output_values_appear_in_recorded_event(tmp_path):
     assert "raw_output" not in rendered
     assert '"input"' not in rendered
     assert '"output"' not in rendered
+
+
+def test_record_decision_result_records_with_explicit_fields(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    event = record_decision_result(
+        ledger_path,
+        sdk_result(),
+        context=context(),
+        evidence_hash="sha256:evidence",
+        input_hash="sha256:input",
+        output_hash="sha256:output",
+        policy_result="escalate",
+        initialize=True,
+    )
+
+    assert event.confidence_score == 0.73
+    assert event.action == "human_review"
+    assert event.policy_result == "escalate"
+    assert event.evidence_hash == "sha256:evidence"
+    assert event.input_hash == "sha256:input"
+    assert event.output_hash == "sha256:output"
+    assert event.warnings == ("sdk_warning",)
+    assert event.verify_hash()
+
+
+def test_record_decision_result_ledger_verifies_after_append(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    record_decision_result(
+        ledger_path,
+        sdk_result(),
+        context=context(),
+        evidence_hash="sha256:evidence",
+        input_hash="sha256:input",
+        output_hash="sha256:output",
+        policy_result="escalate",
+        initialize=True,
+    )
+
+    result = LedgerVerifier().verify(ledger_path)
+
+    assert result.status == "passed_with_warnings"
+    assert result.chain_valid is True
+
+
+def test_record_decision_result_uses_explicit_action_when_provided(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    event = record_decision_result(
+        ledger_path,
+        sdk_result(action="block"),
+        context=context(),
+        evidence_hash="sha256:evidence",
+        input_hash="sha256:input",
+        output_hash="sha256:output",
+        policy_result="block",
+        action="manual_block",
+        initialize=True,
+    )
+
+    assert event.action == "manual_block"
+
+
+def test_record_decision_result_uses_explicit_warnings_when_provided(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    event = record_decision_result(
+        ledger_path,
+        sdk_result(warnings=["ignored_sdk_warning"]),
+        context=context(),
+        evidence_hash="sha256:evidence",
+        input_hash="sha256:input",
+        output_hash="sha256:output",
+        policy_result="escalate",
+        warnings=["explicit_warning"],
+        initialize=True,
+    )
+
+    assert event.warnings == ("explicit_warning",)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("policy_result", None),
+        ("evidence_hash", None),
+        ("input_hash", None),
+        ("output_hash", None),
+        ("policy_result", ""),
+        ("evidence_hash", ""),
+        ("input_hash", ""),
+        ("output_hash", ""),
+    ],
+)
+def test_record_decision_result_missing_required_mapping_fails_closed(
+    tmp_path,
+    field,
+    value,
+):
+    ledger_path = tmp_path / "ledger.jsonl"
+    kwargs = {
+        "context": context(),
+        "evidence_hash": "sha256:evidence",
+        "input_hash": "sha256:input",
+        "output_hash": "sha256:output",
+        "policy_result": "escalate",
+        "initialize": True,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(LedgerMappingError):
+        record_decision_result(ledger_path, sdk_result(), **kwargs)
+
+    assert line_count(ledger_path) == 0
+
+
+def test_record_decision_result_missing_action_fails_closed(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    result = ResultStub(confidence=0.7, warnings=[])
+
+    with pytest.raises(LedgerMappingError):
+        record_decision_result(
+            ledger_path,
+            result,
+            context=context(),
+            evidence_hash="sha256:evidence",
+            input_hash="sha256:input",
+            output_hash="sha256:output",
+            policy_result="escalate",
+            initialize=True,
+        )
+
+    assert line_count(ledger_path) == 0
+
+
+@pytest.mark.parametrize("confidence", [True, "0.7", float("nan"), float("inf"), -0.1, 1.1])
+def test_record_decision_result_invalid_confidence_fails_closed(tmp_path, confidence):
+    ledger_path = tmp_path / "ledger.jsonl"
+    result = ResultStub(confidence=confidence, action="human_review", warnings=[])
+
+    with pytest.raises(LedgerMappingError):
+        record_decision_result(
+            ledger_path,
+            result,
+            context=context(),
+            evidence_hash="sha256:evidence",
+            input_hash="sha256:input",
+            output_hash="sha256:output",
+            policy_result="escalate",
+            initialize=True,
+        )
+
+    assert line_count(ledger_path) == 0
+
+
+def test_record_decision_result_invalid_policy_result_fails_closed(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    with pytest.raises(LedgerValidationError):
+        record_decision_result(
+            ledger_path,
+            sdk_result(),
+            context=context(),
+            evidence_hash="sha256:evidence",
+            input_hash="sha256:input",
+            output_hash="sha256:output",
+            policy_result="approve",
+            initialize=True,
+        )
+
+    assert line_count(ledger_path) == 0
+
+
+def test_record_decision_result_invalid_warnings_fail_closed(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    result = ResultStub(confidence=0.7, action="human_review", warnings=[object()])
+
+    with pytest.raises(LedgerMappingError):
+        record_decision_result(
+            ledger_path,
+            result,
+            context=context(),
+            evidence_hash="sha256:evidence",
+            input_hash="sha256:input",
+            output_hash="sha256:output",
+            policy_result="escalate",
+            initialize=True,
+        )
+
+    assert line_count(ledger_path) == 0
+
+
+def test_record_decision_result_never_serializes_result_value(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+
+    event = record_decision_result(
+        ledger_path,
+        sdk_result(value={"payload": "SECRET_SHOULD_NOT_LEAK"}),
+        context=context(),
+        evidence_hash="sha256:evidence",
+        input_hash="sha256:input",
+        output_hash="sha256:output",
+        policy_result="escalate",
+        initialize=True,
+    )
+    rendered = event.to_canonical_json()
+
+    assert "SECRET_SHOULD_NOT_LEAK" not in rendered
+    assert "payload" not in rendered
+    assert "raw_output" not in rendered
+
+
+def test_record_decision_result_never_serializes_raw_looking_result_fields(tmp_path):
+    ledger_path = tmp_path / "ledger.jsonl"
+    result = ResultStub(
+        confidence=0.7,
+        action="human_review",
+        warnings=[],
+        prompt="SECRET_SHOULD_NOT_LEAK",
+        completion="SECRET_SHOULD_NOT_LEAK",
+        raw_output="SECRET_SHOULD_NOT_LEAK",
+        payload="SECRET_SHOULD_NOT_LEAK",
+    )
+
+    event = record_decision_result(
+        ledger_path,
+        result,
+        context=context(),
+        evidence_hash="sha256:evidence",
+        input_hash="sha256:input",
+        output_hash="sha256:output",
+        policy_result="escalate",
+        initialize=True,
+    )
+    rendered = event.to_canonical_json()
+
+    assert "SECRET_SHOULD_NOT_LEAK" not in rendered
+    assert "prompt" not in rendered
+    assert "completion" not in rendered
+    assert "raw_output" not in rendered
+    assert "payload" not in rendered

@@ -18,8 +18,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   and manifest commands. Slice 5 adds ledger init and append commands. Slice 6
   adds local audit review export packages. Slice 7 adds AI-readable review
   packs. Slice 8 adds an SDK-facing ledger recorder. Slice 9 defines the SDK
-  `DecisionResult` ledger mapping contract before any automatic adapter is
-  implemented.
+  `DecisionResult` ledger mapping contract. Slice 10 adds a safe
+  `DecisionResult` ledger adapter within that contract.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -57,6 +57,9 @@ The likely next implementation release target is `1.7.0 Alpha`.
 - `ledge_lang.ledger.LedgerRecorder` appends semantic decision events while
   managing sequence numbers, previous hashes, timestamps, event ids, event
   hashes, and local ledger append behavior.
+- `ledge_lang.ledger.record_decision_result` records SDK `DecisionResult`
+  objects only when explicit ledger context, hashes, and policy result are
+  supplied.
 
 ## Phase 4 Slice 0 Scope
 
@@ -231,6 +234,23 @@ modify SDK runtime behavior.
 
 No remote anchoring, version bump, or release action is part of Slice 9.
 
+## Phase 4 Slice 10 Scope
+
+Slice 10 adds a safe `DecisionResult` adapter:
+
+- `record_decision_result(...)` in `ledge_lang.ledger`;
+- explicit `LedgerRecordContext`;
+- explicit `evidence_hash`, `input_hash`, `output_hash`, and `policy_result`;
+- confidence from `DecisionResult.confidence`;
+- action from explicit override or `DecisionResult.action`;
+- warnings from explicit override or `DecisionResult.warnings`;
+- fail-closed behavior for missing or ambiguous mappings.
+
+The adapter does not serialize `DecisionResult.value`, `Uncertain.value`,
+prompts, completions, messages, inputs, outputs, responses, or payloads.
+
+No remote anchoring, version bump, or release action is part of Slice 10.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -248,9 +268,8 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 10: implementation of the
-`DecisionResult` adapter only if the Slice 9 mapping contract is accepted, or
-the next narrow ledger capability if adapter work should remain deferred.
+The next recommended slice is Phase 4 Slice 11: the next narrow ledger
+capability after the safe `DecisionResult` adapter.
 
 Expected scope:
 

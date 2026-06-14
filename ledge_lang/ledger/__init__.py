@@ -6,6 +6,7 @@ from .exceptions import (
     LedgerExportError,
     LedgerError,
     LedgerHashError,
+    LedgerMappingError,
     LedgerManifestError,
     LedgerReviewPackError,
     LedgerSequenceError,
@@ -15,7 +16,12 @@ from .exceptions import (
 from .export import LedgerExportResult, export_ledger_review_package
 from .hashing import compute_event_hash, verify_event_hash
 from .manifest import LedgerManifest, build_manifest, read_manifest, write_manifest
-from .recorder import LedgerRecorder, LedgerRecordContext, record_decision_event
+from .recorder import (
+    LedgerRecorder,
+    LedgerRecordContext,
+    record_decision_event,
+    record_decision_result,
+)
 from .review_pack import LedgerAIReviewPack, build_ai_review_pack, write_ai_review_pack
 from .store import DecisionLedger
 from .verifier import LedgerFinding, LedgerVerificationResult, LedgerVerifier, verify_ledger
@@ -39,6 +45,7 @@ __all__ = [
     "LedgerManifestError",
     "LedgerExportError",
     "LedgerReviewPackError",
+    "LedgerMappingError",
     "canonical_json",
     "compute_event_hash",
     "verify_event_hash",
@@ -50,4 +57,5 @@ __all__ = [
     "build_ai_review_pack",
     "write_ai_review_pack",
     "record_decision_event",
+    "record_decision_result",
 ]

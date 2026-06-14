@@ -118,8 +118,8 @@ Slice 8 adds an SDK-facing ledger recorder:
 - `record_decision_event` for a small functional API.
 
 The recorder still requires explicit evidence/input/output hashes and does not
-accept raw payloads. A direct `DecisionResult` adapter remains future work until
-the SDK exposes enough stable ledger context to avoid guessing. Slice 8 still
+accept raw payloads. At Slice 8, a direct `DecisionResult` adapter remained
+future work until the SDK mapping contract could avoid guessing. Slice 8 still
 does not add remote anchoring, version bumps, or release actions.
 
 Slice 9 defines the SDK `DecisionResult` ledger mapping contract:
@@ -133,6 +133,18 @@ Slice 9 defines the SDK `DecisionResult` ledger mapping contract:
 Slice 9 is architecture and contract only. It does not implement automatic
 `DecisionResult` recording, change SDK behavior, bump versions, or create a
 release.
+
+Slice 10 adds the safe `record_decision_result(...)` adapter:
+
+- explicit `LedgerRecordContext` is required;
+- evidence, input, and output hashes are explicit;
+- policy result is explicit and not inferred;
+- confidence and warnings may come from `DecisionResult`;
+- raw decision values are never serialized;
+- missing or ambiguous mappings fail closed without appending a ledger line.
+
+Slice 10 still does not add remote anchoring, version bumps, or release
+actions.
 
 The next implementation slice should focus on the next narrow ledger capability
 while preserving the same anti-claims.

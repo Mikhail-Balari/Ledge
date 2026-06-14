@@ -33,3 +33,7 @@ class LedgerExportError(LedgerError):
 
 class LedgerReviewPackError(LedgerError):
     """Raised when an AI-readable ledger review pack cannot be produced safely."""
+
+
+class LedgerMappingError(LedgerError):
+    """Raised when an SDK result cannot be safely mapped into a ledger event."""

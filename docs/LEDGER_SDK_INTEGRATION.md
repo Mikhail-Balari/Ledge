@@ -1,7 +1,8 @@
 # Ledger SDK Integration Contract
 
-Phase 4 Slice 9 defines the contract for future SDK-to-ledger integration. It
-does not implement automatic `DecisionResult` recording.
+Phase 4 Slice 9 defined the contract for SDK-to-ledger integration. Phase 4
+Slice 10 implements the narrow `record_decision_result(...)` adapter within
+that contract.
 
 The goal is to preserve Ledge's boundary principle: an AI-derived value should
 cross into action only through explicit, checkable, auditable, and blockable
@@ -21,10 +22,12 @@ The SDK currently exposes:
   fields when available.
 - `LedgerRecorder`: explicit recording API that manages sequence numbers,
   previous hashes, timestamps, event ids, event hashes, and append behavior.
+- `record_decision_result(...)`: safe adapter that records a `DecisionResult`
+  only when ledger context, hashes, and policy result are explicit.
 
 This is enough for a user or application to record decision events when it has
-explicit boundary context and safe hashes. It is not enough for Ledge to infer
-all ledger fields from `DecisionResult` alone.
+explicit boundary context and safe hashes. It is still not enough for Ledge to
+infer all ledger fields from `DecisionResult` alone.
 
 ## Safe Integration Principle
 
@@ -55,9 +58,8 @@ closed, require an explicit parameter, and avoid creating a ledger event.
 
 `DecisionResult.action` is explicit, but it is an SDK action such as `allow`,
 `human_review`, or `block`. The ledger `policy_result` vocabulary is `allow`,
-`allow_with_warning`, `block`, and `escalate`. A future adapter must either
-map this through a documented policy contract or require `policy_result`
-explicitly.
+`allow_with_warning`, `block`, and `escalate`. The Slice 10 adapter requires
+`policy_result` explicitly and does not infer it from SDK action.
 
 `DecisionResult.warnings` is explicit and can be used as ledger warnings.
 
@@ -84,9 +86,9 @@ itself:
 These must come from `LedgerRecordContext`, explicit adapter parameters, or a
 future SDK object that carries validated ledger-safe references.
 
-## Future Adapter Shape
+## Adapter Shape
 
-A future implementation may add an adapter shaped like:
+Slice 10 adds an adapter shaped like:
 
 ```python
 record_decision_result(
@@ -98,7 +100,7 @@ record_decision_result(
     input_hash: str,
     output_hash: str,
     action: str | None = None,
-    policy_result: str | None = None,
+    policy_result: str,
     warnings: list[str] | None = None,
     initialize: bool = False,
 ) -> DecisionEvent
@@ -106,20 +108,19 @@ record_decision_result(
 
 Rules:
 
-- required hashes must be explicit unless future SDK objects carry validated
-  hashes;
-- action must be explicit unless `DecisionResult.action` is accepted by a
-  documented mapping contract;
-- policy result must be explicit unless `DecisionResult` gains a stable policy
-  result field;
-- confidence score may come from `DecisionResult.confidence`;
-- warnings may come from `DecisionResult.warnings`;
+- required hashes are explicit;
+- action may come from `DecisionResult.action` only when the caller does not
+  provide an explicit override;
+- policy result is always explicit;
+- confidence score comes from `DecisionResult.confidence`;
+- warnings may come from `DecisionResult.warnings` when no explicit warnings
+  are supplied;
 - raw values from `Uncertain.value` or `DecisionResult.value` must never be
   serialized.
 
 ## Fail-Closed Behavior
 
-Future SDK ledger adapters must follow these rules:
+SDK ledger adapters must follow these rules:
 
 - missing mapping field means no event is recorded;
 - ambiguous SDK field means no event is recorded;
@@ -136,9 +137,9 @@ outputs, responses, payloads, customer data, secrets, API keys, or direct
 personal data. The ledger records hashes, references, warnings, policy results,
 actions, and integrity metadata.
 
-## Future Implementation Tests
+## Implementation Tests
 
-The eventual adapter implementation should test that it:
+The adapter implementation tests that it:
 
 - records only when all required fields are explicit or validated;
 - rejects missing evidence hash;

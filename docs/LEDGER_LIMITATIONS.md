@@ -57,7 +57,7 @@ The SDK-facing recorder reduces bookkeeping for sequence numbers, timestamps,
 event ids, previous hashes, and event hashes. It does not infer missing policy
 or evidence semantics and does not store raw payloads.
 
-Slice 9 defines the future SDK `DecisionResult` mapping contract. It does not
-add automatic `DecisionResult` recording. The contract requires missing or
-ambiguous ledger fields to fail closed instead of creating partial or guessed
-events.
+Slice 9 defines the SDK `DecisionResult` mapping contract. Slice 10 adds a
+safe adapter within that contract. It requires explicit context, hashes, and
+policy result, and missing or ambiguous ledger fields fail closed instead of
+creating partial or guessed events.

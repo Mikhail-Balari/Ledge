@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import math
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from .event import ALLOWED_REDACTION_PROFILES, DecisionEvent
-from .exceptions import LedgerStoreError, LedgerValidationError
+from .exceptions import LedgerMappingError, LedgerStoreError, LedgerValidationError
 from .store import DecisionLedger
 
 
@@ -142,9 +143,93 @@ def record_decision_event(
     )
 
 
+def record_decision_result(
+    ledger: DecisionLedger | str | Path,
+    result: object,
+    *,
+    context: LedgerRecordContext,
+    evidence_hash: str,
+    input_hash: str,
+    output_hash: str,
+    policy_result: str,
+    action: str | None = None,
+    warnings: list[str] | None = None,
+    event_id: str | None = None,
+    timestamp_utc: str | None = None,
+    initialize: bool = False,
+) -> DecisionEvent:
+    """Safely record an SDK DecisionResult when all ledger context is explicit."""
+
+    evidence_hash = _require_mapping_non_empty_string(evidence_hash, "evidence_hash")
+    input_hash = _require_mapping_non_empty_string(input_hash, "input_hash")
+    output_hash = _require_mapping_non_empty_string(output_hash, "output_hash")
+    policy_result = _require_mapping_non_empty_string(policy_result, "policy_result")
+
+    confidence_score = _extract_result_confidence(result)
+    mapped_action = _coerce_action(action if action is not None else _safe_getattr(result, "action"))
+    mapped_warnings = (
+        _coerce_warnings(warnings)
+        if warnings is not None
+        else _coerce_warnings(_safe_getattr(result, "warnings"))
+    )
+
+    recorder = LedgerRecorder(ledger, context, initialize=initialize)
+    return recorder.record(
+        event_id=event_id,
+        timestamp_utc=timestamp_utc,
+        evidence_hash=evidence_hash,
+        input_hash=input_hash,
+        output_hash=output_hash,
+        confidence_score=confidence_score,
+        action=mapped_action,
+        policy_result=policy_result,
+        warnings=mapped_warnings,
+    )
+
+
 def _require_non_empty_string(value: Any, field: str) -> None:
     if not isinstance(value, str) or not value:
         raise LedgerValidationError(f"{field} must be a non-empty string")
+
+
+def _require_mapping_non_empty_string(value: Any, field: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise LedgerMappingError(f"{field} must be explicitly supplied as a non-empty string")
+    return value
+
+
+def _extract_result_confidence(result: object) -> float:
+    value = _safe_getattr(result, "confidence")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise LedgerMappingError("result.confidence must be a finite number in [0.0, 1.0]")
+    confidence = float(value)
+    if not math.isfinite(confidence) or confidence < 0.0 or confidence > 1.0:
+        raise LedgerMappingError("result.confidence must be a finite number in [0.0, 1.0]")
+    return confidence
+
+
+def _coerce_action(value: object) -> str:
+    return _require_mapping_non_empty_string(value, "action")
+
+
+def _coerce_warnings(value: object) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, (list, tuple)):
+        raise LedgerMappingError("warnings must be a list or tuple of strings")
+    result: list[str] = []
+    for warning in value:
+        if not isinstance(warning, str):
+            raise LedgerMappingError("warnings must be a list or tuple of strings")
+        result.append(warning)
+    return result
+
+
+def _safe_getattr(value: object, name: str) -> Any:
+    try:
+        return getattr(value, name)
+    except Exception as exc:
+        raise LedgerMappingError(f"result.{name} is not safely available") from exc
 
 
 def _new_event_id() -> str:
