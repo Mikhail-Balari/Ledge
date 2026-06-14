@@ -122,5 +122,17 @@ accept raw payloads. A direct `DecisionResult` adapter remains future work until
 the SDK exposes enough stable ledger context to avoid guessing. Slice 8 still
 does not add remote anchoring, version bumps, or release actions.
 
+Slice 9 defines the SDK `DecisionResult` ledger mapping contract:
+
+- current SDK fields that can be used safely;
+- fields that require explicit user or system context;
+- future `record_decision_result(...)` adapter shape;
+- fail-closed behavior for missing or ambiguous fields;
+- future implementation tests.
+
+Slice 9 is architecture and contract only. It does not implement automatic
+`DecisionResult` recording, change SDK behavior, bump versions, or create a
+release.
+
 The next implementation slice should focus on the next narrow ledger capability
 while preserving the same anti-claims.

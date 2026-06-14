@@ -17,7 +17,9 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   planned Tamper-Evident Decision Ledger. Slice 4 adds public CLI verification
   and manifest commands. Slice 5 adds ledger init and append commands. Slice 6
   adds local audit review export packages. Slice 7 adds AI-readable review
-  packs. Slice 8 adds an SDK-facing ledger recorder.
+  packs. Slice 8 adds an SDK-facing ledger recorder. Slice 9 defines the SDK
+  `DecisionResult` ledger mapping contract before any automatic adapter is
+  implemented.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -213,6 +215,22 @@ evidence hashes, input hashes, or output hashes safely.
 
 No remote anchoring, version bump, or release action is part of Slice 8.
 
+## Phase 4 Slice 9 Scope
+
+Slice 9 adds docs-only SDK ledger mapping contracts:
+
+- `docs/LEDGER_SDK_INTEGRATION.md`;
+- `docs/LEDGER_DECISION_RESULT_MAPPING.md`;
+- a table classifying ledger fields as auto-managed, SDK-available, explicit
+  context, or not safely inferable;
+- a future `record_decision_result(...)` adapter shape;
+- fail-closed behavior for missing or ambiguous mappings.
+
+Slice 9 does not implement automatic `DecisionResult` recording and does not
+modify SDK runtime behavior.
+
+No remote anchoring, version bump, or release action is part of Slice 9.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -230,8 +248,9 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 9: the next narrow ledger
-capability after the SDK-facing recorder.
+The next recommended slice is Phase 4 Slice 10: implementation of the
+`DecisionResult` adapter only if the Slice 9 mapping contract is accepted, or
+the next narrow ledger capability if adapter work should remain deferred.
 
 Expected scope:
 

@@ -6,9 +6,10 @@ contract document only. Runtime ledger code is not implemented in Slice 0.
 Slice 1 implemented the `DecisionEvent` core. Slice 2 adds append-oriented
 JSONL storage and a local `LedgerManifest` foundation. Slice 5 exposes local
 ledger initialization and event append commands. Slice 8 adds an SDK-facing
-recorder over the same schema. The store remains local append-oriented storage;
-it is not immutable storage, blockchain, or a compliance certification
-mechanism.
+recorder over the same schema. Slice 9 defines the SDK `DecisionResult` mapping
+contract before any automatic adapter is implemented. The store remains local
+append-oriented storage; it is not immutable storage, blockchain, or a
+compliance certification mechanism.
 
 ## Required Fields
 
@@ -212,3 +213,27 @@ The caller still supplies semantic evidence fields:
 
 The recorder stores hashes and references only. It does not accept raw inputs,
 outputs, prompts, completions, messages, responses, or payloads.
+
+## DecisionResult Mapping Contract
+
+Slice 9 documents how a future SDK adapter may map `DecisionResult` into this
+schema.
+
+The adapter must not infer ledger identity fields from ambiguous SDK data. It
+must require explicit or validated values for:
+
+- `boundary_id`
+- `boundary_version`
+- `policy_hash`
+- `evidence_hash`
+- `input_hash`
+- `output_hash`
+- `policy_result`
+- `redaction_profile`
+
+Current SDK `DecisionResult` objects expose confidence, action, warnings,
+reason, metadata, and value. Confidence and warnings are unambiguous. Action is
+available, but SDK action vocabulary is not identical to ledger
+`policy_result`. Raw `value` data must not be serialized into the ledger.
+
+The full contract is in `docs/LEDGER_DECISION_RESULT_MAPPING.md`.

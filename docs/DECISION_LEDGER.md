@@ -224,6 +224,24 @@ outputs, responses, or payloads. Direct `DecisionResult` recording remains
 future work until the SDK exposes enough stable ledger context to avoid
 guessing policy hashes and evidence/input/output hashes.
 
+## SDK DecisionResult Mapping Contract
+
+Phase 4 Slice 9 defines the safe mapping contract for a future
+`DecisionResult` adapter. The contract is documented in:
+
+- `docs/LEDGER_SDK_INTEGRATION.md`
+- `docs/LEDGER_DECISION_RESULT_MAPPING.md`
+
+A `DecisionResult` can only become a ledger event when all required ledger
+fields are explicitly available or explicitly supplied. Current SDK results can
+provide confidence, warnings, and an SDK action string. They do not by
+themselves provide boundary id, boundary version, policy hash, input hash,
+output hash, or a guaranteed ledger policy result.
+
+The future adapter must fail closed when a field is missing or ambiguous. It
+must not serialize `Uncertain.value`, `DecisionResult.value`, prompts,
+completions, messages, inputs, outputs, responses, or payloads.
+
 ## What It Is Not
 
 The ledger is an audit review package, not compliance certification.
