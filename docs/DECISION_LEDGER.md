@@ -164,6 +164,31 @@ The export package is a review aid, not compliance certification. It does not
 add AI review pack generation, SDK integration, remote anchoring, immutable
 storage, or production readiness.
 
+## AI Review Pack
+
+Phase 4 Slice 7 adds a machine-readable review pack command:
+
+```bash
+ledge ledger-review-pack --store ledge_audit.jsonl --out ai_review_pack.json
+ledge ledger-review-pack --store ledge_audit.jsonl --manifest ledger_manifest.json --out ai_review_pack.json
+ledge ledger-review-pack --store ledge_audit.jsonl --boundary refund_decision --out ai_review_pack.json
+ledge ledger-review-pack --store ledge_audit.jsonl --manifest ledger_manifest.json --boundary refund_decision --out ai_review_pack.json
+ledge ledger-review-pack --store ledge_audit.jsonl --out ai_review_pack.json --force
+```
+
+The review pack is a single JSON object for another AI, agent, reviewer, CI job,
+or governance workflow. It summarizes ledger integrity, decision boundaries,
+policy results, actions, warnings, critical findings, recommended review focus,
+safe event summaries, and limitations.
+
+It must not ask a reviewing AI to trust the original AI output. The reviewing
+AI should inspect the boundary, evidence hashes, policy result, action,
+warnings, and ledger integrity. Boundary-filtered review packs still use
+full-ledger integrity for verification.
+
+The AI review pack is not legal compliance certification, not a production
+governance system, not remote anchoring, and not immutable storage.
+
 ## What It Is Not
 
 The ledger is an audit review package, not compliance certification.

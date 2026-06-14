@@ -554,6 +554,139 @@ def test_ledger_export_help_is_listed():
     assert "ledger-export" in result.stdout
 
 
+def test_ledger_review_pack_cli_succeeds_for_valid_ledger(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    out_path = tmp_path / "ai_review_pack.json"
+    write_valid_ledger(ledger_path)
+
+    result = run_cli("ledger-review-pack", "--store", ledger_path, "--out", out_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "AI-readable ledger review pack" in result.stdout
+    assert "passed_with_warnings" in result.stdout
+    data = json.loads(out_path.read_text(encoding="utf-8"))
+    assert data["review_schema"] == "ledge.ai_review_pack.v1"
+    assert data["ledger_status"] == "passed_with_warnings"
+    assert "integrity_summary" in data
+
+
+def test_ledger_review_pack_cli_with_manifest_succeeds(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    manifest_path = tmp_path / "manifest.json"
+    out_path = tmp_path / "ai_review_pack.json"
+    write_valid_ledger(ledger_path)
+    manifest_result = run_cli("ledger-manifest", "--store", ledger_path, "--out", manifest_path)
+    assert manifest_result.returncode == 0, manifest_result.stdout + manifest_result.stderr
+
+    result = run_cli(
+        "ledger-review-pack",
+        "--store",
+        ledger_path,
+        "--manifest",
+        manifest_path,
+        "--out",
+        out_path,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    data = json.loads(out_path.read_text(encoding="utf-8"))
+    assert data["ledger_status"] == "passed"
+    assert data["manifest_used"] == str(manifest_path)
+
+
+def test_ledger_review_pack_cli_boundary_filter_filters_event_summaries(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    out_path = tmp_path / "ai_review_pack.json"
+    first = make_event(boundary_id="refund_routing")
+    second = make_event(
+        sequence=2,
+        previous_event_hash=first.current_event_hash,
+        event_id="evt_shipping_0002",
+        boundary_id="shipping_routing",
+    )
+    ledger = DecisionLedger(ledger_path)
+    ledger.append(first)
+    ledger.append(second)
+
+    result = run_cli(
+        "ledger-review-pack",
+        "--store",
+        ledger_path,
+        "--boundary",
+        "refund_routing",
+        "--out",
+        out_path,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    data = json.loads(out_path.read_text(encoding="utf-8"))
+    assert data["boundary_filter"] == "refund_routing"
+    assert data["events_checked"] == 2
+    assert data["events_in_scope"] == 1
+    assert [event["boundary_id"] for event in data["event_summaries"]] == ["refund_routing"]
+
+
+def test_ledger_review_pack_cli_refuses_overwrite_without_force(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    out_path = tmp_path / "ai_review_pack.json"
+    write_valid_ledger(ledger_path)
+    first_result = run_cli("ledger-review-pack", "--store", ledger_path, "--out", out_path)
+    assert first_result.returncode == 0, first_result.stdout + first_result.stderr
+
+    result = run_cli("ledger-review-pack", "--store", ledger_path, "--out", out_path)
+
+    assert result.returncode != 0
+    assert "already exists" in result.stderr
+
+
+def test_ledger_review_pack_cli_force_overwrites(tmp_path):
+    ledger_path = tmp_path / "valid.jsonl"
+    out_path = tmp_path / "ai_review_pack.json"
+    write_valid_ledger(ledger_path)
+    out_path.write_text('{"stale": true}\n', encoding="utf-8")
+
+    result = run_cli("ledger-review-pack", "--store", ledger_path, "--out", out_path, "--force")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(out_path.read_text(encoding="utf-8"))["review_schema"] == "ledge.ai_review_pack.v1"
+
+
+def test_ledger_review_pack_cli_corrupt_ledger_writes_failed_pack(tmp_path):
+    ledger_path = tmp_path / "corrupt.jsonl"
+    out_path = tmp_path / "ai_review_pack.json"
+    ledger_path.write_text("{bad-json}\n", encoding="utf-8")
+
+    result = run_cli("ledger-review-pack", "--store", ledger_path, "--out", out_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    data = json.loads(out_path.read_text(encoding="utf-8"))
+    assert data["ledger_status"] == "failed"
+    assert data["event_summaries"] == []
+    assert data["findings_summary"][0]["code"] == "LEDGER_INVALID_JSON"
+
+
+def test_ledger_review_pack_cli_output_contains_no_raw_values(tmp_path):
+    ledger_path = tmp_path / "corrupt.jsonl"
+    out_path = tmp_path / "ai_review_pack.json"
+    payload = make_event().to_dict()
+    payload["raw_input"] = "SECRET_SHOULD_NOT_LEAK"
+    ledger_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    result = run_cli("ledger-review-pack", "--store", ledger_path, "--out", out_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    rendered = out_path.read_text(encoding="utf-8") + result.stdout + result.stderr
+    assert "SECRET_SHOULD_NOT_LEAK" not in rendered
+    assert "raw_input" not in rendered
+
+
+def test_ledger_review_pack_help_is_listed():
+    result = run_cli("help")
+
+    assert result.returncode == 0
+    assert "ledger-review-pack" in result.stdout
+
+
 def test_ledger_manifest_missing_store_returns_nonzero(tmp_path):
     result = run_cli(
         "ledger-manifest",
@@ -586,3 +719,4 @@ def test_public_help_lists_ledger_commands():
     assert "ledger-init" in result.stdout
     assert "ledger-append" in result.stdout
     assert "ledger-export" in result.stdout
+    assert "ledger-review-pack" in result.stdout

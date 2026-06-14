@@ -16,7 +16,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   `LedgerManifest` foundation. Slice 3 adds verifier core results for the
   planned Tamper-Evident Decision Ledger. Slice 4 adds public CLI verification
   and manifest commands. Slice 5 adds ledger init and append commands. Slice 6
-  adds local audit review export packages.
+  adds local audit review export packages. Slice 7 adds AI-readable review
+  packs.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -49,6 +50,8 @@ The likely next implementation release target is `1.7.0 Alpha`.
 - `ledge ledger-export` generates local audit review packages with copied
   ledger events, manifest JSON, verification reports, safe summaries, and
   limitations.
+- `ledge ledger-review-pack` writes a single machine-readable JSON review pack
+  for AI, governance, CI, or reviewer workflows.
 
 ## Phase 4 Slice 0 Scope
 
@@ -168,6 +171,25 @@ The package is a local audit review aid, not compliance certification.
 No SDK integration, AI review pack generation, remote anchoring, version bump,
 or release action is part of Slice 6.
 
+## Phase 4 Slice 7 Scope
+
+Slice 7 adds AI-readable ledger review packs only:
+
+- `ledge ledger-review-pack --store <ledger.jsonl> --out <ai_review_pack.json>`;
+- optional manifest verification with `--manifest`;
+- optional boundary filtering with `--boundary`;
+- overwrite protection with `--force`;
+- integrity summary, decision boundaries, policy result counts, action counts,
+  warnings, critical findings, recommended review focus, safe event summaries,
+  and limitations.
+
+The review pack is a machine-readable review contract. It does not ask another
+AI to trust the original AI output. It asks reviewers to inspect boundary ids,
+evidence hashes, policy results, actions, warnings, and integrity status.
+
+No SDK integration, remote anchoring, version bump, or release action is part
+of Slice 7.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -185,8 +207,8 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 7: the next narrow ledger
-capability after local audit review exports.
+The next recommended slice is Phase 4 Slice 8: the next narrow ledger
+capability after AI-readable review packs.
 
 Expected scope:
 

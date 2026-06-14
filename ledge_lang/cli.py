@@ -30,6 +30,8 @@ Usage:
                                Append a semantic decision event to a local ledger
   ledge ledger-export --store <ledger.jsonl> [--manifest <manifest.json>] [--boundary <id>] --out <dir> [--force]
                                Create a local audit review package
+  ledge ledger-review-pack --store <ledger.jsonl> [--manifest <manifest.json>] [--boundary <id>] --out <file> [--force]
+                               Create an AI-readable ledger review pack
   ledge check <file.ledge>     Check syntax without running
   ledge fmt <file.ledge>       Format source (canonical style)
   ledge fmt --check <file>     Check formatting without modifying
@@ -129,6 +131,9 @@ def main():
 
     if args[0] == "ledger-export":
         raise SystemExit(_ledger_export(args[1:]))
+
+    if args[0] == "ledger-review-pack":
+        raise SystemExit(_ledger_review_pack(args[1:]))
 
     if args[0] == "check":
         if len(args) < 2:
@@ -525,6 +530,40 @@ def _ledger_export(args):
     print(f"  Verification status : {result.verification_status}")
     if result.boundary_filter is not None:
         print(f"  Boundary filter     : {result.boundary_filter}")
+    return 0
+
+
+def _ledger_review_pack(args):
+    import argparse
+
+    from ledge_lang.ledger import build_ai_review_pack, write_ai_review_pack
+    from ledge_lang.ledger.exceptions import LedgerError
+
+    parser = argparse.ArgumentParser(prog="ledge ledger-review-pack")
+    parser.add_argument("--store", required=True, help="decision ledger JSONL path")
+    parser.add_argument("--manifest", default=None, help="optional ledger manifest JSON path")
+    parser.add_argument("--boundary", dest="boundary_id", default=None, help="optional boundary id filter")
+    parser.add_argument("--out", required=True, help="AI review pack output JSON path")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing review pack")
+    opts = parser.parse_args(args)
+
+    try:
+        pack = build_ai_review_pack(
+            store_path=opts.store,
+            manifest_path=opts.manifest,
+            boundary_id=opts.boundary_id,
+        )
+        write_ai_review_pack(pack, opts.out, force=opts.force)
+    except (LedgerError, OSError) as exc:
+        print(f"ledge ledger-review-pack: {exc}", file=sys.stderr)
+        return 1
+
+    data = pack.to_dict()
+    print(f"Wrote AI-readable ledger review pack: {opts.out}")
+    print(f"  Ledger status   : {data['ledger_status']}")
+    print(f"  Events in scope : {data['events_in_scope']}")
+    if data["boundary_filter"] is not None:
+        print(f"  Boundary filter : {data['boundary_filter']}")
     return 0
 
 

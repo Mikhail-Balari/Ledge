@@ -93,5 +93,22 @@ Filtered exports still use full-ledger verification as the integrity source.
 Slice 6 still does not add SDK integration, AI review pack generation, remote
 anchoring, version bumps, or release actions.
 
+Slice 7 adds AI-readable ledger review packs:
+
+- `ledge ledger-review-pack` for generating a single machine-readable JSON
+  review contract;
+- full-ledger integrity summary;
+- optional boundary-filtered event summaries;
+- policy result and action counts;
+- warning and critical finding counts;
+- deterministic recommended review focus;
+- explicit limitations and anti-claims.
+
+The review pack tells another AI or governance workflow to inspect boundary
+ids, evidence hashes, policy results, actions, warnings, and integrity status.
+It does not ask the reviewing AI to trust the original AI output. Slice 7 still
+does not add SDK integration, remote anchoring, version bumps, or release
+actions.
+
 The next implementation slice should focus on the next narrow ledger capability
 while preserving the same anti-claims.

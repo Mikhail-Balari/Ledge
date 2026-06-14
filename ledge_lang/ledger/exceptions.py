@@ -29,3 +29,7 @@ class LedgerManifestError(LedgerError):
 
 class LedgerExportError(LedgerError):
     """Raised when a local ledger review export cannot be produced safely."""
+
+
+class LedgerReviewPackError(LedgerError):
+    """Raised when an AI-readable ledger review pack cannot be produced safely."""

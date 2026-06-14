@@ -41,8 +41,13 @@ correctly.
 Phase 4 is being implemented in narrow slices after the 1.6.0 Alpha release.
 The current local ledger work includes event modeling, append-oriented JSONL
 storage, manifest summaries, verifier output, CLI init/append/verify/manifest
-commands, and local audit review export packages.
+commands, local audit review export packages, and AI-readable review packs.
 
-These slices do not add SDK auto-persistence, AI review pack generation, remote
-anchoring, hidden persistence, release changes, or production-readiness claims.
-The export package is a local review aid, not a compliance report.
+These slices do not add SDK auto-persistence, remote anchoring, hidden
+persistence, release changes, or production-readiness claims.
+The export package and AI review pack are local review aids, not compliance
+reports.
+
+The AI review pack does not ask another AI to trust the original AI output. It
+is a structured prompt-independent review contract over boundary ids, evidence
+hashes, policy results, actions, warnings, and integrity status.
