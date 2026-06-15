@@ -61,3 +61,7 @@ Slice 9 defines the SDK `DecisionResult` mapping contract. Slice 10 adds a
 safe adapter within that contract. It requires explicit context, hashes, and
 policy result, and missing or ambiguous ledger fields fail closed instead of
 creating partial or guessed events.
+
+Slice 11 adds an end-to-end source checkout example. The example is synthetic
+and low stakes. It demonstrates local review artifacts, not compliance
+certification, production readiness, remote anchoring, or immutable storage.

@@ -19,7 +19,8 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   adds local audit review export packages. Slice 7 adds AI-readable review
   packs. Slice 8 adds an SDK-facing ledger recorder. Slice 9 defines the SDK
   `DecisionResult` ledger mapping contract. Slice 10 adds a safe
-  `DecisionResult` ledger adapter within that contract.
+  `DecisionResult` ledger adapter within that contract. Slice 11 adds an
+  end-to-end source checkout SDK ledger workflow example.
 
 The likely next implementation release target is `1.7.0 Alpha`.
 
@@ -60,6 +61,9 @@ The likely next implementation release target is `1.7.0 Alpha`.
 - `ledge_lang.ledger.record_decision_result` records SDK `DecisionResult`
   objects only when explicit ledger context, hashes, and policy result are
   supplied.
+- `examples/ledger/sdk_decision_result_to_ledger.py` demonstrates
+  `DecisionResult -> record_decision_result(...) -> ledger verification ->
+  local audit review export -> AI-readable review pack`.
 
 ## Phase 4 Slice 0 Scope
 
@@ -251,6 +255,25 @@ prompts, completions, messages, inputs, outputs, responses, or payloads.
 
 No remote anchoring, version bump, or release action is part of Slice 10.
 
+## Phase 4 Slice 11 Scope
+
+Slice 11 adds a source checkout SDK ledger workflow example only:
+
+- low-stakes support-ticket routing scenario;
+- current SDK `DecisionResult` construction;
+- explicit `LedgerRecordContext`, `evidence_hash`, `input_hash`,
+  `output_hash`, and `policy_result`;
+- local ledger JSONL file;
+- local manifest;
+- local audit review package;
+- AI-readable review pack;
+- integration test coverage for the generated artifacts and public CLI.
+
+The example does not store raw prompts, completions, messages, inputs, outputs,
+responses, payloads, `Uncertain.value`, or `DecisionResult.value`.
+
+No remote anchoring, version bump, or release action is part of Slice 11.
+
 ## Important Limits
 
 Ledge does not guarantee truth.
@@ -268,8 +291,8 @@ blockchain.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 11: the next narrow ledger
-capability after the safe `DecisionResult` adapter.
+The next recommended slice is Phase 4 Slice 12: final Phase 4 technical review
+or the next narrow ledger capability before `1.7.0 Alpha` release prep.
 
 Expected scope:
 

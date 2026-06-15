@@ -243,6 +243,28 @@ The adapter must fail closed when a field is missing or ambiguous. It
 must not serialize `Uncertain.value`, `DecisionResult.value`, prompts,
 completions, messages, inputs, outputs, responses, or payloads.
 
+## End-To-End SDK Workflow Example
+
+Phase 4 Slice 11 adds a source checkout example under `examples/ledger/` that
+demonstrates:
+
+```text
+DecisionResult -> record_decision_result(...) -> DecisionEvent -> DecisionLedger
+-> ledger-verify -> ledger-export -> ledger-review-pack
+```
+
+The example uses a low-stakes support-ticket routing scenario and writes safe
+local artifacts only:
+
+- a decision ledger JSONL file;
+- a ledger manifest;
+- a local audit review package;
+- an AI-readable review pack.
+
+It uses explicit `evidence_hash`, `input_hash`, and `output_hash` values. It
+does not store raw prompts, completions, messages, inputs, outputs, responses,
+payloads, customer data, or PII.
+
 ## What It Is Not
 
 The ledger is an audit review package, not compliance certification.

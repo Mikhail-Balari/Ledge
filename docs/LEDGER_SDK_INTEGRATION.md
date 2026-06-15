@@ -153,6 +153,17 @@ The adapter implementation tests that it:
 - works through existing `LedgerRecorder`;
 - fails closed without adding a ledger line.
 
+## Source Checkout Example
+
+Slice 11 adds `examples/ledger/sdk_decision_result_to_ledger.py` as a
+source-checkout workflow example. It constructs a low-stakes SDK
+`DecisionResult`, records it with explicit hashes and `LedgerRecordContext`,
+builds a manifest, verifies the ledger, exports a local audit review package,
+and writes an AI-readable review pack.
+
+The example is deliberately hash-only for evidence, input, and output. It does
+not serialize `DecisionResult.value` or raw SDK metadata into the ledger.
+
 ## Anti-Claims
 
 SDK ledger integration does not guarantee truth, prevent hallucinations, certify

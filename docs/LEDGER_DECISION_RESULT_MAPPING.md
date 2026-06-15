@@ -129,6 +129,10 @@ The implementation tests prove:
 - works with existing `LedgerRecorder`;
 - fail-closed behavior produces no new ledger line.
 
+Slice 11 also adds an end-to-end source checkout example proving the mapped
+result can flow through ledger verification, local audit review export, and AI
+review pack generation without storing raw decision values.
+
 ## Non-Goals
 
 This mapping contract is not hidden persistence, automatic audit logging,
