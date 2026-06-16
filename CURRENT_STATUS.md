@@ -6,12 +6,17 @@ Current public release: `ledge-lang==1.6.0`
 
 Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
 
+Current source release-prep target: `ledge-lang==1.7.0 Alpha`
+
+Ledge 1.7.0 Alpha is prepared as the Tamper-Evident Decision Ledger release.
+
 ## Phase Status
 
 - Phase 1: Python SDK Core released.
 - Phase 2: Python Linter / CI Enforcement released.
 - Phase 3: Confidence Evidence Engine released in 1.6.0 Alpha.
-- Phase 4: Slice 0 architecture is defined. Slice 1 adds the local
+- Phase 4: implemented for 1.7.0 Alpha release prep. Slice 0 architecture is
+  defined. Slice 1 adds the local
   `DecisionEvent` core. Slice 2 adds append-oriented JSONL storage and a
   `LedgerManifest` foundation. Slice 3 adds verifier core results for the
   planned Tamper-Evident Decision Ledger. Slice 4 adds public CLI verification
@@ -22,7 +27,7 @@ Ledge 1.6.0 Alpha is published as the Confidence Evidence Engine release.
   `DecisionResult` ledger adapter within that contract. Slice 11 adds an
   end-to-end source checkout SDK ledger workflow example.
 
-The likely next implementation release target is `1.7.0 Alpha`.
+The current release-prep target is `1.7.0 Alpha`.
 
 ## What Works Today
 
@@ -284,19 +289,20 @@ Ledge does not provide legal compliance certification.
 
 Ledge is not production-ready or enterprise-ready as an alpha.
 
-The planned ledger is tamper-evident, not tamper-proof.
+The decision ledger is tamper-evident, not tamper-proof or audit-proof.
 
-The planned ledger uses append-oriented local records, not immutable storage or
-blockchain.
+The decision ledger uses append-oriented local records plus verification, not
+immutable storage, blockchain, remote attestation, or secure storage by itself.
 
 ## Next Slice
 
-The next recommended slice is Phase 4 Slice 12: final Phase 4 technical review
-or the next narrow ledger capability before `1.7.0 Alpha` release prep.
+The next recommended work is `1.7.0 Alpha` publication readiness: final release
+review, tag preparation, PyPI upload, and GitHub pre-release only after
+validation passes.
 
 Expected scope:
 
-- no version bump or release action unless explicitly requested;
+- no feature changes unless a release blocker is found;
 - preserve the tamper-evident, not tamper-proof boundary;
-- keep SDK integration, AI review pack, or remote anchoring work scoped to one
-  slice.
+- keep remote anchoring, signing, object-lock storage, and stronger
+  infrastructure controls marked as future work.

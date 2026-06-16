@@ -66,4 +66,4 @@ def test_lint_python_existing_cli_commands_still_work():
     )
 
     assert result.returncode == 0
-    assert "Ledge 1.6.0" in result.stdout
+    assert "Ledge 1.7.0" in result.stdout

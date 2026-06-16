@@ -1,12 +1,12 @@
 # Ledge Capability Matrix
-## Version 1.6.0 Alpha
+## Version 1.7.0 Alpha
 
-This matrix reflects the 1.6.0 alpha release. Ledge 1.4.0 Alpha
+This matrix reflects the 1.7.0 alpha release-prep state. Ledge 1.4.0 Alpha
 added Python SDK Core while preserving the DSL and checked `.ledge` execution
 path. Ledge 1.5.0 Alpha adds AST-based Python linter / CI enforcement for
 common unsafe SDK decision-boundary patterns. Ledge 1.6.0 Alpha adds the
-Confidence Evidence Engine. Phase 4 Slice 0 defines the planned ledger
-architecture and contract in docs only.
+Confidence Evidence Engine. Ledge 1.7.0 Alpha adds the Tamper-Evident
+Decision Ledger for semantic AI decision-boundary events.
 
 This matrix is a sober snapshot of implemented capabilities and known gaps.
 Release-readiness results live in `RELEASE_READINESS.md`.
@@ -34,9 +34,11 @@ Release-readiness results live in `RELEASE_READINESS.md`.
   schema validation evidence, ensemble stability evidence, logprob signal
   evidence, conservative scoring, calibration reports, redaction-safe report
   rendering, and SDK evidence interoperability.
-- Tamper-Evident Decision Ledger is planned / architecture-defined in
-  documentation only. Runtime ledger writing, verification, export, and review
-  pack generation are not implemented in this release.
+- Tamper-Evident Decision Ledger provides `DecisionEvent`, canonical
+  serialization, event hashing, previous-hash linking, append-oriented JSONL
+  storage, manifests, verification results, local audit review export packages,
+  AI-readable review packs, SDK-facing recorder helpers, and a safe
+  `DecisionResult` adapter.
 
 ## Packaging
 
@@ -52,6 +54,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
 - The installed package exposes `ledge confidence-eval <fixture.json>` and
   `ledge calibration-report <outcomes.json>` for confidence evidence and
   calibration report examples.
+- The installed package exposes `ledge ledger-init`, `ledge ledger-append`,
+  `ledge ledger-manifest`, `ledge ledger-verify`, `ledge ledger-export`, and
+  `ledge ledger-review-pack` for local decision ledger workflows.
 - Root-level `scripts/`, `examples/`, and `pilot_templates/` remain
   source-checkout materials for review and adaptation.
 
@@ -71,9 +76,9 @@ Release-readiness results live in `RELEASE_READINESS.md`.
   without historical outcomes, legal compliance certification, production
   readiness, or formal verification.
 - No hidden persistence is added by the Confidence Evidence Engine.
-- Tamper-Evident Decision Ledger is architecture-defined but not implemented.
-- Ledger architecture is not production-ready and does not claim legal
-  compliance certification.
-- Ledger architecture is tamper-evident in design, not tamper-proof, and makes
-  no immutable storage claim.
-- Ledger architecture uses append-oriented local records, not blockchain.
+- Tamper-Evident Decision Ledger is alpha and local-first. It is not
+  production-ready, enterprise-ready, legal compliance certification,
+  tamper-proof, audit-proof, immutable storage, blockchain, or secure storage
+  by itself.
+- Remote anchoring, signing, object-lock storage, and stronger infrastructure
+  controls remain future work.

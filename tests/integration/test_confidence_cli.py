@@ -141,4 +141,4 @@ def test_existing_version_command_still_reports_current_version():
     result = run_cli("version")
 
     assert result.returncode == 0
-    assert "Ledge 1.6.0" in result.stdout
+    assert "Ledge 1.7.0" in result.stdout

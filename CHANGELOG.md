@@ -1,5 +1,41 @@
 # Ledge Changelog
 
+## [1.7.0] - Alpha
+
+### Added
+
+- Adds `ledge_lang.ledger.DecisionEvent` for semantic AI
+  decision-boundary events.
+- Adds canonical event serialization and SHA-256 event hashing.
+- Adds previous-hash linking for tamper-evident local event chains.
+- Adds `DecisionLedger` append-oriented JSONL storage.
+- Adds `LedgerManifest` build/read/write support.
+- Adds `LedgerVerifier` with structured findings.
+- Adds human-readable and machine-readable verification results.
+- Adds ledger CLI commands:
+  - `ledge ledger-init`
+  - `ledge ledger-append`
+  - `ledge ledger-manifest`
+  - `ledge ledger-verify`
+  - `ledge ledger-export`
+  - `ledge ledger-review-pack`
+- Adds a local audit review export package.
+- Adds an AI-readable ledger review pack.
+- Adds SDK-facing `LedgerRecorder`.
+- Adds `record_decision_event(...)`.
+- Adds safe `record_decision_result(...)` adapter.
+- Adds an end-to-end low-stakes ledger example under `examples/ledger/`.
+
+### Notes and limitations
+
+- Alpha release.
+- Not production-ready or enterprise-ready.
+- Not legal compliance certification.
+- The decision ledger is tamper-evident, not tamper-proof.
+- Uses local append-oriented records plus verification, not immutable storage,
+  blockchain, remote attestation, or secure storage by itself.
+- Does not guarantee truth and does not prevent hallucinations.
+
 ## [1.6.0] - Alpha
 
 ### Added

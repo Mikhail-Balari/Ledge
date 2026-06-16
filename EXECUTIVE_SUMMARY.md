@@ -1,6 +1,14 @@
 # Ledge — One-page summary
 
-**Version 1.2.0**
+**Current release-prep target: 1.7.0 Alpha**
+
+This one-page summary originated in the 1.2.0 materials. For the current
+1.7.0 Alpha public surface, Ledge also includes the Python SDK Core, Python
+linter / CI enforcement, Confidence Evidence Engine, and Tamper-Evident
+Decision Ledger. The ledger uses local append-oriented records plus
+verification; it is not production-ready, enterprise-ready, legal compliance
+certification, tamper-proof, audit-proof, immutable storage, blockchain, or
+secure storage by itself.
 
 A small experimental DSL for making AI uncertainty explicit in program flow.
 Surrounds AI calls with a static analysis pass that rejects direct use of

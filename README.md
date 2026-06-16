@@ -13,7 +13,11 @@ surrounds AI calls with a static analysis pass that rejects direct use of
 results whose confidence has not been checked, records AI decisions in a
 hash-chained audit log, compares declared confidence against real outcomes
 over time, and can attach structured confidence evidence before an AI output
-crosses into a business action.
+crosses into a business action. Ledge 1.7.0 Alpha adds a tamper-evident
+decision ledger for semantic AI decision-boundary events: local
+append-oriented records plus verification, export, and AI-readable review
+packs for inspecting how uncertain AI outputs became, or were prevented from
+becoming, system actions.
 
 Ledge is alpha software. It is not an AI model, not a formal proof system, not
 a compliance product, and not a replacement for evaluation, monitoring, or
@@ -51,6 +55,9 @@ the model; it just makes "I forgot to check" turn into a static error.
 - **Not a legal compliance product.** The regulatory export is intended to
   support structured evidence review, but it does not establish compliance.
   Whether it is useful for any specific regime is between you and your lawyer.
+- **Not tamper-proof, audit-proof, immutable storage, or blockchain.** The
+  decision ledger is local append-oriented records plus verification; it is not
+  secure storage by itself.
 - **Not a security boundary against a malicious local operator.** The audit
   trail detects post-hoc modification by an attacker with DB access but
   no anchor-file access; an attacker with both can forge a clean history.
@@ -64,7 +71,7 @@ the model; it just makes "I forgot to check" turn into a static error.
 From PyPI:
 
 ```bash
-pip install ledge-lang==1.6.0
+pip install ledge-lang==1.7.0
 ledge demo
 ledge demo medical_triage
 ledge demo loan_approval
@@ -137,11 +144,17 @@ It is API-level and runtime-level handling. Ledge 1.5.0 Alpha added
 `ledge lint-python` for AST-based CI enforcement of common unsafe Python
 decision-boundary patterns. Ledge 1.6.0 Alpha adds a Confidence Evidence
 Engine: structured, redaction-aware, hashable evidence for confidence scores
-before AI outputs cross into business actions. It does not provide complete
-Python semantic verification, complete cross-file/interprocedural dataflow
-analysis, a truth guarantee, hallucination prevention, or legal compliance.
+before AI outputs cross into business actions. Ledge 1.7.0 Alpha adds a
+Tamper-Evident Decision Ledger for semantic decision-boundary events,
+verification, local audit review export packages, AI-readable review packs,
+and SDK-facing recording helpers. It does not provide complete Python
+semantic verification, complete cross-file/interprocedural dataflow analysis,
+a truth guarantee, hallucination prevention, legal compliance, production
+readiness, enterprise readiness, tamper-proof storage, audit-proof guarantees,
+immutable storage, or blockchain.
 See [`examples/sdk_decision_boundary`](examples/sdk_decision_boundary/) and
-[`examples/confidence`](examples/confidence/).
+[`examples/confidence`](examples/confidence/). For the end-to-end ledger
+workflow, see [`examples/ledger`](examples/ledger/).
 
 For minimal Python integration and CI checker examples after installing the
 package:
@@ -172,6 +185,16 @@ ledge calibration-report examples/confidence/outcomes.json
 ledge calibration-report examples/confidence/outcomes.json --format json
 ```
 
+Decision Ledger examples that use repository paths also require a source
+checkout where `examples/ledger/` is available:
+
+```bash
+python examples/ledger/sdk_decision_result_to_ledger.py
+ledge ledger-verify --store examples/ledger/out/support_ticket_ledger.jsonl --manifest examples/ledger/out/ledger_manifest.json
+ledge ledger-export --store examples/ledger/out/support_ticket_ledger.jsonl --manifest examples/ledger/out/ledger_manifest.json --out examples/ledger/out/audit_export --force
+ledge ledger-review-pack --store examples/ledger/out/support_ticket_ledger.jsonl --manifest examples/ledger/out/ledger_manifest.json --out examples/ledger/out/ai_review_pack.json --force
+```
+
 For the detailed checker contract, see [`docs/STATIC_CHECKER.md`](docs/STATIC_CHECKER.md).
 For Python integration guidance, see [`docs/PYTHON_INTEGRATION.md`](docs/PYTHON_INTEGRATION.md).
 For SDK-level uncertain values in normal Python, see
@@ -180,6 +203,9 @@ For current and future uncertainty semantics, see
 [`docs/UNCERTAINTY_MODEL.md`](docs/UNCERTAINTY_MODEL.md).
 For confidence evidence records, signal generation, reporting, and limits, see
 [`docs/CONFIDENCE_EVIDENCE_ENGINE.md`](docs/CONFIDENCE_EVIDENCE_ENGINE.md).
+For the tamper-evident decision ledger, schema, verification contract, SDK
+integration, and limitations, see
+[`docs/DECISION_LEDGER.md`](docs/DECISION_LEDGER.md).
 For deployment assumptions and non-goals, see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 For the future audit anchoring design, see
 [`docs/AUDIT_ANCHORING.md`](docs/AUDIT_ANCHORING.md).

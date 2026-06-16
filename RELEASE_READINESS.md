@@ -1,87 +1,100 @@
-# Release Readiness - Ledge 1.6.0 Alpha
+# Release Readiness - Ledge 1.7.0 Alpha
 
-This document records release-prep status for Ledge 1.6.0 Alpha and
+This document records release-prep status for Ledge 1.7.0 Alpha and
 publication status for earlier alpha releases. It is a process document, not
 the PyPI long description.
 
-## 1.6.0 Alpha Release Prep Status
+## 1.7.0 Alpha Release Prep Status
 
-- Target version: `1.6.0 Alpha`.
-- Feature: Confidence Evidence Engine.
-- PyPI 1.6.0 uploaded: no.
+- Target version: `1.7.0 Alpha`.
+- Feature: Tamper-Evident Decision Ledger.
+- PyPI target: `ledge-lang==1.7.0`.
 - PyPI project version: pending.
-- Git tag `v1.6.0` created and pushed: no.
-- GitHub Release `v1.6.0` created: no.
+- Future git tag target: `v1.7.0`.
+- Git tag `v1.7.0` created and pushed: no.
+- GitHub Release `v1.7.0` created: no.
 - GitHub Release should be marked as pre-release: yes.
 - Ledge remains alpha.
-- Confidence Evidence Engine is available in local release-prep state.
-- Tamper-evident decision ledger remains future Phase 4.
+- Tamper-Evident Decision Ledger is available in local release-prep state.
+- Remote anchoring, signing, object-lock storage, and stronger infrastructure
+  controls remain future work.
 - No production, enterprise, or compliance guarantees.
 - No hallucination-prevention claim.
 - No truth guarantee.
 - No formal verification claim.
-- No audit-proof, immutable, blockchain-secured, or certification claim.
+- No tamper-proof, audit-proof, immutable-storage, blockchain, remote
+  attestation, or certification claim.
 
-## 1.6.0 Scope
+## 1.7.0 Scope
 
-- Adds audit-ready `ledge_lang.confidence.ConfidenceEvidence`.
-- Adds `EvidenceSource` records and canonical evidence serialization.
-- Adds SHA-256 evidence hashing and redaction helpers.
-- Adds schema validation evidence.
-- Adds ensemble agreement evidence as an exact stability signal, not truth.
-- Adds backend-provided logprob signal evidence and unavailable-logprob
-  warnings.
-- Adds conservative scoring with hard schema/type failure dominance.
-- Adds calibration reports with Brier score, simplified ECE, low-sample
-  warnings, and cautious threshold guidance.
-- Adds redaction-safe text and JSON report rendering.
+- Adds `ledge_lang.ledger.DecisionEvent` for semantic AI decision-boundary
+  events.
+- Adds canonical event serialization, SHA-256 event hashing, and
+  previous-hash linking.
+- Adds `DecisionLedger` append-oriented JSONL storage.
+- Adds `LedgerManifest` build/read/write support.
+- Adds `LedgerVerifier` with structured findings, deterministic JSON output,
+  and human-readable summaries.
 - Adds CLI commands:
-  - `ledge confidence-eval <fixture.json>`
-  - `ledge confidence-eval <fixture.json> --format json`
-  - `ledge calibration-report <outcomes.json>`
-  - `ledge calibration-report <outcomes.json> --format json`
-- Adds low-stakes synthetic confidence examples under `examples/confidence/`.
-- Adds SDK evidence interoperability for legacy SDK evidence, audit-ready
-  confidence evidence, unknown evidence, and malformed evidence-like objects.
-- Corrects legacy compliance-shaped wording to structured evidence-field
-  wording.
+  - `ledge ledger-init`
+  - `ledge ledger-append`
+  - `ledge ledger-manifest`
+  - `ledge ledger-verify`
+  - `ledge ledger-export`
+  - `ledge ledger-review-pack`
+- Adds a local audit review export package.
+- Adds an AI-readable ledger review pack.
+- Adds SDK-facing `LedgerRecorder`.
+- Adds `record_decision_event(...)`.
+- Adds safe `record_decision_result(...)` adapter.
+- Adds a low-stakes end-to-end ledger example under `examples/ledger/`.
 
-## 1.6.0 Packaging Checklist
+## 1.7.0 Packaging Checklist
 
-- `pyproject.toml` version: `1.6.0`.
-- `ledge_lang._version.__version__`: `1.6.0`.
+- `pyproject.toml` version: `1.7.0`.
+- `ledge_lang._version.__version__`: `1.7.0`.
 - Bundled package data still includes `ledge_lang/demos/*.ledge`.
 - Studio package data still includes `ledge_lang/studio/templates/*.html` for
   the optional `ledge-lang[studio]` extra.
 - Expected wheel contents include:
+  - `ledge_lang/ledger/*.py`
   - `ledge_lang/confidence/*.py`
   - `ledge_lang/sdk/_evidence_compat.py`
   - `ledge_lang/sdk/*.py`
   - `ledge_lang/python_linter/*.py`
   - bundled demos and pilot templates listed in the 1.5.0 checklist below.
-- Root-level `examples/`, including `examples/confidence/`, remain
+- Root-level `examples/`, including `examples/confidence/` and
+  `examples/ledger/`, remain
   source-checkout materials for review and adaptation.
 
-## 1.6.0 Pre-release Verification Checklist
+## 1.7.0 Pre-release Verification Checklist
 
 Expected before publication:
 
-- `python -m ledge_lang.cli version`: should report `Ledge 1.6.0`.
-- Focused confidence tests:
-  `python -m pytest tests/unit/test_confidence_*.py tests/unit/test_sdk_confidence_evidence_compat.py -q`.
-- `python -m pytest tests/unit/ -q`.
-- `python -m pytest tests/integration/ -q`.
+- `python -m ledge_lang.cli version`: should report `Ledge 1.7.0`.
+- Full unit and integration tests:
+  `python -m pytest tests/unit tests/integration -q`.
 - `python tests/conformance.py`.
 - `python scripts/pre_release_check.py`.
 - `python examples/sdk_decision_boundary/app.py`.
+- `python examples/ledger/sdk_decision_result_to_ledger.py --out .tmp_ledger_release_smoke`.
+- `python -m ledge_lang.cli ledger-verify --store .tmp_ledger_release_smoke/support_ticket_ledger.jsonl --manifest .tmp_ledger_release_smoke/ledger_manifest.json --format json`.
 - `python -m ledge_lang.cli confidence-eval examples/confidence/fixture.json`.
 - `python -m ledge_lang.cli confidence-eval examples/confidence/fixture.json --format json`.
 - `python -m ledge_lang.cli calibration-report examples/confidence/outcomes.json`.
 - `python -m ledge_lang.cli calibration-report examples/confidence/outcomes.json --format json`.
+- `python -m ledge_lang.cli ledger-init --help`.
+- `python -m ledge_lang.cli ledger-append --help`.
+- `python -m ledge_lang.cli ledger-manifest --help`.
+- `python -m ledge_lang.cli ledger-verify --help`.
+- `python -m ledge_lang.cli ledger-export --help`.
+- `python -m ledge_lang.cli ledger-review-pack --help`.
 - `python -m ledge_lang.cli lint-python examples/python_linter/safe_usage.py --config examples/python_linter/ledge.toml`: should pass.
 - `python -m ledge_lang.cli lint-python examples/python_linter/unsafe_usage.py --config examples/python_linter/ledge.toml`: should fail with `LPY001`, `LPY002`, `LPY003`, and `LPY004`.
 - `python -m build`.
 - `python -m twine check dist/*`.
+- Clean source-checkout artifact cleanup:
+  `rm -rf build dist ledge_lang.egg-info .tmp_ledger_release_smoke`.
 - Clean local wheel install verification from outside the repository: pending
   before PyPI upload.
 - Real PyPI install verification from outside the repository: pending after
@@ -93,9 +106,9 @@ Expected before publication:
 - No generated artifacts staged.
 - Working tree clean before tag/upload/release.
 
-## 1.6.0 Claims Audit Summary
+## 1.7.0 Claims Audit Summary
 
-The 1.6.0 Alpha release candidate must not claim:
+The 1.7.0 Alpha release candidate must not claim:
 
 - production readiness;
 - enterprise readiness;
@@ -105,23 +118,38 @@ The 1.6.0 Alpha release candidate must not claim:
 - hallucination prevention;
 - truth guarantee;
 - formal verification;
-- tamper-proof, audit-proof, immutable, or blockchain-secured behavior.
+- tamper-proof, audit-proof, immutable storage, blockchain-secured behavior,
+  remote attestation, or secure storage by itself.
 
 Allowed framing:
 
 - alpha software;
-- evidence-backed confidence records;
-- redaction-aware reports;
-- deterministic schema, ensemble, logprob, scoring, and calibration helpers;
-- SDK interoperability for legacy and audit-ready evidence;
-- structured evidence review support;
-- future tamper-evident decision ledger work.
+- tamper-evident local decision ledger;
+- semantic AI decision-boundary events;
+- append-oriented local JSONL records;
+- deterministic verification results;
+- local audit review export packages;
+- AI-readable review packs;
+- SDK-facing recorder and safe `DecisionResult` adapter;
+- future remote anchoring, signing, object-lock storage, and stronger
+  infrastructure controls.
 
-## 1.6.0 Current Recommendation
+## 1.7.0 Current Recommendation
 
-Ledge 1.6.0 Alpha is in local release-prep state. Do not upload to PyPI,
-create tag `v1.6.0`, or create a GitHub Release until the release candidate is
+Ledge 1.7.0 Alpha is in local release-prep state. Do not upload to PyPI,
+create tag `v1.7.0`, or create a GitHub Release until the release candidate is
 explicitly approved.
+
+## 1.6.0 Alpha Publication Status
+
+- Released version: `1.6.0 Alpha`.
+- Feature: Confidence Evidence Engine.
+- PyPI 1.6.0 uploaded: yes.
+- PyPI project version: `ledge-lang 1.6.0`.
+- Git tag `v1.6.0` created and pushed: yes.
+- GitHub Release `v1.6.0` created: yes.
+- GitHub Release marked as pre-release: yes.
+- Ledge remains alpha.
 
 ## 1.5.0 Alpha Publication Status
 

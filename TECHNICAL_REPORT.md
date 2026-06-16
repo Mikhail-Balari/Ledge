@@ -5,6 +5,14 @@ Mikhail Balari
 May 2026
 https://github.com/Mikhail-Balari/Ledge
 
+**Current release-prep note:** Ledge 1.7.0 Alpha adds the Tamper-Evident
+Decision Ledger: semantic AI decision-boundary events, canonical event
+hashing, append-oriented JSONL storage, manifest verification, local audit
+review exports, AI-readable review packs, and SDK-facing recorder helpers.
+This remains alpha software. It is not production-ready, enterprise-ready,
+legal compliance certification, tamper-proof, audit-proof, immutable storage,
+blockchain, or secure storage by itself.
+
 ---
 
 ## Abstract

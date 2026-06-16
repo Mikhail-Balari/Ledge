@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0-alpha",
+  "version": "1.7.0-alpha",
   "release_readiness": "See RELEASE_READINESS.md",
   "implemented": {
     "interpreter": "Tree-walker interpreter",
@@ -10,8 +10,8 @@
     "python_sdk_core": "Minimal Uncertain, DecisionPolicy, DecisionResult, confidence evidence metadata, validators, and deterministic fake clients for normal Python code",
     "python_linter_ci": "AST-based ledge lint-python enforcement for common unsafe SDK decision-boundary patterns",
     "confidence_evidence_engine": "Alpha confidence evidence records, schema validation evidence, ensemble stability evidence, logprob signal evidence, conservative scoring, calibration reports, redaction-safe rendering, CLI examples, and SDK evidence interoperability",
-    "decision_ledger": "Planned / architecture-defined in docs only for Phase 4 Slice 0; runtime ledger writing, verification, export, and AI review pack generation are not implemented",
-    "packaging": "1.6.0 wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, CI-check, lint-python commands, Python SDK Core, Python linter package, confidence package, and SDK evidence interoperability layer"
+    "decision_ledger": "Alpha tamper-evident decision ledger with DecisionEvent, canonical serialization, event hashing, previous-hash linking, append-oriented JSONL storage, manifests, verification, local audit review export packages, AI-readable review packs, SDK-facing recorder helpers, and safe DecisionResult adapter",
+    "packaging": "1.7.0 wheel builds and includes bundled demos plus packaged pilot dry-run, Python integration demo, CI-check, lint-python commands, Python SDK Core, Python linter package, confidence package, SDK evidence interoperability layer, and ledger package"
   },
   "known_gaps": [
     "No known production deployments",
@@ -23,9 +23,10 @@
     "Python linter coverage is AST-based and intentionally scoped to common local unsafe-use patterns; it does not yet perform complete cross-file or interprocedural dataflow analysis",
     "Confidence Evidence Engine is alpha and does not claim calibrated confidence without historical outcomes",
     "No hidden persistence is added by the Confidence Evidence Engine",
-    "Tamper-Evident Decision Ledger is architecture-defined but not implemented",
-    "Ledger architecture is not production-ready and does not claim legal compliance certification",
-    "Ledger architecture is tamper-evident in design, not tamper-proof, and makes no immutable storage claim",
-    "Ledger architecture uses append-oriented local records, not blockchain"
+    "Tamper-Evident Decision Ledger is alpha and local-first",
+    "Decision Ledger is not production-ready or enterprise-ready and does not claim legal compliance certification",
+    "Decision Ledger is tamper-evident, not tamper-proof or audit-proof, and makes no immutable storage claim",
+    "Decision Ledger uses append-oriented local records, not blockchain or secure storage by itself",
+    "Remote anchoring, signing, object-lock storage, and stronger infrastructure controls remain future work"
   ]
 }
